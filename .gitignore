@@ -1,0 +1,7 @@
+# dotfiles
+.*
+!.gitignore
+!.npmignore
+
+# dependencies
+node_modules

@@ -1,0 +1,41 @@
+{
+  "name": "node-exist",
+  "version": "0.0.0",
+  "description": "promise based interaction with eXist DB's XML-RPC API",
+  "main": "index.js",
+  "scripts": {
+    "test": "node_modules/.bin/standard && node_modules/.bin/tape spec/tests/*.js"
+  },
+  "keywords": [
+    "existdb",
+    "exist",
+    "db",
+    "database",
+    "xmlrpc",
+    "xml",
+    "rpc",
+    "api",
+    "promise",
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/substack/tape.git"
+  },
+  "maintainers": [
+    {
+      "name": "line0",
+      "email": "npm@line-o.de"
+    }
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "tape": "^4.5.0"
+  },
+  "dependencies": {
+    "lodash.assign": "^4.0.2",
+    "mime": "^1.3.4",
+    "xmlrpc": "^1.3.1"
+  }
+}
