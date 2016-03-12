@@ -1,6 +1,6 @@
 {
   "name": "node-exist",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "promise based interaction with eXist DB's XML-RPC API",
   "main": "index.js",
   "scripts": {

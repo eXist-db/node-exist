@@ -1,0 +1,9 @@
+language: node_js
+node_js:
+  - "5"
+  - "4"
+before_script:
+  - wget https://github.com/eXist-db/exist/archive/eXist-3.0.RC1.tar.gz -O /tmp/exist.tar.gz
+  - tar -xvf /tmp/exist.tar.gz
+  - ./build.sh -Dexist.autodeploy=off -Dtest.haltonerror=true -Dtest.haltonfailure=true travis
+  - bin/startup.sh
