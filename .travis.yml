@@ -30,4 +30,4 @@ after_script:
 
 cache:
   directories:
-  - $HOME/exist-${EXIST_DB_VERSION}
+    - ${HOME}/exist-${EXIST_DB_VERSION}
