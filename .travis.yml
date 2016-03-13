@@ -2,8 +2,16 @@ language: node_js
 node_js:
   - "5"
   - "4"
+env:
+  - EXIST_DB_VERSION=eXist-3.0.RC1
+addons:
+  apt:
+    packages:
+      - default-jdk
+before_install:
+  - wget https://github.com/eXist-db/exist/archive/$EXIST_DB_VERSION.tar.gz -O /tmp/$EXIST_DB_VERSION.tar.gz
+  - tar -xvf /tmp/$EXIST_DB_VERSION.tar.gz
+  - cd exist-$EXIST_DB_VERSION
+  - ./build.sh
 before_script:
-  - wget https://github.com/eXist-db/exist/archive/eXist-3.0.RC1.tar.gz -O /tmp/exist.tar.gz
-  - tar -xvf /tmp/exist.tar.gz
-  - ./build.sh -Dexist.autodeploy=off -Dtest.haltonerror=true -Dtest.haltonfailure=true travis
-  - bin/startup.sh
+  - bin/$EXIST_DB_VERSION/bin/startup.sh
