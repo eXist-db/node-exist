@@ -6,6 +6,11 @@
   "scripts": {
     "test": "node_modules/.bin/standard && node_modules/.bin/tape spec/tests/*.js"
   },
+  "standard": {
+    "ignore": [
+      "exist-*"
+    ]
+  },
   "keywords": [
     "existdb",
     "exist",
@@ -30,7 +35,6 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "gulp": "^3.9.0",
     "standard": "^6.0.8",
     "tape": "^4.5.0"
   },
