@@ -17,17 +17,30 @@ install:
   - npm install -q
 
 before_script:
+  - npm prune
   - nohup ${HOME}/exist-${EXIST_DB_VERSION}/bin/startup.sh &
   - sleep 15
   - cat nohup.out
   - curl http://127.0.0.1:8080/
+  - curl -Lo travis_after_all.py https://git.io/vLSON
 
 script:
   - npm test
+
+after_success:
+  - python travis_after_all.py
+  - npm run semantic-release
 
 after_script:
   - $HOME/exist-${EXIST_DB_VERSION}/bin/shutdown.sh
 
 cache:
   directories:
+    - node_modules
     - ${HOME}/exist-${EXIST_DB_VERSION}
+
+sudo:
+  false
+notifications:
+  email:
+    false
