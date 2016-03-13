@@ -12,12 +12,11 @@ addons:
     packages:
       - oracle-java8-installer
 
-before_install:
+install:
   - wget https://github.com/eXist-db/exist/archive/$EXIST_DB_VERSION.tar.gz -O /tmp/$EXIST_DB_VERSION.tar.gz
   - tar -xvf /tmp/$EXIST_DB_VERSION.tar.gz
   - cd exist-$EXIST_DB_VERSION
   - ./build.sh
+  - nohup sh bin/startup.sh &
   - cd ..
-
-before_script:
-  - nohup sh exist-$EXIST_DB_VERSION/bin/startup.sh &
+  - npm install -q
