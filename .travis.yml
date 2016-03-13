@@ -8,6 +8,7 @@ addons:
   apt:
     packages:
       - oracle-java8-installer
+      - oracle-java8-set-default
 before_install:
   - echo $JAVA_HOME
   - java -version
