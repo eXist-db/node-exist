@@ -17,7 +17,8 @@ install:
   - npm install -q
 
 before_script:
-  - ci/exist-${EXIST_DB_VERSION}/bin/startup.sh
+  - nohup ci/exist-${EXIST_DB_VERSION}/bin/startup.sh &
+  - sleep 15
 
 script:
   - npm test
