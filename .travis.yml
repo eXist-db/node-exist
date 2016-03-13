@@ -8,13 +8,14 @@ addons:
   apt:
     packages:
       - oracle-java8-installer
-      - oracle-java8-set-default
 before_install:
-  - echo $JAVA_HOME
-  - java -version
-  - wget https://github.com/eXist-db/exist/archive/$EXIST_DB_VERSION.tar.gz -O /tmp/$EXIST_DB_VERSION.tar.gz
-  - tar -xvf /tmp/$EXIST_DB_VERSION.tar.gz
-  - cd exist-$EXIST_DB_VERSION
-  - ./build.sh
+  - ls /usr/lib/jvm
+  - echo 1
+#  - echo $JAVA_HOME
+#  - java -version
+#  - wget https://github.com/eXist-db/exist/archive/$EXIST_DB_VERSION.tar.gz -O /tmp/$EXIST_DB_VERSION.tar.gz
+#  - tar -xvf /tmp/$EXIST_DB_VERSION.tar.gz
+#  - cd exist-$EXIST_DB_VERSION
+#  - ./build.sh
 before_script:
-  - bin/$EXIST_DB_VERSION/bin/startup.sh
+#  - bin/$EXIST_DB_VERSION/bin/startup.sh
