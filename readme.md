@@ -1,6 +1,7 @@
 # node-exist
 
-![https://travis-ci.org/line-o/node-exist.svg?branch=master]
+[![Build Status](https://travis-ci.org/line-o/node-exist.svg)](https://travis-ci.org/line-o/node-exist)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
 Mostly a shallow wrapper for [eXist's XML-RPC API](http://exist-db.org/exist/apps/doc/devguide_xmlrpc.xml).
 Attempts to translate terminologies into node world. Uses promises.
