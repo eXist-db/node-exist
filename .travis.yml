@@ -5,24 +5,32 @@ node_js:
   - "4"
 
 env:
-  - EXIST_DB_VERSION=eXist-3.0.RC1 JAVA_HOME=/usr/lib/jvm/java-8-oracle
+  - EXIST_DB_VERSION=HEAD
+  - EXIST_DB_VERSION=eXist-3.0.RC1
 
 addons:
   apt:
     packages:
       - oracle-java8-installer
 
+sudo: false
+
+notifications:
+  email: false
+
+before_install:
+  - export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+
 install:
   - ci/setup.sh
   - npm install -q
 
 before_script:
-  - npm prune
   - nohup ${HOME}/exist-${EXIST_DB_VERSION}/bin/startup.sh &
-  - sleep 15
-  - cat nohup.out
-  - curl http://127.0.0.1:8080/
+  - npm prune
   - curl -Lo travis_after_all.py https://git.io/vLSON
+  - sleep 15
+  - curl http://127.0.0.1:8080/exist
 
 script:
   - npm test
@@ -32,15 +40,12 @@ after_success:
   - npm run semantic-release
 
 after_script:
-  - $HOME/exist-${EXIST_DB_VERSION}/bin/shutdown.sh
+  - $HOME/exist/${EXIST_DB_VERSION}/bin/shutdown.sh
+
+before_cache:
+  - ci/teardown.sh
 
 cache:
   directories:
     - node_modules
-    - ${HOME}/exist-${EXIST_DB_VERSION}
-
-sudo:
-  false
-notifications:
-  email:
-    false
+    - ${HOME}/exist
