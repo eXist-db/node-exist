@@ -1,5 +1,7 @@
 # node-exist
 
+![https://travis-ci.org/line-o/node-exist.svg?branch=master]
+
 Mostly a shallow wrapper for [eXist's XML-RPC API](http://exist-db.org/exist/apps/doc/devguide_xmlrpc.xml).
 Attempts to translate terminologies into node world. Uses promises.
 
