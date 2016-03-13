@@ -5,8 +5,7 @@ node_js:
   - "4"
 
 env:
-  - EXIST_DB_VERSION=eXist-3.0.RC1
-  - JAVA_HOME=/usr/lib/jvm/java-8-oracle
+  - EXIST_DB_VERSION=eXist-3.0.RC1 JAVA_HOME=/usr/lib/jvm/java-8-oracle
 
 addons:
   apt:
