@@ -17,6 +17,7 @@ before_install:
   - tar -xvf /tmp/$EXIST_DB_VERSION.tar.gz
   - cd exist-$EXIST_DB_VERSION
   - ./build.sh
+  - cd ..
 
 before_script:
-  - bin/$EXIST_DB_VERSION/bin/startup.sh
+  - nohup sh exist-$EXIST_DB_VERSION/bin/startup.sh &
