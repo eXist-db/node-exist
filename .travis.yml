@@ -17,12 +17,17 @@ install:
   - npm install -q
 
 before_script:
-  - nohup ci/exist-${EXIST_DB_VERSION}/bin/startup.sh
+  - nohup ci/exist-${EXIST_DB_VERSION}/bin/startup.sh &
   - sleep 15
   - echo nohup.out
+  - curl http://127.0.0.1:8080/
 
 script:
   - npm test
 
 after_script:
   - ci/exist-${EXIST_DB_VERSION}/bin/shutdown.sh
+
+cache:
+  directories:
+  - ci/exist-${EXIST_DB_VERSION}
