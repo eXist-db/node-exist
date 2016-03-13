@@ -16,9 +16,11 @@ install:
   - ci/setup.sh
   - npm install -q
 
+before_script:
+  - ci/exist-${EXIST_DB_VERSION}/bin/startup.sh
+
 script:
-  - ${HOME}/ci/exist-${EXIST_DB_VERSION}/bin/startup.sh
   - npm test
 
 after_script:
-  - ci/teardown.sh
+  - ci/exist-${EXIST_DB_VERSION}/bin/shutdown.sh
