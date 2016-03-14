@@ -6,6 +6,8 @@ if [ "${EXIST_DB_VERSION}" -eq "HEAD" ]; then
   echo "exclude HEAD from cache"
   rm -rf ${FOLDER}
 else
-  echo "reset logfiles for ${EXIST_DB_VERSION}"
-  rm -rf ${FOLDER}/webapp/WEB-INF/logs/*.log
+  echo "reset data and logfiles for ${EXIST_DB_VERSION}"
+  cd ${FOLDER}
+  ./build.sh clean-default-data-dir
+  rm -rf webapp/WEB-INF/logs/*.log
 fi
