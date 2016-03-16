@@ -5,7 +5,6 @@ node_js:
   - "4"
 
 env:
-  - EXIST_DB_VERSION=develop
   - EXIST_DB_VERSION=eXist-3.0.RC1
   - EXIST_DB_VERSION=eXist-2.2
 
