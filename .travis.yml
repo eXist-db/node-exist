@@ -20,6 +20,7 @@ notifications:
 
 before_install:
   - export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+  - npm prune
 
 install:
   - ci/setup.sh
@@ -27,9 +28,8 @@ install:
 
 before_script:
   - nohup ${HOME}/exist/${EXIST_DB_VERSION}/bin/startup.sh &
-  - npm prune
   - curl -Lo travis_after_all.py https://git.io/vLSON
-  - sleep 15
+  - sleep 30
   - curl http://127.0.0.1:8080/exist
 
 script:
