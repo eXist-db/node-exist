@@ -7,7 +7,7 @@ if [ "${EXIST_DB_VERSION}" -eq "HEAD" ]; then
   rm -rf ${FOLDER}
 else
   echo "reset data and logfiles for ${EXIST_DB_VERSION}"
-  cd ${FOLDER}
+  cd ${EXIST_DB_FOLDER}
   ./build.sh clean-default-data-dir
-  rm -rf webapp/WEB-INF/logs/*.log
+  rm webapp/WEB-INF/logs/*.log
 fi

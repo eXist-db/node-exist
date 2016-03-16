@@ -20,17 +20,16 @@ notifications:
 
 before_install:
   - export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+  - export EXIST_DB_FOLDER=${HOME}/exist/${EXIST_DB_VERSION}
   - npm prune
 
 install:
-  - ci/setup.sh
+  - ci/setup-db.sh
   - npm install -q
 
 before_script:
-  - nohup ${HOME}/exist/${EXIST_DB_VERSION}/bin/startup.sh &
+  - ci/start-db.sh
   - curl -Lo travis_after_all.py https://git.io/vLSON
-  - sleep 30
-  - curl http://127.0.0.1:8080/exist
 
 script:
   - npm test
@@ -40,10 +39,11 @@ after_success:
   - npm run semantic-release
 
 after_script:
-  - $HOME/exist/${EXIST_DB_VERSION}/bin/shutdown.sh
+  - cd ${EXIST_DB_FOLDER}
+  - bin/shutdown.sh
 
 before_cache:
-  - ci/teardown.sh
+  - ci/teardown-db.sh
 
 cache:
   directories:
