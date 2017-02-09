@@ -21,10 +21,10 @@ notifications:
 before_install:
   - export JAVA_HOME=/usr/lib/jvm/java-8-oracle
   - export EXIST_DB_FOLDER=${HOME}/exist/${EXIST_DB_VERSION}
+  - ci/setup-db.sh
   - npm prune
 
 install:
-  - ci/setup-db.sh
   - npm install -q
 
 before_script:
