@@ -13,8 +13,7 @@ var users = require('./components/users')
 // exist specific mime types
 mime.define({
   'application/xquery': ['xq', 'xql', 'xqm'],
-  'application/xml': ['xconf'],
-  'application/xml': ['odd']
+  'application/xml': ['xconf','odd']
 })
 
 // helper functions
