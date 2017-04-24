@@ -1,40 +1,19 @@
 var mime = require('mime')
 
 function upload (client, contentBuffer) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('upload', [contentBuffer, contentBuffer.length], function (error, fileHandle) {
-      if (error) {
-        return reject(error)
-      }
-      resolve(fileHandle)
-    })
-  })
+  return client.promisedMethodCall('upload', [contentBuffer, contentBuffer.length])
 }
 
 function parseLocal (client, handle, filename, options) {
   // set default values
-  var mimetype = options.mimetype || mime.lookup(filename)
+  var mimeType = options.mimetype || mime.lookup(filename)
   var replace = options.replace || true
 
-  return new Promise(function (resolve, reject) {
-    client.methodCall('parseLocal', [handle, filename, replace, mimetype], function (error, result) {
-      if (error) {
-        return reject(error)
-      }
-      resolve(result)
-    })
-  })
+  return client.promisedMethodCall('parseLocal', [handle, filename, replace, mimeType])
 }
 
 function read (client, documentName, options) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('getDocument', [documentName, options], function (error, result) {
-      if (error) {
-        return reject(error)
-      }
-      resolve(result)
-    })
-  })
+  return client.promisedMethodCall('getDocument', [documentName, options])
 }
 
 function remove (client, documentName) {

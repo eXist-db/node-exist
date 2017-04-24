@@ -1,41 +1,21 @@
 // createCollection
 function create (client, name) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('createCollection', [ name ], function (error, result) {
-      if (error) { return reject(error) }
-      resolve(result)
-    })
-  })
+  return client.promisedMethodCall('createCollection', [ name ])
 }
 
 // removeCollection
 function remove (client, name) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('removeCollection', [ name ], function (error, result) {
-      if (error) { return reject(error) }
-      resolve(result)
-    })
-  })
+  return client.promisedMethodCall('removeCollection', [ name ])
 }
 
 // describeCollection
 function describe (client, name) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('describeCollection', [ name ], function (error, result) {
-      if (error) { return reject(error) }
-      resolve(result)
-    })
-  })
+  return client.promisedMethodCall('describeCollection', [ name ])
 }
 
 // getCollectionDesc
 function read (client, name) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('getCollectionDesc', [ name ], function (error, result) {
-      if (error) { return reject(error) }
-      resolve(result)
-    })
-  })
+  return client.promisedMethodCall('getCollectionDesc', [ name ])
 }
 
 module.exports = {

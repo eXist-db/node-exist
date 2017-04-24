@@ -1,28 +1,13 @@
 function describe (client, resourceIdentifier) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('describeResource', [resourceIdentifier], function (error, resourceInfo) {
-      if (error) { return reject(error) }
-      resolve(resourceInfo)
-    })
-  })
+  return client.promisedMethodCall('describeResource', [resourceIdentifier])
 }
 
 function setPermissions (client, resourceIdentifier, permission) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('setPermissions', [resourceIdentifier, permission], function (error, result) {
-      if (error) { return reject(error) }
-      resolve(result)
-    })
-  })
+  return client.promisedMethodCall('setPermissions', [resourceIdentifier, permission])
 }
 
 function getPermissions (client, resourceIdentifier) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('getPermissions', [resourceIdentifier], function (error, permissions) {
-      if (error) { return reject(error) }
-      resolve(permissions)
-    })
-  })
+  return client.promisedMethodCall('getPermissions', [resourceIdentifier])
 }
 
 module.exports = {

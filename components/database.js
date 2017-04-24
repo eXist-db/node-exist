@@ -1,19 +1,9 @@
 function syncDbToDisk (client) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('sync', [], function (error, result) {
-      if (error) { return reject(error) }
-      resolve(result)
-    })
-  })
+  return client.promisedMethodCall('sync', [])
 }
 
 function shutdownDb (client) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('shutdown', [], function (error, result) {
-      if (error) { return reject(error) }
-      resolve(result)
-    })
-  })
+  return client.promisedMethodCall('shutdown', [])
 }
 
 module.exports = {

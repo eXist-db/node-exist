@@ -14,12 +14,7 @@ function read (client, query, options) {
   delete queryOptions.start
   delete queryOptions.limit
 
-  return new Promise(function (resolve, reject) {
-    client.methodCall('query', [ query, limit, start, queryOptions ], function (error, resultSet) {
-      if (error) { return reject(error) }
-      resolve(resultSet)
-    })
-  })
+  return client.promisedMethodCall('query', [ query, limit, start, queryOptions ])
 }
 
 /**
@@ -29,30 +24,15 @@ function read (client, query, options) {
  * @returns {Promise}
  */
 function execute (client, queryStringOrBuffer, options) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('executeQuery', [ queryStringOrBuffer, options ], function (error, resultHandle) {
-      if (error) { return reject(error) }
-      resolve(resultHandle)
-    })
-  })
+  return client.promisedMethodCall('executeQuery', [ queryStringOrBuffer, options ])
 }
 
 function getHits (client, resultHandle) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('getHits', [ resultHandle ], function (error, hitCount) {
-      if (error) { return reject(error) }
-      resolve(hitCount)
-    })
-  })
+  return client.promisedMethodCall('getHits', [ resultHandle ])
 }
 
 function retrieveResult (client, handle, position) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('retrieve', [ handle, position, {} ], function (error, resultSet) {
-      if (error) { return reject(error) }
-      resolve(resultSet)
-    })
-  })
+  return client.promisedMethodCall('retrieve', [ handle, position, {} ])
 }
 
 function getAllResults (client, handle, position) {
@@ -64,12 +44,7 @@ function getAllResults (client, handle, position) {
 }
 
 function releaseResult (client, handle) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('releaseQueryResult', [ handle ], function (error, result) {
-      if (error) { return reject(error) }
-      resolve(result)
-    })
-  })
+  return client.promisedMethodCall('releaseQueryResult', [ handle ])
 }
 
 function readAll (client, queryStringOrBuffer, options) {
