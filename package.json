@@ -35,9 +35,9 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "semantic-release": "^4.3.5",
     "standard": "^6.0.8",
-    "tape": "^4.5.0",
-    "semantic-release": "^4.3.5"
+    "tape": "^4.6.3"
   },
   "dependencies": {
     "lodash.assign": "^4.0.2",
