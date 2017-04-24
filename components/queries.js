@@ -20,6 +20,7 @@ function read (client, query, options) {
 /**
  *
  * @param client
+ * @param queryStringOrBuffer
  * @param options
  * @returns {Promise}
  */
