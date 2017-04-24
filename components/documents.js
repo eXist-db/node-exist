@@ -17,14 +17,7 @@ function read (client, documentName, options) {
 }
 
 function remove (client, documentName) {
-  return new Promise(function (resolve, reject) {
-    client.methodCall('removeResource', [documentName], function (error, result) {
-      if (error) {
-        return reject(error)
-      }
-      resolve(result)
-    })
-  })
+  return client.promisedMethodCall('remove', [documentName])
 }
 
 module.exports = {
