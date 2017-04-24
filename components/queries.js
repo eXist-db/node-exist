@@ -62,6 +62,7 @@ function readAll (client, queryStringOrBuffer, options) {
       return getAllResults(client, resultHandle, hits)
     })
     .then(function (results) {
+      releaseResult(client, resultHandle)
       return {
         query: queryStringOrBuffer,
         options: options,
