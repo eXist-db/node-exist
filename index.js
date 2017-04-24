@@ -9,6 +9,7 @@ var documents = require('./components/documents')
 var collections = require('./components/collections')
 var indices = require('./components/indices')
 var users = require('./components/users')
+var app = require('./components/app')
 
 // exist specific mime types
 mime.define({
@@ -36,6 +37,7 @@ function applyEachWith (module, client) {
 module.exports = {
   connect: function (options) {
     var client = connection(options)
+
     return {
       client: client,
       server: applyEachWith(database, client),
@@ -44,7 +46,8 @@ module.exports = {
       documents: applyEachWith(documents, client),
       collections: applyEachWith(collections, client),
       indices: applyEachWith(indices, client),
-      users: applyEachWith(users, client)
+      users: applyEachWith(users, client),
+      app: applyEachWith(app, client)
     }
   },
   defineMimeTypes: function (mimeTypes) {
