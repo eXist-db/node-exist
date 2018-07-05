@@ -1,6 +1,6 @@
 # node-exist
 
-[![Build Status](https://travis-ci.org/line-o/node-exist.svg)](https://travis-ci.org/line-o/node-exist)
+[![Build Status](https://travis-ci.org/eXist-db/node-exist.svg)](https://travis-ci.org/eXist-db/node-exist)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
 Mostly a shallow wrapper for [eXist's XML-RPC API](http://exist-db.org/exist/apps/doc/devguide_xmlrpc.xml).
@@ -68,7 +68,7 @@ This convenience function calls queries.count then retrieves all result pages an
 	    })
 
 
-#### count 
+#### count
 
     db.queries.count(resultHandle)
 
@@ -111,7 +111,7 @@ A document can be seen as a file. It might be indexed if it's type is not binary
 
 Status: working
 
-A resource is identified by its path in the database. 
+A resource is identified by its path in the database.
 Documents *and* collections are resources.
 
 #### describe
