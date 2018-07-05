@@ -3,7 +3,7 @@ function promisify (client) {
     return new Promise(function promiseHandler (resolve, reject) {
       function methodCallback (error, result) {
         if (error) {
-          console.error('methodCallback:error', result)
+          // console.trace('methodCallback:error', error)
           return reject(error)
         }
         // console.trace('methodCallback:result', result)
