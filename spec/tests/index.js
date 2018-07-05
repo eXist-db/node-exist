@@ -43,4 +43,3 @@ test('get collection permissions', function (t) {
       t.end()
     })
 })
-

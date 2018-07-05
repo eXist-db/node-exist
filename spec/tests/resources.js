@@ -103,4 +103,3 @@ test('resources:', function (t) {
       })
   })
 })
-
