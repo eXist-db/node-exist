@@ -7,7 +7,7 @@ test('call remote procedure through methodCall', function (t) {
   var resultHandle = null
   var queryString = '<result>{for $i in (1,2) return <i>{$i + $a}</i>}</result>'
   var queryOptions = {variables: {a: 1}}
-  var expectedResult = '<result>\n    <i>2</i>\n    <i>3</i>\n</result>'
+  var resultMatcher = /^<result>\s*<i>2<\/i>\s*<i>3<\/i>\s*<\/result>$/
 
   db.queries.execute(queryString, queryOptions, null)
     .then(function (handle) {
@@ -22,7 +22,7 @@ test('call remote procedure through methodCall', function (t) {
     .then(function (results) {
       var concatenatedBuffers = Buffer.concat(results)
 
-      t.equal(concatenatedBuffers.toString(), expectedResult, 'got expected result')
+      t.ok(resultMatcher.test(concatenatedBuffers.toString()), 'got expected result')
       return db.queries.releaseResult(resultHandle)
     })
     .catch(function (e) {
