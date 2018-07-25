@@ -8,7 +8,7 @@ Attempts to translate terminologies into node world. Uses promises.
 
 ## Disclaimer
 
-This software is in very early development stage and may not be ready for production!
+This software is in early development stage and may not be ready for production!
 Think twice before your data is lost.
 
 **Use at your own risk.**
