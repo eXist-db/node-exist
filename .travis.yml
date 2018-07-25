@@ -32,14 +32,13 @@ install:
 
 before_script:
   - ci/start-db.sh
-  - curl -Lo travis_after_all.py https://git.io/vLSON
 
 script:
   - npm test
 
 after_success:
-  - python travis_after_all.py
-  - npm run semantic-release
+  - npm install -g travis-deploy-once
+  - travis-deploy-once "npm run semantic-release"
 
 after_script:
   - cd ${EXIST_DB_FOLDER}
@@ -50,5 +49,6 @@ before_cache:
 
 cache:
   directories:
+    - ~/.npm
     - node_modules
     - ${HOME}/exist
