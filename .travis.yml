@@ -47,8 +47,8 @@ after_script:
 before_cache:
   - ci/teardown-db.sh
 
-cache:
-  directories:
-    - ~/.npm
-    - node_modules
-    - ${HOME}/exist
+# cache:
+#   directories:
+#     - ~/.npm
+#     - node_modules
+#     - ${HOME}/exist
