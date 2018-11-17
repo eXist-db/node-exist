@@ -49,6 +49,4 @@ before_cache:
 
 cache:
   directories:
-    - ~/.npm
-    - node_modules
     - ${HOME}/exist
