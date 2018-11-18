@@ -5,7 +5,7 @@ var connectionOptions = require('../db-connection')
 
 test('upload document', function (t) {
   var db = exist.connect(connectionOptions)
-  var buffer = new Buffer('test')
+  var buffer = Buffer.from('test')
 
   db.documents.upload(buffer, buffer.length)
     .then(function (result) {

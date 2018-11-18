@@ -18,7 +18,7 @@ function upload (client, xarBuffer, targetXarPath) {
 
 function install (client, uploadedXarPath) {
   var installQueryString = 'repo:install-and-deploy-from-db($path)'
-  var queryOptions = {variables: {path: uploadedXarPath}}
+  var queryOptions = { variables: { path: uploadedXarPath } }
 
   return queries.readAll(client, installQueryString, queryOptions)
     .then(function (result) {
@@ -31,7 +31,7 @@ function install (client, uploadedXarPath) {
 
 function deploy (client, uri) {
   var installQueryString = 'repo:deploy($app)'
-  var queryOptions = {variables: {app: uri}}
+  var queryOptions = { variables: { app: uri } }
 
   return queries.readAll(client, installQueryString, queryOptions)
     .then(function (result) {
@@ -44,7 +44,7 @@ function deploy (client, uri) {
 
 function remove (client, appIdentifier) {
   var removeQueryString = '(repo:undeploy($app), repo:remove($app))'
-  var queryOptions = {variables: {app: appIdentifier}}
+  var queryOptions = { variables: { app: appIdentifier } }
 
   return queries.readAll(client, removeQueryString, queryOptions)
     .then(function (result) {
