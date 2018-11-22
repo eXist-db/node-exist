@@ -15,30 +15,58 @@ Think twice before your data is lost.
 
 ## Install
 
-    npm install node-exist
+    npm install @existdb/node-exist
 
 ## Use
+
+Creating, reading and removing a collection:
 
 ```js
 var exist = require('node-exist')
 
 var db = exist.connect()
 
-db.collections.create('/test')
+db.collections.create('/db/apps/test')
     .then(function (result) {
         console.log('create returned with:', result)
-        return db.collections.describe('/test')
+        return db.collections.describe('/db/apps/test')
     })
     .then(function (result) {
         console.log('collection description:', result)
-        return db.collections.remove('/test')
+        return db.collections.remove('/db/apps/test')
     })
     .then(function (result) {
-        console.log('tmp removed', result)
+        console.log('test collection removed', result)
     })
     .catch(function (e) {
         console.log('fail', e)
     })
+```
+Uploading an XML file into the database
+
+```js
+var exist = require('node-exist')
+
+var db = exist.connect()
+
+db.document.upload(Buffer.from('<root/>'))
+  .then(function (fileHandle) {
+    return db.document.parseLocal(fileHandle, '/db/apps/test/file.xml', {})
+  })
+  .then(function (result) {
+    return db.documents.read('/db/apps/test/file.xml')
+  })
+  .then(function (result) {
+    console.log('test file contents', result)
+    return db.documents.remove('/db/apps/test/file.xml')
+  })
+  .then(function (result) {
+      console.log('test file removed', result)
+  })
+  .catch(function (e) {
+      console.log('fail', e)
+  })
+
 ```
 
 ## Components
@@ -64,7 +92,9 @@ This convenience function calls queries.count then retrieves all result pages an
 
     db.queries.readAll(query, options)
 	    .then(function (result) {
-		    console.log(result.pages[0].toString())
+        result.pages.forEach(function () {
+          console.log(page)
+        })
 	    })
 
 
@@ -91,6 +121,8 @@ free result on server
 A document can be seen as a file. It might be indexed if it's type is not binary.
 
 #### upload
+
+Resolves into a file handle which can then be used by `db.documents.parseLocal`.
 
     db.documents.upload(Buffer.from('test'))
 
