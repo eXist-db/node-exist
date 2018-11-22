@@ -15,7 +15,7 @@ test('check for default mime type extensions', function (t) {
 })
 
 test('extend mime type definitions', function (t) {
-  exist.defineMimeTypes({'text/foo': ['bar']})
+  exist.defineMimeTypes({ 'text/foo': ['bar'] })
 
   t.equal(exist.getMimeTypes()['bar'], 'text/foo')
   t.end()
