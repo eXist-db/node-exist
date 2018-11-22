@@ -6,7 +6,7 @@ test('call remote procedure through methodCall', function (t) {
   var db = exist.connect(connectionOptions)
   var resultHandle = null
   var queryString = '<result>{for $i in (1,2) return <i>{$i + $a}</i>}</result>'
-  var queryOptions = {variables: {a: 1}}
+  var queryOptions = { variables: { a: 1 } }
   var resultMatcher = /^<result>\s*<i>2<\/i>\s*<i>3<\/i>\s*<\/result>$/
 
   db.queries.execute(queryString, queryOptions, null)
@@ -37,7 +37,7 @@ test('call remote procedure through methodCall', function (t) {
 test('call promised query', function (t) {
   var db = exist.connect(connectionOptions)
   var queryString = 'for $i in (1, 2, 3) return $i'
-  var options = {start: 2, limit: 1}
+  var options = { start: 2, limit: 1 }
   var expectedResult = '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist" hits="3" start="2" count="1">\n<exist:value type="xs:integer">2</exist:value>\n</exist:result>'
 
   db.queries.read(queryString, options)
@@ -54,7 +54,7 @@ test('call promised query', function (t) {
 test('call queryAll method', function (t) {
   var db = exist.connect(connectionOptions)
   var queryString = 'for $i in (1,2) return $i + $a'
-  var queryOptions = {variables: {a: 10}}
+  var queryOptions = { variables: { a: 10 } }
   var expectedResult = '11,12'
 
   db.queries.readAll(queryString, queryOptions)

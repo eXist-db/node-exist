@@ -74,7 +74,7 @@ test('resources:', function (t) {
   t.test('setup', function (setup) {
     db.collections.create(testCollection)
       .then(function () {
-        return db.documents.upload(new Buffer('1'))
+        return db.documents.upload(Buffer.from('1'))
       })
       .then(function (fh) {
         return db.documents.parseLocal(fh, testCollection + '/test.xql', {})
