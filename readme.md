@@ -92,7 +92,7 @@ A document can be seen as a file. It might be indexed if it's type is not binary
 
 #### upload
 
-    db.documents.upload(new Buffer('test'))
+    db.documents.upload(Buffer.from('test'))
 
 #### parseLocal
 
