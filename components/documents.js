@@ -6,7 +6,7 @@ function upload (client, contentBuffer) {
 
 function parseLocal (client, handle, filename, options) {
   // set default values
-  var mimeType = options.mimetype || mime.lookup(filename)
+  var mimeType = options.mimetype || mime.getType(filename)
   var replace = options.replace || true
 
   return client.promisedMethodCall('parseLocal', [handle, filename, replace, mimeType])

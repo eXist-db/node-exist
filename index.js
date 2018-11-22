@@ -53,7 +53,7 @@ module.exports = {
   defineMimeTypes: function (mimeTypes) {
     mime.define(mimeTypes)
   },
-  getMimeTypes: function () {
-    return mime.types
+  getMimeType: function (path) {
+    return mime.getType(path)
   }
 }
