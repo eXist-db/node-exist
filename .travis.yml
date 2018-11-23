@@ -5,31 +5,30 @@ node_js:
   - "8"
   - "6"
 
-env:
-  - EXIST_DB_VERSION=eXist-5.0.0-RC1
-  - EXIST_DB_VERSION=eXist-4.2.1
-  - EXIST_DB_VERSION=eXist-3.6.1
-  - EXIST_DB_VERSION=eXist-2.2
+services:
+  - docker
 
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
+env:
+  - img=existdb/existdb:latest
+  - img=existdb/existdb:release
+  # - img= existdb/existdb:4.5.0
+  - img=evolvedbinary/exist-db:eXist-3.6.1-minimal
 
 notifications:
   email: false
 
 before_install:
-  - export JAVA_HOME=/usr/lib/jvm/java-8-oracle
-  - export EXIST_DB_FOLDER=${HOME}/exist/${EXIST_DB_VERSION}
-  - ci/setup-db.sh
+  - docker pull $img
+  - docker create  --name exist-ci -p 8080:8080 $img
   - npm prune
 
 install:
   - npm install -q
 
 before_script:
-  - ci/start-db.sh
+  - docker start exist-ci
+  # exist needs time
+  - sleep 30
 
 script:
   - npm test
@@ -37,14 +36,3 @@ script:
 after_success:
   - npm install -g travis-deploy-once
   - travis-deploy-once "npm run semantic-release"
-
-after_script:
-  - cd ${EXIST_DB_FOLDER}
-  - bin/shutdown.sh
-
-before_cache:
-  - ci/teardown-db.sh
-
-cache:
-  directories:
-    - ${HOME}/exist
