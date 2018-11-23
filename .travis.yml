@@ -16,8 +16,6 @@ addons:
     packages:
       - oracle-java8-installer
 
-sudo: false
-
 notifications:
   email: false
 
