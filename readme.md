@@ -1,6 +1,6 @@
 # node-exist
 
-[![Build Status](https://travis-ci.org/eXist-db/node-exist.svg)](https://travis-ci.org/eXist-db/node-exist)
+[![Build Status](https://travis-ci.com/eXist-db/node-exist.svg)](https://travis-ci.com/eXist-db/node-exist)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
 Mostly a shallow wrapper for [eXist's XML-RPC API](http://exist-db.org/exist/apps/doc/devguide_xmlrpc.xml).
@@ -8,7 +8,7 @@ Attempts to translate terminologies into node world. Uses promises.
 
 ## Disclaimer
 
-This software is in early development stage and may not be ready for production!
+This software is safe for development but should not be used to alter a production database instance!
 Think twice before your data is lost.
 
 **Use at your own risk.**
@@ -22,50 +22,27 @@ Think twice before your data is lost.
 Creating, reading and removing a collection:
 
 ```js
-var exist = require('node-exist')
-
-var db = exist.connect()
+const exist = require('@existdb/node-exist')
+const db = exist.connect()
 
 db.collections.create('/db/apps/test')
-    .then(function (result) {
-        console.log('create returned with:', result)
-        return db.collections.describe('/db/apps/test')
-    })
-    .then(function (result) {
-        console.log('collection description:', result)
-        return db.collections.remove('/db/apps/test')
-    })
-    .then(function (result) {
-        console.log('test collection removed', result)
-    })
-    .catch(function (e) {
-        console.log('fail', e)
-    })
+    .then(result => db.collections.describe('/db/apps/test'))
+    .then(result => console.log('collection description:', result))
+    .catch(e => console.error('fail', e))
+
 ```
+
 Uploading an XML file into the database
 
 ```js
-var exist = require('node-exist')
+const exist = require('@existdb/node-exist')
+const db = exist.connect()
 
-var db = exist.connect()
-
-db.document.upload(Buffer.from('<root/>'))
-  .then(function (fileHandle) {
-    return db.document.parseLocal(fileHandle, '/db/apps/test/file.xml', {})
-  })
-  .then(function (result) {
-    return db.documents.read('/db/apps/test/file.xml')
-  })
-  .then(function (result) {
-    console.log('test file contents', result)
-    return db.documents.remove('/db/apps/test/file.xml')
-  })
-  .then(function (result) {
-      console.log('test file removed', result)
-  })
-  .catch(function (e) {
-      console.log('fail', e)
-  })
+db.documents.upload(Buffer.from('<root/>'))
+  .then(fileHandle => db.documents.parseLocal(fileHandle, '/db/apps/test/file.xml', {}))
+  .then(result => db.documents.read('/db/apps/test/file.xml'))
+  .then(result => console.log('test file contents', result))
+  .catch(e => console.error('fail', e))
 
 ```
 
@@ -80,22 +57,33 @@ Status: working
 
 #### execute
 
+```js
     db.queries.execute(query, options)
+```
 
 #### read
 
+```js
     db.queries.read(query, options)
+```
 
 #### readAll
 
 This convenience function calls queries.count then retrieves all result pages and returns them in an array.
 
+```js
     db.queries.readAll(query, options)
-	    .then(function (result) {
-        result.pages.forEach(function () {
-          console.log(page)
-        })
-	    })
+```
+
+**Example:**
+
+```js
+db.queries.readAll('xquery version "3.1"; xmldb:get-child-collections("/db/apps") => string-join(",\n")', {})
+  .then(result => console.log(
+    Buffer.concat(result.pages).toString()))
+  .catch(e => console.error(e))
+
+```
 
 
 #### count
@@ -179,6 +167,21 @@ Status: working
 
     db.collections.read(collectionPath)
 
+### App
+
+Status: **Experimental**
+
+#### upload
+
+    db.app.upload(xarBuffer, xarName)
+
+#### install
+
+    db.app.install(xarName)
+
+#### remove
+
+    db.app.remove(xarName)
 
 ### Indices
 
