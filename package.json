@@ -39,8 +39,7 @@
   "devDependencies": {
     "semantic-release": "^15.6.3",
     "standard": "^12.0.1",
-    "tape": "^4.6.3",
-    "travis-deploy-once": "^5.0.1"
+    "tape": "^4.6.3"
   },
   "dependencies": {
     "lodash.assign": "^4.0.2",

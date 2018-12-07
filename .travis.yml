@@ -5,6 +5,23 @@ node_js:
   - "8"
   - "6"
 
+jobs:
+  include:
+    # Define the release stage that runs semantic-release
+    - stage: release
+      node_js: lts/*
+      # skip docker build and tests
+      script: skip
+      before_install: skip
+      before_script: skip
+      deploy:
+        on:
+          branch: master
+        provider: script
+        skip_cleanup: true
+        script:
+          - npx semantic-release
+
 services:
   - docker
 
@@ -32,7 +49,3 @@ before_script:
 
 script:
   - npm test
-
-after_success:
-  - npm install -g travis-deploy-once
-  - travis-deploy-once "npm run semantic-release"
