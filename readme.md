@@ -11,6 +11,10 @@ Attempts to translate terminologies into node world. Uses promises.
 This software is safe for development but should not be used to alter a production database instance!
 Think twice before your data is lost.
 
+## Roadmap
+
+This package will switch to use eXist-db's REST-API.
+
 **Use at your own risk.**
 
 ## Install
