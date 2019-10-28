@@ -14,7 +14,7 @@ function read (client, query, options) {
   delete queryOptions.start
   delete queryOptions.limit
 
-  return client.promisedMethodCall('query', [ query, limit, start, queryOptions ])
+  return client.promisedMethodCall('query', [query, limit, start, queryOptions])
 }
 
 /**
@@ -25,15 +25,15 @@ function read (client, query, options) {
  * @returns {Promise}
  */
 function execute (client, queryStringOrBuffer, options) {
-  return client.promisedMethodCall('executeQuery', [ queryStringOrBuffer, options ])
+  return client.promisedMethodCall('executeQuery', [queryStringOrBuffer, options])
 }
 
 function getHits (client, resultHandle) {
-  return client.promisedMethodCall('getHits', [ resultHandle ])
+  return client.promisedMethodCall('getHits', [resultHandle])
 }
 
 function retrieveResult (client, handle, position) {
-  return client.promisedMethodCall('retrieve', [ handle, position, {} ])
+  return client.promisedMethodCall('retrieve', [handle, position, {}])
 }
 
 function getAllResults (client, handle, position) {
@@ -45,7 +45,7 @@ function getAllResults (client, handle, position) {
 }
 
 function releaseResult (client, handle) {
-  return client.promisedMethodCall('releaseQueryResult', [ handle ])
+  return client.promisedMethodCall('releaseQueryResult', [handle])
 }
 
 function readAll (client, queryStringOrBuffer, options) {

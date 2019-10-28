@@ -1,5 +1,5 @@
 function byName (client, userName) {
-  return client.promisedMethodCall('getUser', [ userName ])
+  return client.promisedMethodCall('getUser', [userName])
 }
 
 function list (client) {
