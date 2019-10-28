@@ -1,13 +1,13 @@
-var test = require('tape')
-var exist = require('../../index')
+const test = require('tape')
+const exist = require('../../index')
 
-var fs = require('fs')
-var app = require('../../components/app')
-var connectionOptions = require('../db-connection')
+const fs = require('fs')
+const app = require('../../components/app')
+const connectionOptions = require('../db-connection')
 
-var appUri = 'http://exist-db.org/apps/test-app'
-var xarBuffer = fs.readFileSync('spec/files/test-app.xar')
-var xarTarget = 'uploadTest.xar'
+const appUri = 'http://exist-db.org/apps/test-app'
+const xarBuffer = fs.readFileSync('spec/files/test-app.xar')
+const xarTarget = 'uploadTest.xar'
 
 test('app component exports install method', function (t) {
   t.equal(typeof app.install, 'function')
@@ -25,7 +25,7 @@ test('app component exports upload method', function (t) {
 })
 
 test('upload app', function (t) {
-  var db = exist.connect(connectionOptions)
+  const db = exist.connect(connectionOptions)
 
   t.plan(1)
   db.app.upload(xarBuffer, xarTarget)
@@ -38,8 +38,8 @@ test('upload app', function (t) {
 })
 
 test('install app', function (t) {
-  var db = exist.connect(connectionOptions)
-  var expected = '<status xmlns="http://exist-db.org/xquery/repo" result="ok" target="/db/apps/test-app"/>'
+  const db = exist.connect(connectionOptions)
+  const expected = '<status xmlns="http://exist-db.org/xquery/repo" result="ok" target="/db/apps/test-app"/>'
 
   t.plan(1)
   db.app.install(xarTarget)
@@ -52,8 +52,8 @@ test('install app', function (t) {
 })
 
 test('remove installed app', function (t) {
-  var db = exist.connect(connectionOptions)
-  var expected = '<status xmlns="http://exist-db.org/xquery/repo" result="ok" target="test-app"/>,true'
+  const db = exist.connect(connectionOptions)
+  const expected = '<status xmlns="http://exist-db.org/xquery/repo" result="ok" target="test-app"/>,true'
 
   t.plan(1)
   db.app.remove(appUri)
@@ -66,7 +66,7 @@ test('remove installed app', function (t) {
 })
 
 test('teardown', function tearDown (t) {
-  var db = exist.connect(connectionOptions)
+  const db = exist.connect(connectionOptions)
   function logAndEnd (r) {
     console.log(r)
     t.end()

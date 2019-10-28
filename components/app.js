@@ -1,24 +1,21 @@
-var queries = require('./queries')
-var documents = require('./documents')
+const queries = require('./queries')
+const documents = require('./documents')
 
 function upload (client, xarBuffer, targetXarPath) {
-  return documents.upload(client, xarBuffer)
-    .then(function (fh) {
-      console.info('got handle:' + fh)
-      return documents.parseLocal(client, fh, targetXarPath, {})
-    })
+  return documents.upload(client, targetXarPath, xarBuffer, 'application/octet-stream')
     .then(function (results) {
-      console.info(targetXarPath, 'deployed')
+      console.info(targetXarPath, 'uploaded')
       return results
     })
     .catch(function (e) {
+      console.error(e)
       return false
     })
 }
 
 function install (client, uploadedXarPath) {
-  var installQueryString = 'repo:install-and-deploy-from-db($path)'
-  var queryOptions = { variables: { path: uploadedXarPath } }
+  const installQueryString = 'repo:install-and-deploy-from-db($path)'
+  const queryOptions = { variables: { path: uploadedXarPath } }
 
   return queries.readAll(client, installQueryString, queryOptions)
     .then(function (result) {
@@ -30,8 +27,8 @@ function install (client, uploadedXarPath) {
 }
 
 function deploy (client, uri) {
-  var installQueryString = 'repo:deploy($app)'
-  var queryOptions = { variables: { app: uri } }
+  const installQueryString = 'repo:deploy($app)'
+  const queryOptions = { variables: { app: uri } }
 
   return queries.readAll(client, installQueryString, queryOptions)
     .then(function (result) {
@@ -43,8 +40,8 @@ function deploy (client, uri) {
 }
 
 function remove (client, appIdentifier) {
-  var removeQueryString = '(repo:undeploy($app), repo:remove($app))'
-  var queryOptions = { variables: { app: appIdentifier } }
+  const removeQueryString = '(repo:undeploy($app), repo:remove($app))'
+  const queryOptions = { variables: { app: appIdentifier } }
 
   return queries.readAll(client, removeQueryString, queryOptions)
     .then(function (result) {

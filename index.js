@@ -1,15 +1,16 @@
-var mime = require('mime')
+const mime = require('mime')
 
 // components
-var connection = require('./components/connection')
-var database = require('./components/database')
-var queries = require('./components/queries')
-var resources = require('./components/resources')
-var documents = require('./components/documents')
-var collections = require('./components/collections')
-var indices = require('./components/indices')
-var users = require('./components/users')
-var app = require('./components/app')
+const connection = require('./components/connection')
+const database = require('./components/database')
+const queries = require('./components/queries')
+// const resources = require('./components/resources')
+const documents = require('./components/documents')
+// const collections = require('./components/collections')
+// const indices = require('./components/indices')
+// const users = require('./components/users')
+const app = require('./components/app')
+const permissions = require('./components/permissions')
 
 // exist specific mime types
 mime.define({
@@ -21,14 +22,14 @@ mime.define({
 
 function applyWith (func, client) {
   return function () {
-    var args = Array.prototype.slice.call(arguments)
+    const args = Array.prototype.slice.call(arguments)
     return func.apply(null, [client].concat(args))
   }
 }
 
 function applyEachWith (module, client) {
-  var methods = {}
-  for (var method in module) {
+  const methods = {}
+  for (const method in module) {
     methods[method] = applyWith(module[method], client)
   }
   return methods
@@ -36,18 +37,24 @@ function applyEachWith (module, client) {
 
 module.exports = {
   connect: function (options) {
-    var client = connection(options)
+    const client = connection(options)
 
     return {
       client: client,
       server: applyEachWith(database, client),
       queries: applyEachWith(queries, client),
-      resources: applyEachWith(resources, client),
+      // resources: applyEachWith(resources, client),
       documents: applyEachWith(documents, client),
-      collections: applyEachWith(collections, client),
-      indices: applyEachWith(indices, client),
-      users: applyEachWith(users, client),
-      app: applyEachWith(app, client)
+      // collections: applyEachWith(collections, client),
+      // indices: applyEachWith(indices, client),
+      // users: applyEachWith(users, client),
+      app: applyEachWith(app, client),
+      permissions: applyEachWith(permissions, client),
+      head: (documentName) => client.head(documentName),
+      put: applyWith(documents.upload, client),
+      get: applyWith(documents.read, client),
+      delete: (documentName) => client.delete(documentName),
+      query: (query, options) => queries.read(client, query, options)
     }
   },
   defineMimeTypes: function (mimeTypes) {

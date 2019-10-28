@@ -37,7 +37,7 @@ test('create connection with default settings', function (t) {
 
 test('get collection permissions', function (t) {
   const db = exist.connect(connectionOptions)
-  db.resources.getPermissions('/db')
+  db.permissions.read('/db')
     .then(function (result) {
       t.ok(result)
       t.end()

@@ -1,5 +1,5 @@
 function describe (client, resourceIdentifier) {
-  return client.promisedMethodCall('describeResource', [resourceIdentifier])
+  return client.get(resourceIdentifier)
 }
 
 function setPermissions (client, resourceIdentifier, permission) {
