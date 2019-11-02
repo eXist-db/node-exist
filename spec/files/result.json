@@ -1,0 +1,21 @@
+{
+  "exist:result": {
+    "_attributes": {
+      "xmlns:exist": "http://exist.sourceforge.net/NS/exist",
+      "exist:hits": "1",
+      "exist:start": "1",
+      "exist:count": "1",
+      "exist:compilation-time": "5",
+      "exist:execution-time": "5"
+    },
+    "sm:permission": {
+      "_attributes": {
+        "xmlns:sm": "http://exist-db.org/xquery/securitymanager",
+        "owner": "ibo",
+        "group": "ibuser",
+        "mode": "rwx------"
+      },
+      "sm:acl": { "_attributes": { "entries": "0" } }
+    }
+  }
+}
