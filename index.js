@@ -13,7 +13,7 @@ var app = require('./components/app')
 
 // exist specific mime types
 mime.define({
-  'application/xquery': ['xq', 'xql', 'xqm'],
+  'application/xquery': ['xq', 'xqs', 'xquery', 'xql', 'xqm'],
   'application/xml': ['xconf', 'odd']
 })
 
