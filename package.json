@@ -37,7 +37,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "semantic-release": "^15.6.3",
+    "semantic-release": "^17.0.8",
     "standard": "^14.3.1",
     "tape": "^4.6.3"
   },
