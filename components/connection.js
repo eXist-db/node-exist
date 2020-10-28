@@ -3,7 +3,6 @@ const assign = require('lodash.assign')
 const promisedMethodCall = require('./promisedMethodCall')
 
 const defaultRPCoptions = {
-  collections: '',
   host: 'localhost',
   port: '8443',
   path: '/exist/xmlrpc',
