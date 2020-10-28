@@ -50,6 +50,68 @@ db.documents.upload(Buffer.from('<root/>'))
 
 ```
 
+Since all interactions with the database are promises you can also use async functions
+
+```js
+const exist = require('@existdb/node-exist')
+const db = exist.connect()
+
+async function logResult (query) {
+  try {
+    const result = await db.queries.readAll(query, {})
+    console.log(result)
+  }
+  catch (e) {
+    console.error(e)
+  } 
+}
+
+logResult('xmldb:get-child-collections("/db/apps")')
+```
+
+You can also have a look at the 
+[examples](https://github.com/eXist-db/node-exist/tree/master/examples) for more use-cases.
+
+## Configuration
+
+Connect as someone else than guest 
+
+```js
+exist.connect({
+  basic_auth: {
+    user: 'me',
+    pass: '1 troubadour artisanal #compost'
+  }
+})
+```
+
+Connect to a **local development** server using HTTP
+
+```js
+exist.connect({ secure: false, port: 8080 })
+```
+
+Connect to a server with an **invalid** or **expired** certificate
+
+```js
+exist.connect({ rejectUnauthorized: false })
+```
+
+### Defaults
+
+```js
+{
+  collections: '',
+  host: 'localhost',
+  port: '8443',
+  path: '/exist/xmlrpc', // you most likely do not need to change that
+  basic_auth: {
+    user: 'guest',
+    pass: 'guest'
+  }
+}
+```
+
 ## Components
 
 The methods are grouped into components by what they operate on.
@@ -62,13 +124,13 @@ Status: working
 #### execute
 
 ```js
-    db.queries.execute(query, options)
+db.queries.execute(query, options)
 ```
 
 #### read
 
 ```js
-    db.queries.read(query, options)
+db.queries.read(query, options)
 ```
 
 #### readAll
