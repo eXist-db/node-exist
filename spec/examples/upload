@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+
+const exist = require('../../index')
+const fs = require("fs")
+const db = exist.connect({ 
+  rejectUnauthorized: false, 
+  basic_auth: { user: "admin", pass: "" }
+})
+
+if (!process.argv[3]) {
+  console.log("Usage: upload [local file] [remote file]")
+  console.log("Example: upload ./test.xml /db/test.xml")
+  process.exit(1)
+}
+
+const localFilePath = process.argv[2]
+const remoteFilePath = process.argv[3]
+
+fs.readFile(localFilePath, async (err, buffer) => {
+  try {
+    if (err) { throw err }
+    const fileHandle = await db.documents.upload(buffer)
+    await db.documents.parseLocal(fileHandle, remoteFilePath, {})
+    console.log("uploaded", localFilePath, "to", remoteFilePath)
+  }
+  catch (e) { 
+    let message = e.faultString ? e.faultString : e.message
+    console.error(message)
+  }
+})

@@ -1,4 +1,5 @@
 nohup.out
 .travis.yml
 travis*
-ci
+.github
+spec
