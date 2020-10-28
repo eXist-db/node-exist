@@ -84,7 +84,6 @@ test('resources:', function (t) {
         setup.end()
       })
       .catch(function (e) {
-        console.dir(e)
         t.fail('setup failed')
         t.end()
       })
