@@ -49,8 +49,9 @@ function releaseResult (client, handle) {
 }
 
 function readAll (client, queryStringOrBuffer, options) {
-  var resultHandle = -1
-  var resultPages = -1
+  let resultHandle = -1
+  let resultPages = -1
+  let results, error
 
   return execute(client, queryStringOrBuffer, options)
     .then(function (handle) {
@@ -61,18 +62,29 @@ function readAll (client, queryStringOrBuffer, options) {
       resultPages = hits
       return getAllResults(client, resultHandle, hits)
     })
-    .then(function (results) {
-      releaseResult(client, resultHandle)
-      return {
+    .then(function (pages) {
+      results = {
         query: queryStringOrBuffer,
         options: options,
         hits: resultPages,
-        pages: results
+        pages: pages
       }
+
+      return releaseResult(client, resultHandle)
+    })
+    .then(function () {
+      return results
     })
     .catch(function (e) {
-      releaseResult(client, resultHandle)
+      error = e
+      // try to clean up even after an error if there is something to free
+      if (resultHandle >= 0) {
+        return releaseResult(client, resultHandle)
+      }
       return Promise.reject(e)
+    })
+    .catch(function () {
+      return Promise.reject(error)
     })
 }
 
