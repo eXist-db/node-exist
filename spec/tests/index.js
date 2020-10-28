@@ -6,9 +6,12 @@ const connectionOptions = require('../db-connection')
 
 test('check for default mime type extensions', function (t) {
   t.equal(exist.getMimeType('test.xq'), 'application/xquery')
+  t.equal(exist.getMimeType('test.xqs'), 'application/xquery')
+  t.equal(exist.getMimeType('test.xquery'), 'application/xquery')
   t.equal(exist.getMimeType('test.xql'), 'application/xquery')
   t.equal(exist.getMimeType('test.xqm'), 'application/xquery')
   t.equal(exist.getMimeType('test.xconf'), 'application/xml')
+  t.equal(exist.getMimeType('test.odd'), 'application/xml')
   t.end()
 })
 
