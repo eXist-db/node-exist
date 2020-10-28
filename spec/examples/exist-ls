@@ -1,0 +1,32 @@
+#!/usr/bin/env node
+
+const exist = require('../../index')
+const db = exist.connect({ secure: false, port: 8080 })
+
+async function ls (collection) {
+    try {
+        const query = `
+        (
+            xmldb:get-child-collections("${collection}"),
+            xmldb:get-child-resources("${collection}")
+        )
+            => (function ($collections) { array { $collections } })()
+            => serialize(map { "method": "json" })
+        `
+        const result = await db.queries.readAll(query, {})
+        const json = JSON.parse(result.pages.toString())
+        console.log(json)
+    }
+    catch (e) {
+        let message = e.faultString ? e.faultString : e.message
+        console.error("Could not run query! Reason:", message)
+    } 
+}
+
+if (!process.argv[2]) {
+    console.log("Usage: exist-ls [collection]")
+    console.log("Example: exist-ls /db/apps")
+    process.exit(0)
+}
+
+ls(process.argv[2])
