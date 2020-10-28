@@ -35,6 +35,13 @@ test('create connection with default settings', function (t) {
   components.forEach(function (component) {
     t.ok(component in db, 'component ' + component + ' found')
   })
+  t.ok(db.client.isSecure, 'secure client used')
+  t.end()
+})
+
+test('create connection using http://', function (t) {
+  const db = exist.connect({ secure: false, port: 8080 })
+  t.equal(db.client.isSecure, false, 'insecure client used')
   t.end()
 })
 
