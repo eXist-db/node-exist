@@ -25,11 +25,11 @@ test('call remote procedure through methodCall', function (t) {
       t.ok(resultMatcher.test(concatenatedBuffers.toString()), 'got expected result')
       return db.queries.releaseResult(resultHandle)
     })
+    .then(function () {
+      t.end()
+    })
     .catch(function (e) {
       t.fail(e)
-      return db.queries.releaseResult(resultHandle)
-    })
-    .then(function () {
       t.end()
     })
 })

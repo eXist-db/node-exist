@@ -79,8 +79,8 @@ test('resources:', function (t) {
       .then(function (fh) {
         return db.documents.parseLocal(fh, testCollection + '/test.xql', {})
       })
-      .then(function () {
-        setup.ok(true, 'setup ended')
+      .then(function (r) {
+        setup.ok(r, 'setup ended')
         setup.end()
       })
       .catch(function (e) {
@@ -96,10 +96,13 @@ test('resources:', function (t) {
 
   t.test('tearDown', function tearDown (td) {
     db.collections.remove(testCollection)
-      .then(function () { t.end() })
+      .then(function (r) {
+        td.ok(r, 'tearDown ended')
+        td.end()
+      })
       .catch(function (e) {
         td.fail(e)
-        t.end()
+        td.end()
       })
   })
 })

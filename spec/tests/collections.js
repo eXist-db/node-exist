@@ -23,6 +23,11 @@ test('get info for non existent collection', function (t) {
       t.end()
     })
     .catch(function (e) {
+      if (!e.faultString) {
+        t.fail(e, 'no faultString, something else must have gone wrong')
+        t.end()
+        return
+      }
       t.ok(e.faultString.match(/\/foo not found!$/), 'not found error')
       t.end()
     })
