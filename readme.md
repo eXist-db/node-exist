@@ -70,7 +70,7 @@ uploadAndParse('/db/apps/test-file.xml', Buffer.from('<root/>'))
 ```
 
 You can also have a look at the 
-[examples](https://github.com/eXist-db/node-exist/tree/master/examples) for more use-cases.
+[examples](https://github.com/eXist-db/node-exist/tree/master/spec/examples) for more use-cases.
 
 ## Configuration
 
