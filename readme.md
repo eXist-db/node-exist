@@ -8,18 +8,21 @@ Attempts to translate terminologies into node world. Uses promises.
 
 ## Disclaimer
 
-This software is safe for development but should not be used to alter a production database instance!
-Think twice before your data is lost.
+**Use at your own risk.**
+
+This software is safe for development.
+It may be used to work with a production instance, but think twice before your data is lost.
 
 ## Roadmap
 
-This package will switch to use eXist-db's REST-API.
-
-**Use at your own risk.**
+- [ ] switch to use eXist-db's REST-API.
+- [ ] refactor to ES6 modules
 
 ## Install
 
-    npm install @existdb/node-exist
+```sh
+npm install @existdb/node-exist
+```
 
 ## Use
 
@@ -30,10 +33,9 @@ const exist = require('@existdb/node-exist')
 const db = exist.connect()
 
 db.collections.create('/db/apps/test')
-    .then(result => db.collections.describe('/db/apps/test'))
-    .then(result => console.log('collection description:', result))
-    .catch(e => console.error('fail', e))
-
+  .then(result => db.collections.describe('/db/apps/test'))
+  .then(result => console.log('collection description:', result))
+  .catch(e => console.error('fail', e))
 ```
 
 Uploading an XML file into the database
@@ -46,8 +48,7 @@ db.documents.upload(Buffer.from('<root/>'))
   .then(fileHandle => db.documents.parseLocal(fileHandle, '/db/apps/test/file.xml', {}))
   .then(result => db.documents.read('/db/apps/test/file.xml'))
   .then(result => console.log('test file contents', result))
-  .catch(e => console.error('fail', e))
-
+  .catch(error => console.error('fail', error))
 ```
 
 Since all interactions with the database are promises you can also use async functions
@@ -56,17 +57,16 @@ Since all interactions with the database are promises you can also use async fun
 const exist = require('@existdb/node-exist')
 const db = exist.connect()
 
-async function logResult (query) {
-  try {
-    const result = await db.queries.readAll(query, {})
-    console.log(result)
-  }
-  catch (e) {
-    console.error(e)
-  } 
+async function uploadAndParse (filePath, contents) {
+  const fileHandle = await db.documents.upload(contents)
+  await db.documents.parseLocal(fileHandle, filePath, {})
+  return filePath
 }
 
-logResult('xmldb:get-child-collections("/db/apps")')
+// top-level await is not available everywhere, yet
+uploadAndParse('/db/apps/test-file.xml', Buffer.from('<root/>'))
+  .then(filePath => console.log("uploaded", filePath))
+  .catch(error => console.error(error))
 ```
 
 You can also have a look at the 
@@ -101,7 +101,6 @@ exist.connect({ rejectUnauthorized: false })
 
 ```js
 {
-  collections: '',
   host: 'localhost',
   port: '8443',
   path: '/exist/xmlrpc', // you most likely do not need to change that
@@ -138,7 +137,7 @@ db.queries.read(query, options)
 This convenience function calls queries.count then retrieves all result pages and returns them in an array.
 
 ```js
-    db.queries.readAll(query, options)
+db.queries.readAll(query, options)
 ```
 
 **Example:**
@@ -154,21 +153,29 @@ db.queries.readAll('xquery version "3.1"; xmldb:get-child-collections("/db/apps"
 
 #### count
 
-    db.queries.count(resultHandle)
+```js
+db.queries.count(resultHandle)
+```
 
 #### retrieve
 
-    db.queries.retrieveResult(resultHandle, page)
+```js
+db.queries.retrieveResult(resultHandle, page)
+```
 
 #### retrieveAll
 
-    db.queries.retrieveAll(resultHandle)
+```js
+db.queries.retrieveAll(resultHandle)
+```
 
 #### releaseResult
 
 free result on server
 
-    db.queries.releaseResult(resultHandle)
+```js
+db.queries.releaseResult(resultHandle)
+```
 
 ### Documents
 
@@ -178,20 +185,27 @@ A document can be seen as a file. It might be indexed if it's type is not binary
 
 Resolves into a file handle which can then be used by `db.documents.parseLocal`.
 
-    db.documents.upload(Buffer.from('test'))
+```js
+db.documents.upload(Buffer.from('test'))
+```
 
 #### parseLocal
 
-    db.documents.parseLocal(fileHandle, 'foo/test.txt', {})
+```js
+db.documents.parseLocal(fileHandle, 'foo/test.txt', {})
+```
 
 #### read
 
-    db.documents.read('foo.xml')
+```js
+db.documents.read('foo.xml')
+```
 
 #### remove
 
-    db.documents.remove('foo.xml')
-
+```js
+db.documents.remove('foo.xml')
+```
 
 ### Resources
 
@@ -202,16 +216,21 @@ Documents *and* collections are resources.
 
 #### describe
 
-    db.resources.describe(resourcePath)
+```js
+db.resources.describe(resourcePath)
+```
 
 #### setPermissions
 
-    db.resources.setPermissions(resourcePath, 400)
+```js
+db.resources.setPermissions(resourcePath, 400)
+```
 
 #### getPermissions
 
-    db.resources.getPermissions(resourcePath)
-
+```js
+db.resources.getPermissions(resourcePath)
+```
 
 ### Collections
 
@@ -219,19 +238,27 @@ Status: working
 
 #### create
 
-    db.collections.create(collectionPath)
+```js
+db.collections.create(collectionPath)
+```
 
 #### remove
 
-    db.collections.remove(collectionPath)
+```js
+db.collections.remove(collectionPath)
+```
 
 #### describe
 
-    db.collections.describe(collectionPath)
+```js
+db.collections.describe(collectionPath)
+```
 
 #### read
 
-    db.collections.read(collectionPath)
+```js
+db.collections.read(collectionPath)
+```
 
 ### App
 
@@ -239,20 +266,25 @@ Status: **Experimental**
 
 #### upload
 
-    db.app.upload(xarBuffer, xarName)
+```js
+db.app.upload(xarBuffer, xarName)
+```
 
 #### install
 
-    db.app.install(xarName)
+```js
+db.app.install(xarName)
+```
 
 #### remove
 
-    db.app.remove(xarName)
+```js
+db.app.remove(xarName)
+```
 
 ### Indices
 
 Status: TODO
-
 
 ### Users
 
@@ -260,11 +292,15 @@ Status: failing
 
 #### byName
 
-    db.users.byName(username)
+```js
+db.users.byName(username)
+```
 
 #### list
 
-    db.users.list()
+```js
+db.users.list()
+```
 
 ### server
 
@@ -272,11 +308,15 @@ Status: working
 
 #### syncToDisk
 
-    db.server.syncToDisk()
+```js
+db.server.syncToDisk()
+```
 
 #### shutdown
 
-    db.server.shutdown()
+```js
+db.server.shutdown()
+```
 
 Note: There is no way to bring it up again.
 
@@ -284,4 +324,6 @@ Note: There is no way to bring it up again.
 
 All tests are in **spec/tests** and written for [tape](https://npmjs.org/tape)
 
-    npm test
+```sh
+npm test
+```
