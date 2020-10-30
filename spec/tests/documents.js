@@ -1,11 +1,11 @@
-var test = require('tape')
-var fs = require('fs')
-var exist = require('../../index')
-var connectionOptions = require('../db-connection')
+const test = require('tape')
+const fs = require('fs')
+const exist = require('../../index')
+const connectionOptions = require('../db-connection')
 
 test('upload document', function (t) {
-  var db = exist.connect(connectionOptions)
-  var buffer = Buffer.from('test')
+  const db = exist.connect(connectionOptions)
+  const buffer = Buffer.from('test')
 
   db.documents.upload(buffer, buffer.length)
     .then(function (result) {
@@ -19,8 +19,8 @@ test('upload document', function (t) {
 })
 
 test('upload invalid XML', function (t) {
-  var db = exist.connect(connectionOptions)
-  var buffer = fs.readFileSync('spec/files/invalid.xml')
+  const db = exist.connect(connectionOptions)
+  const buffer = fs.readFileSync('spec/files/invalid.xml')
 
   db.documents.upload(buffer, buffer.length)
     .then(function (result) {
@@ -38,8 +38,8 @@ test('upload invalid XML', function (t) {
 })
 
 test('upload valid XML', function (t) {
-  var db = exist.connect(connectionOptions)
-  var remoteFileName = '/test.xml'
+  const db = exist.connect(connectionOptions)
+  const remoteFileName = '/test.xml'
 
   db.documents.upload(fs.readFileSync('spec/files/test.xml'))
     .then(function (fh) {
@@ -61,11 +61,11 @@ test('upload valid XML', function (t) {
 })
 
 test('download test.xml', function (t) {
-  var db = exist.connect(connectionOptions)
-  var localContents = fs.readFileSync('spec/files/test.xml').toString()
-  var expectedContents = localContents.substr(0, localContents.length - 1) // for some reason the last newline is removed
-  var options = { 'omit-xml-declaration': 'no' } // xml header is cut off by default
-  var remoteFileName = '/test.xml'
+  const db = exist.connect(connectionOptions)
+  const localContents = fs.readFileSync('spec/files/test.xml').toString()
+  const expectedContents = localContents.substr(0, localContents.length - 1) // for some reason the last newline is removed
+  const options = { 'omit-xml-declaration': 'no' } // xml header is cut off by default
+  const remoteFileName = '/test.xml'
 
   db.documents.read(remoteFileName, options)
     .then(function (result) {

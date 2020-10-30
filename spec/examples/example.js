@@ -1,13 +1,13 @@
-var exist = require('../../index')
+const exist = require('../../index')
 
-var db = exist.connect({
+const db = exist.connect({
   basic_auth: {
     user: 'hans',
     pass: '********************'
   }
 })
 
-var collection = 'fo0o'
+const collection = 'fo0o'
 
 db.collections.create(collection)
   .then(function (result) {

@@ -1,9 +1,9 @@
-var test = require('tape')
-var exist = require('../../index')
-var connectionOptions = require('../db-connection')
+const test = require('tape')
+const exist = require('../../index')
+const connectionOptions = require('../db-connection')
 
 test.skip('list users', function (t) {
-  var db = exist.connect(connectionOptions)
+  const db = exist.connect(connectionOptions)
   db.users.list()
     .then(function (r) {
       console.log(r)
@@ -16,7 +16,7 @@ test.skip('list users', function (t) {
 })
 
 test.skip('get user info', function (t) {
-  var db = exist.connect(connectionOptions)
+  const db = exist.connect(connectionOptions)
   db.users.byName('admin')
     .then(function (info) {
       console.log(info)

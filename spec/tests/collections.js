@@ -1,9 +1,9 @@
-var test = require('tape')
-var exist = require('../../index')
-var connectionOptions = require('../db-connection')
+const test = require('tape')
+const exist = require('../../index')
+const connectionOptions = require('../db-connection')
 
 test('get collection info', function (t) {
-  var db = exist.connect(connectionOptions)
+  const db = exist.connect(connectionOptions)
   db.collections.describe('/db')
     .then(function (info) {
       t.equal(info.owner, 'SYSTEM')
@@ -16,7 +16,7 @@ test('get collection info', function (t) {
 })
 
 test('get info for non existent collection', function (t) {
-  var db = exist.connect(connectionOptions)
+  const db = exist.connect(connectionOptions)
   db.collections.describe('/foo')
     .then(function (r) {
       t.fail(r, 'no error')
@@ -34,7 +34,7 @@ test('get info for non existent collection', function (t) {
 })
 
 test('create collection', function (t) {
-  var db = exist.connect(connectionOptions)
+  const db = exist.connect(connectionOptions)
   db.collections.create('new-test-collection')
     .then(function (r) {
       console.log(r, 'create')
@@ -48,8 +48,8 @@ test('create collection', function (t) {
 })
 
 test('remove collection', function (t) {
-  var db = exist.connect(connectionOptions)
-  var testCollection = '/remove-collection'
+  const db = exist.connect(connectionOptions)
+  const testCollection = '/remove-collection'
   db.collections.create(testCollection)
     .then(function () {
       return db.collections.remove(testCollection)

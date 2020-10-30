@@ -1,13 +1,13 @@
-var test = require('tape')
-var exist = require('../../index')
-var connectionOptions = require('../db-connection')
+const test = require('tape')
+const exist = require('../../index')
+const connectionOptions = require('../db-connection')
 
 test('call remote procedure through methodCall', function (t) {
-  var db = exist.connect(connectionOptions)
-  var resultHandle = null
-  var queryString = '<result>{for $i in (1,2) return <i>{$i + $a}</i>}</result>'
-  var queryOptions = { variables: { a: 1 } }
-  var resultMatcher = /^<result>\s*<i>2<\/i>\s*<i>3<\/i>\s*<\/result>$/
+  const db = exist.connect(connectionOptions)
+  let resultHandle = null
+  const queryString = '<result>{for $i in (1,2) return <i>{$i + $a}</i>}</result>'
+  const queryOptions = { variables: { a: 1 } }
+  const resultMatcher = /^<result>\s*<i>2<\/i>\s*<i>3<\/i>\s*<\/result>$/
 
   db.queries.execute(queryString, queryOptions, null)
     .then(function (handle) {
@@ -20,7 +20,7 @@ test('call remote procedure through methodCall', function (t) {
       return db.queries.retrieveAll(resultHandle, hits)
     })
     .then(function (results) {
-      var concatenatedBuffers = Buffer.concat(results)
+      const concatenatedBuffers = Buffer.concat(results)
 
       t.ok(resultMatcher.test(concatenatedBuffers.toString()), 'got expected result')
       return db.queries.releaseResult(resultHandle)
@@ -35,10 +35,10 @@ test('call remote procedure through methodCall', function (t) {
 })
 
 test('call promised query', function (t) {
-  var db = exist.connect(connectionOptions)
-  var queryString = 'for $i in (1, 2, 3) return $i'
-  var options = { start: 2, limit: 1 }
-  var expectedResult = '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist" hits="3" start="2" count="1">\n<exist:value type="xs:integer">2</exist:value>\n</exist:result>'
+  const db = exist.connect(connectionOptions)
+  const queryString = 'for $i in (1, 2, 3) return $i'
+  const options = { start: 2, limit: 1 }
+  const expectedResult = '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist" hits="3" start="2" count="1">\n<exist:value type="xs:integer">2</exist:value>\n</exist:result>'
 
   db.queries.read(queryString, options)
     .then(function (result) {
@@ -52,14 +52,14 @@ test('call promised query', function (t) {
 })
 
 test('call queryAll method', function (t) {
-  var db = exist.connect(connectionOptions)
-  var queryString = 'for $i in (1,2) return $i + $a'
-  var queryOptions = { variables: { a: 10 } }
-  var expectedResult = '11,12'
+  const db = exist.connect(connectionOptions)
+  const queryString = 'for $i in (1,2) return $i + $a'
+  const queryOptions = { variables: { a: 10 } }
+  const expectedResult = '11,12'
 
   db.queries.readAll(queryString, queryOptions)
     .then(function (result) {
-      var csv = result.pages.map(function (p) { return p.toString() }).join(',')
+      const csv = result.pages.map(function (p) { return p.toString() }).join(',')
       t.equal(result.pages.length, result.hits, 'all pages retrieved')
       t.equal(csv, expectedResult, 'got expected result')
       t.end()

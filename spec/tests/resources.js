@@ -1,8 +1,8 @@
-var test = require('tape')
-var exist = require('../../index')
-var connectionOptions = require('../db-connection')
-var testCollection = '/tests'
-var db = exist.connect(connectionOptions)
+const test = require('tape')
+const exist = require('../../index')
+const connectionOptions = require('../db-connection')
+const testCollection = '/tests'
+const db = exist.connect(connectionOptions)
 
 function testGetPermissions (t) {
   // setup
@@ -21,7 +21,7 @@ function testGetPermissions (t) {
 }
 
 function testDescribeResource (t) {
-  var expectedInfo = {
+  const expectedInfo = {
     owner: 'admin',
     'content-length': 1,
     'mime-type': 'application/xquery',
@@ -50,8 +50,8 @@ function testDescribeResource (t) {
 }
 
 function testSetPermissions (t) {
-  var resourcePath = testCollection + '/test.xql'
-  var permissions = 666
+  const resourcePath = testCollection + '/test.xql'
+  const permissions = 666
 
   db.resources.setPermissions(resourcePath, permissions)
     .then(function (result) {
@@ -69,7 +69,7 @@ function testSetPermissions (t) {
 }
 
 test('resources:', function (t) {
-  var db = exist.connect(connectionOptions)
+  const db = exist.connect(connectionOptions)
 
   t.test('setup', function (setup) {
     db.collections.create(testCollection)

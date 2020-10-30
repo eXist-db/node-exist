@@ -6,9 +6,9 @@
  * @returns {Promise}
  */
 function read (client, query, options) {
-  var limit = options.limit || 1
-  var start = options.start || 1 // yes, it seems to be 1-based
-  var queryOptions = options || {}
+  const limit = options.limit || 1
+  const start = options.start || 1 // yes, it seems to be 1-based
+  const queryOptions = options || {}
 
   // these cause null exceptions in exist XML RPC
   delete queryOptions.start
@@ -37,7 +37,7 @@ function retrieveResult (client, handle, position) {
 }
 
 function getAllResults (client, handle, position) {
-  var results = []
+  const results = []
   while (position--) {
     results.push(retrieveResult(client, handle, position))
   }
