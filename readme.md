@@ -6,17 +6,9 @@
 Mostly a shallow wrapper for [eXist's XML-RPC API](http://exist-db.org/exist/apps/doc/devguide_xmlrpc.xml).
 Attempts to translate terminologies into node world. Uses promises.
 
-## Disclaimer
-
-**Use at your own risk.**
-
-This software is safe for development.
-It may be used to work with a production instance, but think twice before your data is lost.
-
-## Roadmap
-
-- [ ] switch to use eXist-db's REST-API.
-- [ ] refactor to ES6 modules
+- [Roadmap](#roadmap)
+- [Compatibility](#compatibility)
+- [Disclaimer](#disclaimer)
 
 ## Install
 
@@ -367,3 +359,20 @@ All tests are in **spec/tests** and written for [tape](https://npmjs.org/tape)
 ```sh
 npm test
 ```
+
+## Roadmap
+
+- [ ] switch to use eXist-db's REST-API.
+- [ ] refactor to ES6 modules
+
+## Compatibility
+
+**node-exist** is tested to be compatible with **eXist-db 4 and 5**.
+It should be compatible with version 3, except XAR installation.
+
+## Disclaimer
+
+**Use at your own risk.**
+
+This software is safe for development.
+It may be used to work with a production instance, but think twice before your data is lost.
