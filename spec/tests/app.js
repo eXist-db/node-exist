@@ -1,13 +1,7 @@
-const test = require('tape')
-const exist = require('../../index')
-
 const fs = require('fs')
+const test = require('tape')
 const app = require('../../components/app')
-const connectionOptions = require('../db-connection')
-
-const appUri = 'http://exist-db.org/apps/test-app'
-const xarBuffer = fs.readFileSync('spec/files/test-app.xar')
-const xarTarget = 'uploadTest.xar'
+const exist = require('../../index')
 
 test('app component exports install method', function (t) {
   t.equal(typeof app.install, 'function')
@@ -24,55 +18,35 @@ test('app component exports upload method', function (t) {
   t.end()
 })
 
-test('upload app', function (t) {
-  const db = exist.connect(connectionOptions)
+test('upload and install application XAR', function (t) {
+  const db = exist.connect(require('../db-connection'))
 
-  t.plan(1)
-  db.app.upload(xarBuffer, xarTarget)
-    .then(function (result) {
-      t.equal(result, true)
-    })
-    .catch(function (e) {
-      t.fail(e)
-    })
-})
+  const xarBuffer = fs.readFileSync('spec/files/test-app.xar')
+  const xarName = 'test-app.xar'
+  const appNamespace = 'http://exist-db.org/apps/test-app'
 
-test('install app', function (t) {
-  const db = exist.connect(connectionOptions)
-  const expected = '<status xmlns="http://exist-db.org/xquery/repo" result="ok" target="/db/apps/test-app"/>'
+  t.test('upload app', function (st) {
+    st.plan(1)
+    db.app.upload(xarBuffer, xarName)
+      .then(result => st.equal(result, true))
+      .catch(e => st.fail(e))
+  })
 
-  t.plan(1)
-  db.app.install(xarTarget)
-    .then(function (result) {
-      t.equal(result, expected)
-    })
-    .catch(function (e) {
-      t.fail(e)
-    })
-})
+  t.test('install app', function (st) {
+    const expected = '<status xmlns="http://exist-db.org/xquery/repo" result="ok" target="/db/apps/test-app"/>'
 
-test('remove installed app', function (t) {
-  const db = exist.connect(connectionOptions)
-  const expected = '<status xmlns="http://exist-db.org/xquery/repo" result="ok" target="test-app"/>,true'
+    st.plan(1)
+    db.app.install(xarName)
+      .then(result => st.equal(result, expected))
+      .catch(e => st.fail(e))
+  })
 
-  t.plan(1)
-  db.app.remove(appUri)
-    .then(function (result) {
-      t.equal(result, expected)
-    })
-    .catch(function (e) {
-      t.fail(e)
-    })
-})
+  t.test('remove installed app', function (st) {
+    const expected = '<status xmlns="http://exist-db.org/xquery/repo" result="ok" target="test-app"/>,true'
 
-test('teardown', function tearDown (t) {
-  const db = exist.connect(connectionOptions)
-  function logAndEnd (r) {
-    console.log(r)
-    t.end()
-  }
-
-  db.documents.remove(xarTarget)
-    .then(logAndEnd)
-    .catch(logAndEnd)
+    st.plan(1)
+    db.app.remove(appNamespace)
+      .then(result => st.equal(result, expected))
+      .catch(e => st.fail(e))
+  })
 })

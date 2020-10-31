@@ -107,7 +107,8 @@ exist.connect({ rejectUnauthorized: false })
   basic_auth: {
     user: 'guest',
     pass: 'guest'
-  }
+  },
+  secure: true
 }
 ```
 
@@ -262,12 +263,20 @@ db.collections.read(collectionPath)
 
 ### App
 
-Status: **Experimental**
+Status: working
 
 #### upload
 
 ```js
 db.app.upload(xarBuffer, xarName)
+```
+
+**Example:**
+
+```js
+db.app.upload(fs.readFileSync('spec/files/test-app.xar'), 'test-app.xar')
+  .then(result => console.log(result))
+  .catch(e => console.error(e))
 ```
 
 #### install
@@ -276,10 +285,26 @@ db.app.upload(xarBuffer, xarName)
 db.app.install(xarName)
 ```
 
+**Example:**
+
+```js
+db.app.install('test-app.xar')
+  .then(result => console.log(result))
+  .catch(e => console.error(e))
+```
+
 #### remove
 
 ```js
-db.app.remove(xarName)
+db.app.remove(applicationNamespace)
+```
+
+**Example:**
+
+```js
+db.app.remove('http://exist-db.org/apps/test-app')
+  .then(result => console.log(result))
+  .catch(e => console.error(e))
 ```
 
 ### Indices
