@@ -144,11 +144,18 @@ db.queries.readAll(query, options)
 **Example:**
 
 ```js
-db.queries.readAll('xquery version "3.1"; xmldb:get-child-collections("/db/apps") => string-join(",\n")', {})
-  .then(result => console.log(
-    Buffer.concat(result.pages).toString()))
-  .catch(e => console.error(e))
+const query = `xquery version "3.1";
+xmldb:get-child-collections($collection)
+  => string-join(",\n")
+`
+const options = { variables: collection: "/db/apps" }
 
+db.queries.readAll(query, options)
+  .then(result => {
+    const response = Buffer.concat(result.pages).toString() 
+    console.log(response)
+  })
+  .catch(error => console.error(error))
 ```
 
 
@@ -267,6 +274,8 @@ Status: working
 
 #### upload
 
+After uploading a XAR you can install it
+
 ```js
 db.app.upload(xarBuffer, xarName)
 ```
@@ -274,12 +283,16 @@ db.app.upload(xarBuffer, xarName)
 **Example:**
 
 ```js
-db.app.upload(fs.readFileSync('spec/files/test-app.xar'), 'test-app.xar')
+const xarContents = fs.readFileSync('spec/files/test-app.xar')
+
+db.app.upload(xarContents, 'test-app.xar')
   .then(result => console.log(result))
-  .catch(e => console.error(e))
+  .catch(error => console.error(error))
 ```
 
 #### install
+
+Install an uploaded XAR (this will call `repo:install-and-deploy-from-db`).
 
 ```js
 db.app.install(xarName)
@@ -290,10 +303,12 @@ db.app.install(xarName)
 ```js
 db.app.install('test-app.xar')
   .then(result => console.log(result))
-  .catch(e => console.error(e))
+  .catch(error => console.error(error))
 ```
 
 #### remove
+
+Uninstall _and_ remove the application identified by its namespace URL.
 
 ```js
 db.app.remove(applicationNamespace)
@@ -304,7 +319,7 @@ db.app.remove(applicationNamespace)
 ```js
 db.app.remove('http://exist-db.org/apps/test-app')
   .then(result => console.log(result))
-  .catch(e => console.error(e))
+  .catch(error => console.error(error))
 ```
 
 ### Indices
