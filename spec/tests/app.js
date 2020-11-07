@@ -23,30 +23,92 @@ test('upload and install application XAR', function (t) {
 
   const xarBuffer = fs.readFileSync('spec/files/test-app.xar')
   const xarName = 'test-app.xar'
-  const appNamespace = 'http://exist-db.org/apps/test-app'
+  const packageUri = 'http://exist-db.org/apps/test-app'
+  const packageTarget = '/db/apps/test-app'
 
   t.test('upload app', function (st) {
     st.plan(1)
     db.app.upload(xarBuffer, xarName)
-      .then(result => st.equal(result, true))
+      .then(result => st.equal(result.success, true))
+      .catch(e => {
+        st.fail(e)
+        st.end()
+      })
+  })
+
+  t.test('install app', function (st) {
+    db.app.install(xarName, packageUri)
+      .then(result => {
+        if (!result.success) { return Promise.reject(result.error) }
+        st.plan(3)
+        st.equal(result.success, true, 'the application should have been installed')
+        st.equal(result.update, false, 'there should be no previous installation')
+        st.equal(result.target, packageTarget, 'the correct target should be returned')
+      })
+      .catch(e => {
+        st.fail(e)
+        st.end()
+      })
+  })
+
+  t.test('re-install app', function (st) {
+    db.app.install(xarName, packageUri)
+      .then(result => {
+        if (!result.success) { return Promise.reject(result.error) }
+        st.plan(3)
+        st.equal(result.success, true)
+        st.equal(result.update, true)
+        st.equal(result.target, packageTarget, 'the correct target should be returned')
+      })
+      .catch(e => {
+        st.fail(e)
+        st.end()
+      })
+  })
+
+  t.test('remove installed app', function (st) {
+    st.plan(2)
+    db.app.remove(packageUri)
+      .then(result => st.equal(result.success, true, 'uninstalled'))
+      .then(_ => db.documents.remove('/db/system/repo/test-app.xar'))
+      .then(result => st.equal(result, true, 'removed'))
+      .catch(e => st.fail(e))
+  })
+})
+
+test('empty application XAR', function (t) {
+  const db = exist.connect(require('../db-connection'))
+
+  const xarBuffer = Buffer.from('')
+  const xarName = 'test-empty-app.xar'
+  const packageUri = 'http://exist-db.org/apps/test-empty-app'
+
+  t.test('upload app', function (st) {
+    st.plan(1)
+    db.app.upload(xarBuffer, xarName)
+      .then(result => st.equal(result.success, true))
       .catch(e => st.fail(e))
   })
 
   t.test('install app', function (st) {
-    const expected = '<status xmlns="http://exist-db.org/xquery/repo" result="ok" target="/db/apps/test-app"/>'
-
-    st.plan(1)
-    db.app.install(xarName)
-      .then(result => st.equal(result, expected))
-      .catch(e => st.fail(e))
+    db.app.install(xarName, packageUri)
+      .then(result => {
+        if (!result.error.code) { return Promise.reject(result.error) }
+        st.plan(3)
+        st.equal(result.success, false)
+        st.equal(result.error.code, 'experr:EXPATH00')
+        st.equal(result.error.value, 'Missing descriptor from package: /db/system/repo/test-empty-app.xar')
+      })
+      .catch(e => {
+        st.fail(e)
+        st.end()
+      })
   })
 
-  t.test('remove installed app', function (st) {
-    const expected = '<status xmlns="http://exist-db.org/xquery/repo" result="ok" target="test-app"/>,true'
-
+  t.test('cleanup', function (st) {
     st.plan(1)
-    db.app.remove(appNamespace)
-      .then(result => st.equal(result, expected))
+    db.documents.remove('/db/system/repo/test-empty-app.xar')
+      .then(result => st.equal(result, true))
       .catch(e => st.fail(e))
   })
 })

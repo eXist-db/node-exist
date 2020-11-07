@@ -1,38 +1,81 @@
+/**
+ * @typedef { import("xmlrpc").Client } XMLRPCClient
+ */
+
+/**
+ * @typedef {Object} NormalizedQueryResult
+ * @prop {boolean} success
+ * @prop {Error | {code:string, value:string}} [error]
+ */
+
+const fs = require('fs')
 const queries = require('./queries')
 const documents = require('./documents')
+const installQueryString = fs.readFileSync('xquery/install-package.xq')
+const removeQueryString = fs.readFileSync('xquery/remove-package.xq')
 
+/**
+ * Upload XAR package to an existdb instance
+ *
+ * @param {XMLRPCClient} client db connection
+ * @param {Buffer} xarBuffer XAR package contents (binary zip)
+ * @param {String} xarName the filename that will be stored in /db/system/repo
+ * @returns {NormalizedQueryResult} the result of the action
+ */
 function upload (client, xarBuffer, xarName) {
   return documents.upload(client, xarBuffer)
     .then(fh => documents.parseLocal(client, fh, `/db/system/repo/${xarName}`, {}))
-    .then(results => results)
-    .catch(e => e)
+    .then(success => { return { success } })
+    .catch(error => { return { success: false, error } })
 }
 
-function install (client, xarName) {
-  const installQueryString = 'repo:install-and-deploy-from-db("/db/system/repo/" || $xarName)'
-  const queryOptions = { variables: { xarName } }
+/**
+ * Install and deploy a XAR that was uploaded to the database instance
+ * A previously installed version will be removed
+ * NOTE: Dependencies declared in expath-pkg.xml are not taken into account!
+ *
+ * @param {XMLRPCClient} client db connection
+ * @param {String} xarName the name of a XAR file, must be present in /db/system/repo
+ * @param {String} packageUri unique package descriptor
+ * @returns {NormalizedQueryResult} the result of the action
+ */
+function install (client, xarName, packageUri) {
+  const queryOptions = { variables: { xarName, packageUri } }
+
+  return queries.readAll(client, installQueryString, queryOptions)
+    .then(result => JSON.parse(result.pages.toString()))
+    .catch(error => { return { success: false, error } })
+}
+
+/**
+ * experimental: only deploy an application that is already installed
+ *
+ * @param {XMLRPCClient} client db connection
+ * @param {String} packageUri unique package descriptor
+ * @returns {NormalizedQueryResult | Object} the result of the action
+ */
+function deploy (client, packageUri) {
+  const installQueryString = 'repo:deploy($packageUri)'
+  const queryOptions = { variables: { packageUri } }
 
   return queries.readAll(client, installQueryString, queryOptions)
     .then(result => result.pages.toString())
-    .catch(e => e)
+    .catch(error => { return { success: false, error } })
 }
 
-function deploy (client, uri) {
-  const installQueryString = 'repo:deploy($uri)'
-  const queryOptions = { variables: { uri } }
-
-  return queries.readAll(client, installQueryString, queryOptions)
-    .then(result => result.pages.toString())
-    .catch(e => e)
-}
-
-function remove (client, uri) {
-  const removeQueryString = '(repo:undeploy($uri), repo:remove($uri))'
-  const queryOptions = { variables: { uri } }
-
+/**
+ * Remove an installed application
+ * will report success if the application was not found
+ *
+ * @param {XMLRPCClient} client db connection
+ * @param {String} packageUri unique package descriptor
+ * @returns {NormalizedQueryResult} the result of the action
+ */
+function remove (client, packageUri) {
+  const queryOptions = { variables: { packageUri } }
   return queries.readAll(client, removeQueryString, queryOptions)
-    .then(result => result.pages.toString())
-    .catch(e => e)
+    .then(result => JSON.parse(result.pages.toString()))
+    .catch(error => { return { success: false, error } })
 }
 
 module.exports = {
