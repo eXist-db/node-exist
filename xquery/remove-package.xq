@@ -18,12 +18,12 @@ try {
 catch * {
     serialize(
         map {
+            "success": false(),
             "error": map {
                 "code": $err:code,
                 "description": $err:description,
                 "value": $err:value
-            },
-            "success": false()
+            }
         },
         map {"method":"json"}
     )

@@ -38,12 +38,12 @@ test('upload and install application XAR', function (t) {
 
   t.test('install app', function (st) {
     db.app.install(xarName, packageUri)
-      .then(result => {
-        if (!result.success) { return Promise.reject(result.error) }
+      .then(response => {
+        if (!response.success) { return Promise.reject(response.error) }
         st.plan(3)
-        st.equal(result.success, true, 'the application should have been installed')
-        st.equal(result.update, false, 'there should be no previous installation')
-        st.equal(result.target, packageTarget, 'the correct target should be returned')
+        st.equal(response.success, true, 'the application should have been installed')
+        st.equal(response.result.update, false, 'there should be no previous installation')
+        st.equal(response.result.target, packageTarget, 'the correct target should be returned')
       })
       .catch(e => {
         st.fail(e)
@@ -53,12 +53,12 @@ test('upload and install application XAR', function (t) {
 
   t.test('re-install app', function (st) {
     db.app.install(xarName, packageUri)
-      .then(result => {
-        if (!result.success) { return Promise.reject(result.error) }
+      .then(response => {
+        if (!response.success) { return Promise.reject(response.error) }
         st.plan(3)
-        st.equal(result.success, true)
-        st.equal(result.update, true)
-        st.equal(result.target, packageTarget, 'the correct target should be returned')
+        st.equal(response.success, true)
+        st.equal(response.result.update, true)
+        st.equal(response.result.target, packageTarget, 'the correct target should be returned')
       })
       .catch(e => {
         st.fail(e)
@@ -69,9 +69,9 @@ test('upload and install application XAR', function (t) {
   t.test('remove installed app', function (st) {
     st.plan(2)
     db.app.remove(packageUri)
-      .then(result => st.equal(result.success, true, 'uninstalled'))
+      .then(response => st.equal(response.success, true, 'uninstalled'))
       .then(_ => db.documents.remove('/db/system/repo/test-app.xar'))
-      .then(result => st.equal(result, true, 'removed'))
+      .then(response => st.equal(response, true, 'removed'))
       .catch(e => st.fail(e))
   })
 })
@@ -86,18 +86,18 @@ test('empty application XAR', function (t) {
   t.test('upload app', function (st) {
     st.plan(1)
     db.app.upload(xarBuffer, xarName)
-      .then(result => st.equal(result.success, true))
+      .then(response => st.equal(response.success, true))
       .catch(e => st.fail(e))
   })
 
   t.test('install app', function (st) {
     db.app.install(xarName, packageUri)
-      .then(result => {
-        if (!result.error.code) { return Promise.reject(result.error) }
+      .then(response => {
+        if (!response.error.code) { return Promise.reject(response.error) }
         st.plan(3)
-        st.equal(result.success, false)
-        st.equal(result.error.code, 'experr:EXPATH00')
-        st.equal(result.error.value, 'Missing descriptor from package: /db/system/repo/test-empty-app.xar')
+        st.equal(response.success, false)
+        st.equal(response.error.code, 'experr:EXPATH00')
+        st.equal(response.error.value, 'Missing descriptor from package: /db/system/repo/test-empty-app.xar')
       })
       .catch(e => {
         st.fail(e)
@@ -108,7 +108,7 @@ test('empty application XAR', function (t) {
   t.test('cleanup', function (st) {
     st.plan(1)
     db.documents.remove('/db/system/repo/test-empty-app.xar')
-      .then(result => st.equal(result, true))
+      .then(response => st.equal(response, true))
       .catch(e => st.fail(e))
   })
 })

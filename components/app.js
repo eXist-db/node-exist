@@ -5,7 +5,8 @@
 /**
  * @typedef {Object} NormalizedQueryResult
  * @prop {boolean} success
- * @prop {Error | {code:string, value:string}} [error]
+ * @prop {Object} [result] detailed information, if the operation succeeded
+ * @prop {Error | {code:string, value:string}} [error] detailed information, if the operation failed
  */
 
 const fs = require('fs')
@@ -13,6 +14,7 @@ const queries = require('./queries')
 const documents = require('./documents')
 const installQueryString = fs.readFileSync('xquery/install-package.xq')
 const removeQueryString = fs.readFileSync('xquery/remove-package.xq')
+const defaultPackageRepo = 'http://exist-db.org/exist/apps/public-repo'
 
 /**
  * Upload XAR package to an existdb instance
@@ -32,15 +34,16 @@ function upload (client, xarBuffer, xarName) {
 /**
  * Install and deploy a XAR that was uploaded to the database instance
  * A previously installed version will be removed
- * NOTE: Dependencies declared in expath-pkg.xml are not taken into account!
  *
  * @param {XMLRPCClient} client db connection
  * @param {String} xarName the name of a XAR file, must be present in /db/system/repo
  * @param {String} packageUri unique package descriptor
+ * @param {String} [customPackageRepoUrl] a different repository to resolve package dependencies
  * @returns {NormalizedQueryResult} the result of the action
  */
-function install (client, xarName, packageUri) {
-  const queryOptions = { variables: { xarName, packageUri } }
+function install (client, xarName, packageUri, customPackageRepoUrl) {
+  const publicRepoURL = customPackageRepoUrl || defaultPackageRepo
+  const queryOptions = { variables: { xarName, packageUri, publicRepoURL } }
 
   return queries.readAll(client, installQueryString, queryOptions)
     .then(result => JSON.parse(result.pages.toString()))
