@@ -358,6 +358,7 @@ db.app.remove('http://exist-db.org/apps/test-app')
   success: false,
   error: Object | Error
 }
+```
 
 ### Indices
 
