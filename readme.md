@@ -285,6 +285,8 @@ db.app.upload(xarContents, 'test-app.xar')
 #### install
 
 Install an uploaded XAR (this will call `repo:install-and-deploy-from-db`).
+For extra safety a previously installed version will be removed before
+installing the new version.
 
 ```js
 db.app.install(xarName)
@@ -298,12 +300,35 @@ db.app.install('test-app.xar')
   .catch(error => console.error(error))
 ```
 
+**Returns**
+
+```js
+{
+  "success": true,
+  "update": false, // true if a previous version was found
+  "target": "/db/apps/test-app"
+}
+```
+
+**Error**
+
+```js
+{
+  "success": false,
+  "error": {
+    "code": "err:EXPATH00",
+    "value": "Missing descriptor from package: /db/system/repo/test-app.xar"
+  }
+}
+```
+
 #### remove
 
 Uninstall _and_ remove the application identified by its namespace URL.
+If no app with `packageUri` could be found then this counts as success.
 
 ```js
-db.app.remove(applicationNamespace)
+db.app.remove(packageUri)
 ```
 
 **Example:**
@@ -313,6 +338,20 @@ db.app.remove('http://exist-db.org/apps/test-app')
   .then(result => console.log(result))
   .catch(error => console.error(error))
 ```
+
+**Returns**
+
+```js
+{ success: true }
+```
+
+**Error**
+
+```js
+{
+  success: false,
+  error: Object | Error
+}
 
 ### Indices
 
