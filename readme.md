@@ -288,14 +288,18 @@ Install an uploaded XAR (this will call `repo:install-and-deploy-from-db`).
 For extra safety a previously installed version will be removed before
 installing the new version.
 
+Dependencies will be resolved from <http://exist-db.org/exist/apps/public-repo>
+by default.
+If you want to use a different repository provide the optional `customPackageRepoUrl`.
+
 ```js
-db.app.install(xarName)
+db.app.install(xarName, packageUri[, customPackageRepoUrl])
 ```
 
 **Example:**
 
 ```js
-db.app.install('test-app.xar')
+db.app.install('test-app.xar', 'http://exist-db.org/apps/test-app')
   .then(result => console.log(result))
   .catch(error => console.error(error))
 ```
@@ -305,8 +309,10 @@ db.app.install('test-app.xar')
 ```js
 {
   "success": true,
-  "update": false, // true if a previous version was found
-  "target": "/db/apps/test-app"
+  "result": {
+    "update": false, // true if a previous version was found
+    "target": "/db/apps/test-app"
+  }
 }
 ```
 
