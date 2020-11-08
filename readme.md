@@ -6,17 +6,9 @@
 Mostly a shallow wrapper for [eXist's XML-RPC API](http://exist-db.org/exist/apps/doc/devguide_xmlrpc.xml).
 Attempts to translate terminologies into node world. Uses promises.
 
-## Disclaimer
-
-**Use at your own risk.**
-
-This software is safe for development.
-It may be used to work with a production instance, but think twice before your data is lost.
-
-## Roadmap
-
-- [ ] switch to use eXist-db's REST-API.
-- [ ] refactor to ES6 modules
+- [Roadmap](#roadmap)
+- [Compatibility](#compatibility)
+- [Disclaimer](#disclaimer)
 
 ## Install
 
@@ -107,7 +99,8 @@ exist.connect({ rejectUnauthorized: false })
   basic_auth: {
     user: 'guest',
     pass: 'guest'
-  }
+  },
+  secure: true
 }
 ```
 
@@ -143,11 +136,18 @@ db.queries.readAll(query, options)
 **Example:**
 
 ```js
-db.queries.readAll('xquery version "3.1"; xmldb:get-child-collections("/db/apps") => string-join(",\n")', {})
-  .then(result => console.log(
-    Buffer.concat(result.pages).toString()))
-  .catch(e => console.error(e))
+const query = `xquery version "3.1";
+xmldb:get-child-collections($collection)
+  => string-join(",\n")
+`
+const options = { variables: collection: "/db/apps" }
 
+db.queries.readAll(query, options)
+  .then(result => {
+    const response = Buffer.concat(result.pages).toString() 
+    console.log(response)
+  })
+  .catch(error => console.error(error))
 ```
 
 
@@ -262,25 +262,102 @@ db.collections.read(collectionPath)
 
 ### App
 
-Status: **Experimental**
+Status: working
 
 #### upload
+
+After uploading a XAR you can install it
 
 ```js
 db.app.upload(xarBuffer, xarName)
 ```
 
-#### install
+**Example:**
 
 ```js
-db.app.install(xarName)
+const xarContents = fs.readFileSync('spec/files/test-app.xar')
+
+db.app.upload(xarContents, 'test-app.xar')
+  .then(result => console.log(result))
+  .catch(error => console.error(error))
+```
+
+#### install
+
+Install an uploaded XAR (this will call `repo:install-and-deploy-from-db`).
+For extra safety a previously installed version will be removed before
+installing the new version.
+
+Dependencies will be resolved from <http://exist-db.org/exist/apps/public-repo>
+by default.
+If you want to use a different repository provide the optional `customPackageRepoUrl`.
+
+```js
+db.app.install(xarName, packageUri[, customPackageRepoUrl])
+```
+
+**Example:**
+
+```js
+db.app.install('test-app.xar', 'http://exist-db.org/apps/test-app')
+  .then(result => console.log(result))
+  .catch(error => console.error(error))
+```
+
+**Returns**
+
+```js
+{
+  "success": true,
+  "result": {
+    "update": false, // true if a previous version was found
+    "target": "/db/apps/test-app"
+  }
+}
+```
+
+**Error**
+
+```js
+{
+  "success": false,
+  "error": {
+    "code": "err:EXPATH00",
+    "value": "Missing descriptor from package: /db/system/repo/test-app.xar"
+  }
+}
 ```
 
 #### remove
 
+Uninstall _and_ remove the application identified by its namespace URL.
+If no app with `packageUri` could be found then this counts as success.
+
 ```js
-db.app.remove(xarName)
+db.app.remove(packageUri)
 ```
+
+**Example:**
+
+```js
+db.app.remove('http://exist-db.org/apps/test-app')
+  .then(result => console.log(result))
+  .catch(error => console.error(error))
+```
+
+**Returns**
+
+```js
+{ success: true }
+```
+
+**Error**
+
+```js
+{
+  success: false,
+  error: Object | Error
+}
 
 ### Indices
 
@@ -327,3 +404,20 @@ All tests are in **spec/tests** and written for [tape](https://npmjs.org/tape)
 ```sh
 npm test
 ```
+
+## Roadmap
+
+- [ ] switch to use eXist-db's REST-API.
+- [ ] refactor to ES6 modules
+
+## Compatibility
+
+**node-exist** is tested to be compatible with **eXist-db 4 and 5**.
+It should be compatible with version 3, except XAR installation.
+
+## Disclaimer
+
+**Use at your own risk.**
+
+This software is safe for development.
+It may be used to work with a production instance, but think twice before your data is lost.

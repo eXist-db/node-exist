@@ -29,7 +29,6 @@ env:
   - img=existdb/existdb:latest
   - img=existdb/existdb:release
   - img=existdb/existdb:4.7.1
-  - img=evolvedbinary/exist-db:eXist-3.6.1-minimal
 
 notifications:
   email: false
