@@ -4,16 +4,18 @@
 
 /**
  * @typedef {Object} NormalizedQueryResult
- * @prop {boolean} success
+ * @prop {boolean} success true, if operation succeeded
  * @prop {Object} [result] detailed information, if the operation succeeded
  * @prop {Error | {code:string, value:string}} [error] detailed information, if the operation failed
  */
 
 const fs = require('fs')
+const path = require('path')
 const queries = require('./queries')
 const documents = require('./documents')
-const installQueryString = fs.readFileSync('xquery/install-package.xq')
-const removeQueryString = fs.readFileSync('xquery/remove-package.xq')
+const xqueryPath = path.resolve(__dirname, '../xquery/')
+const installQueryString = fs.readFileSync(path.join(xqueryPath, 'install-package.xq'))
+const removeQueryString = fs.readFileSync(path.join(xqueryPath, 'remove-package.xq'))
 const defaultPackageRepo = 'http://exist-db.org/exist/apps/public-repo'
 
 /**
