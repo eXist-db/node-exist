@@ -43,9 +43,9 @@ function upload (client, xarBuffer, xarName) {
  * @param {String} [customPackageRepoUrl] a different repository to resolve package dependencies
  * @returns {NormalizedQueryResult} the result of the action
  */
-function install (client, xarName, packageUri, customPackageRepoUrl) {
+function install (client, xarName, customPackageRepoUrl) {
   const publicRepoURL = customPackageRepoUrl || defaultPackageRepo
-  const queryOptions = { variables: { xarName, packageUri, publicRepoURL } }
+  const queryOptions = { variables: { xarPath: `/db/system/repo/${xarName}`, publicRepoURL } }
 
   return queries.readAll(client, installQueryString, queryOptions)
     .then(result => JSON.parse(result.pages.toString()))
