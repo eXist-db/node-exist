@@ -16,7 +16,7 @@ const documents = require('./documents')
 const xqueryPath = path.resolve(__dirname, '../xquery/')
 const installQueryString = fs.readFileSync(path.join(xqueryPath, 'install-package.xq'))
 const removeQueryString = fs.readFileSync(path.join(xqueryPath, 'remove-package.xq'))
-const defaultPackageRepo = 'http://exist-db.org/exist/apps/public-repo'
+const defaultPackageRepo = 'https://exist-db.org/exist/apps/public-repo'
 
 /**
  * Upload XAR package to an existdb instance
