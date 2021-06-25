@@ -1,3 +1,13 @@
+//* /@type/..[name]
+/**
+ * @typedef {import('xmlrpc').Client} XMLRPCClient
+ * @typedef {import('./index')}
+ * @typedef {import('./index').Modules} Modules
+ * @typedef {import('./index').Module} Module
+ * @typedef {import('./index').BoundModule} BoundModule
+ * @typedef {import('./index').ConnectionOptions} ConnectionOptions
+ */
+
 const mime = require('mime')
 
 // components
@@ -19,41 +29,53 @@ mime.define({
 
 // helper functions
 
-function applyWith (func, client) {
-  return function () {
-    const args = Array.prototype.slice.call(arguments)
-    return func.apply(null, [client].concat(args))
-  }
-}
-
-function applyEachWith (module, client) {
+/**
+ *
+ * @param {XMLRPCClient} client
+ * @param {Module} module a component that exports a variety of functions
+ * @returns {BoundModule} bound module functions
+ */
+function bindEachInModuleTo (client, module) {
   const methods = {}
   for (const method in module) {
-    methods[method] = applyWith(module[method], client)
+    const f = module[method]
+    methods[method] = f.bind(null, client)
   }
   return methods
 }
 
-module.exports = {
-  connect: function (options) {
-    const client = connection(options)
+/**
+ * connect to an existdb instance
+ *
+ * @param {ConnectionOptions} options
+ * @returns {Modules}
+ */
+function connect (options) {
+  const client = connection(options)
 
-    return {
-      client: client,
-      server: applyEachWith(database, client),
-      queries: applyEachWith(queries, client),
-      resources: applyEachWith(resources, client),
-      documents: applyEachWith(documents, client),
-      collections: applyEachWith(collections, client),
-      indices: applyEachWith(indices, client),
-      users: applyEachWith(users, client),
-      app: applyEachWith(app, client)
-    }
-  },
-  defineMimeTypes: function (mimeTypes) {
-    mime.define(mimeTypes)
-  },
-  getMimeType: function (path) {
-    return mime.getType(path)
+  return {
+    client: client,
+    server: bindEachInModuleTo(client, database),
+    queries: bindEachInModuleTo(client, queries),
+    resources: bindEachInModuleTo(client, resources),
+    documents: bindEachInModuleTo(client, documents),
+    collections: bindEachInModuleTo(client, collections),
+    indices: bindEachInModuleTo(client, indices),
+    users: bindEachInModuleTo(client, users),
+    app: bindEachInModuleTo(client, app)
   }
+}
+
+function defineMimeTypes (mimeTypes) {
+  mime.define(mimeTypes)
+}
+
+function getMimeType (path) {
+  return mime.getType(path)
+}
+
+module.exports = {
+  connect,
+  defineMimeTypes,
+  getMimeType
 }
