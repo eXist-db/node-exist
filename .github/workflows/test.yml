@@ -26,8 +26,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: npm install and build
-        run:
-          npm ci
+        run: npm ci
 
       - name: Pull docker image
         run: docker pull existdb/existdb:${{ matrix.docker-tag }}
@@ -37,6 +36,9 @@ jobs:
 
       - name: Start docker image
         run: docker start exist-ci
+
+      - name: Wait for existdb startup
+        run: sleep 30
 
       - name: npm test
         run: npm test
