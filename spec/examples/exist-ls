@@ -6,21 +6,23 @@ const db = exist.connect({ secure: false, port: 8080 })
 async function ls (collection) {
     try {
         const query = `
+        declare variable $collection external;
+
         (
-            xmldb:get-child-collections("${collection}"),
-            xmldb:get-child-resources("${collection}")
+            xmldb:get-child-collections($collection),
+            xmldb:get-child-resources($collection)
         )
             => (function ($collections) { array { $collections } })()
             => serialize(map { "method": "json" })
         `
-        const result = await db.queries.readAll(query, {})
+        const result = await db.queries.readAll(query, { variables: {collection} })
         const json = JSON.parse(result.pages.toString())
         console.log(json)
     }
     catch (e) {
         let message = e.faultString ? e.faultString : e.message
         console.error("Could not run query! Reason:", message)
-    } 
+    }
 }
 
 if (!process.argv[2]) {
