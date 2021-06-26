@@ -19,10 +19,10 @@ jobs:
           npm ci
 
       - name: Pull docker image
-        run: docker pull exist/existdb:${{ matrix.docker-tag }}
+        run: docker pull exist/existdb:release
 
       - name: Build docker image
-        run: docker create --name exist-ci -p 8080:8080 -p 8443:8443 exist/existdb:${{ matrix.docker-tag }}
+        run: docker create --name exist-ci -p 8080:8080 -p 8443:8443 exist/existdb:release
 
       - name: Start docker image
         run: docker start exist-ci
