@@ -2,7 +2,8 @@
 .*
 !.gitignore
 !.npmignore
-!.travis.yml
+!.github
+!.releaserc
 
 # dependencies
 node_modules
