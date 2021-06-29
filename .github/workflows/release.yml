@@ -5,34 +5,48 @@ on:
     branches:
       - master
 
+# Tests cannot run on windows due to issues with the windows server 2019 images 
+# the github action runners are using not being able to run linux docker images
+# https://github.com/actions/virtual-environments/issues/1143
+
 jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: ['10', '12', '14']
+        docker-tag: [latest, release, 4.7.1]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/setup-existdb
+        with:
+          docker-tag: ${{ matrix.docker-tag }}
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
   release:
-    name: Release
+    needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
-          node-version: "14.x"
+          node-version: '14'
 
-      - name: npm install and build
-        run:
+      - name: Release package to npmjs
+        run: |
           npm ci
-
-      - name: Pull docker image
-        run: docker pull existdb/existdb:release
-
-      - name: Build docker image
-        run: docker create --name exist-ci -p 8080:8080 -p 8443:8443 existdb/existdb:release
-
-      - name: Start docker image
-        run: docker start exist-ci
-
-      - name: Wait for existdb startup
-        run: sleep 30
-
-      - run: npm test
-      - run: npx semantic-release
+          npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
