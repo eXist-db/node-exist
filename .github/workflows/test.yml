@@ -1,44 +1,35 @@
-name: test node-exist
+name: Test Pull Request
 
 on:
   pull_request:
-    branches: [ master, develop ]
+    branches: 
+      - master
 
-  push:
-    branches:
-      - develop
-
-  workflow_dispatch:
+# Tests cannot run on windows due to issues with the windows server 2019 images 
+# the github action runners are using not being able to run linux docker images
+# https://github.com/actions/virtual-environments/issues/1143
 
 jobs:
-  build:
-      runs-on: ubuntu-latest
-      strategy:
-        matrix:
-          node-version: [10.x, 12.x, 14.x]
-          docker-tag: [latest, release, 4.7.1]
-      steps:
-      - uses: actions/checkout@v2
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: ['10', '12', '14']
+        docker-tag: [latest, release, 4.7.1]
 
+    steps:
+      - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/setup-existdb
+        with:
+          docker-tag: ${{ matrix.docker-tag }}
 
-      - name: npm install and build
+      - name: Install
         run: npm ci
 
-      - name: Pull docker image
-        run: docker pull existdb/existdb:${{ matrix.docker-tag }}
-
-      - name: Build docker image
-        run: docker create --name exist-ci -p 8080:8080 -p 8443:8443 existdb/existdb:${{ matrix.docker-tag }}
-
-      - name: Start docker image
-        run: docker start exist-ci
-
-      - name: Wait for existdb startup
-        run: sleep 30
-
-      - name: npm test
+      - name: Test
         run: npm test
