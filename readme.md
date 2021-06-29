@@ -293,13 +293,13 @@ by default.
 If you want to use a different repository provide the optional `customPackageRepoUrl`.
 
 ```js
-db.app.install(xarName, packageUri[, customPackageRepoUrl])
+db.app.install(xarName, [, customPackageRepoUrl])
 ```
 
 **Example:**
 
 ```js
-db.app.install('test-app.xar', 'http://exist-db.org/apps/test-app')
+db.app.install('test-app.xar')
   .then(result => console.log(result))
   .catch(error => console.error(error))
 ```

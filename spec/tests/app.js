@@ -1,7 +1,7 @@
 const fs = require('fs')
 const test = require('tape')
 const app = require('../../components/app')
-const exist = require('../../index')
+const { connect } = require('../../index')
 
 test('app component exports install method', function (t) {
   t.equal(typeof app.install, 'function')
@@ -19,7 +19,7 @@ test('app component exports upload method', function (t) {
 })
 
 test('upload and install application XAR', function (t) {
-  const db = exist.connect(require('../db-connection'))
+  const db = connect(require('../db-connection'))
 
   const xarBuffer = fs.readFileSync('spec/files/test-app.xar')
   const xarName = 'test-app.xar'
@@ -37,7 +37,7 @@ test('upload and install application XAR', function (t) {
   })
 
   t.test('install app', function (st) {
-    db.app.install(xarName, packageUri)
+    db.app.install(xarName)
       .then(response => {
         if (!response.success) { return Promise.reject(response.error) }
         st.plan(3)
@@ -52,7 +52,7 @@ test('upload and install application XAR', function (t) {
   })
 
   t.test('re-install app', function (st) {
-    db.app.install(xarName, packageUri)
+    db.app.install(xarName)
       .then(response => {
         if (!response.success) { return Promise.reject(response.error) }
         st.plan(3)
@@ -77,11 +77,10 @@ test('upload and install application XAR', function (t) {
 })
 
 test('empty application XAR', function (t) {
-  const db = exist.connect(require('../db-connection'))
+  const db = connect(require('../db-connection'))
 
   const xarBuffer = Buffer.from('')
   const xarName = 'test-empty-app.xar'
-  const packageUri = 'http://exist-db.org/apps/test-empty-app'
 
   t.test('upload app', function (st) {
     st.plan(1)
@@ -91,7 +90,7 @@ test('empty application XAR', function (t) {
   })
 
   t.test('install app', function (st) {
-    db.app.install(xarName, packageUri)
+    db.app.install(xarName)
       .then(response => {
         if (!response.error.code) { return Promise.reject(response.error) }
         st.plan(3)
