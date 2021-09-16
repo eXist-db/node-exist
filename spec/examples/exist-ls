@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-const exist = require('../../index')
-const db = exist.connect({ secure: false, port: 8080 })
+const {connect} = require('../../index')
 
-async function ls (collection) {
+async function ls (connectionOptions, collection) {
     try {
+        const db = connect(connectionOptions)
         const query = `
         declare variable $collection external;
 
@@ -22,13 +22,32 @@ async function ls (collection) {
     catch (e) {
         let message = e.faultString ? e.faultString : e.message
         console.error("Could not run query! Reason:", message)
+        process.exit(1)
     }
 }
 
 if (!process.argv[2]) {
     console.log("Usage: exist-ls [collection]")
     console.log("Example: exist-ls /db/apps")
-    process.exit(0)
+    process.exit(9)
 }
 
-ls(process.argv[2])
+const dbPath = process.argv[2] 
+
+// read connection options from ENV
+const user = process.env.EXISTDB_USER || 'admin'
+const pass = process.env.EXISTDB_PASS || ''
+const server = process.env.EXISTDB_SERVER || 'http://localhost:8080'
+const { port, hostname, protocol } = new URL(server)
+const secure = protocol === 'https:'
+
+const connectionOptions = {
+  rejectUnauthorized: secure && !(hostname === 'localhost'),
+  secure,
+  basic_auth: { user, pass },
+  host: hostname,
+  port
+}
+
+// run query
+ls(connectionOptions, dbPath)

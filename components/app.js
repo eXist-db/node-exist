@@ -49,6 +49,16 @@ function install (client, xarName, customPackageRepoUrl) {
 
   return queries.readAll(client, installQueryString, queryOptions)
     .then(result => JSON.parse(result.pages.toString()))
+    .then(result => {
+      if (!result.success) {
+        const errorMessage = result.error.code + ' ' + (result.error.description || result.error.value)
+        return {
+          success: false,
+          error: new Error(errorMessage)
+        }
+      }
+      return result
+    })
     .catch(error => { return { success: false, error } })
 }
 

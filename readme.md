@@ -1,11 +1,15 @@
 # node-exist
 
-[![Build Status](https://travis-ci.com/eXist-db/node-exist.svg)](https://travis-ci.com/eXist-db/node-exist)
+![example branch parameter](https://github.com/exist-db/node-exist/actions/workflows/test.yml/badge.svg)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
 Mostly a shallow wrapper for [eXist's XML-RPC API](http://exist-db.org/exist/apps/doc/devguide_xmlrpc.xml).
 Attempts to translate terminologies into node world. Uses promises.
 
+- [Install](#install)
+- [Use](#use)
+- [Command Line Scripts](#command-line-scripts)
+- [Test](#test)
 - [Roadmap](#roadmap)
 - [Compatibility](#compatibility)
 - [Disclaimer](#disclaimer)
@@ -293,7 +297,7 @@ by default.
 If you want to use a different repository provide the optional `customPackageRepoUrl`.
 
 ```js
-db.app.install(xarName, [, customPackageRepoUrl])
+db.app.install(xarName[, customPackageRepoUrl])
 ```
 
 **Example:**
@@ -320,11 +324,8 @@ db.app.install('test-app.xar')
 
 ```js
 {
-  "success": false,
-  "error": {
-    "code": "err:EXPATH00",
-    "value": "Missing descriptor from package: /db/system/repo/test-app.xar"
-  }
+  success: false,
+  error: Error
 }
 ```
 
@@ -397,6 +398,11 @@ db.server.shutdown()
 ```
 
 Note: There is no way to bring it up again.
+
+## Command Line Scripts
+
+You can use this library to interact with local or remote existdb instances on the command line.
+You can find a few basic [examples](spec/examples) in this repository.
 
 ## Test
 
