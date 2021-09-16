@@ -7,6 +7,11 @@
     "semantic-release": "semantic-release",
     "travis-deploy-once": "travis-deploy-once"
   },
+  "bin": {
+    "exist-ls" : "spec/examples/exist-ls",
+    "exist-upload" : "spec/examples/upload",
+    "exist-install" : "spec/examples/install-package"
+  },
   "standard": {
     "ignore": [
       "exist-*"
