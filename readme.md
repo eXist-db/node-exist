@@ -6,6 +6,8 @@
 Mostly a shallow wrapper for [eXist's XML-RPC API](http://exist-db.org/exist/apps/doc/devguide_xmlrpc.xml).
 Attempts to translate terminologies into node world. Uses promises.
 
+
+- [Command Line Scripts](#commmandlinescripts)
 - [Roadmap](#roadmap)
 - [Compatibility](#compatibility)
 - [Disclaimer](#disclaimer)
@@ -405,6 +407,11 @@ All tests are in **spec/tests** and written for [tape](https://npmjs.org/tape)
 ```sh
 npm test
 ```
+
+## Command Line Scripts
+
+You can use this library to interact with local or remote existdb instances on the command line.
+You can find a few basic [examples](spec/examples) in this repository.
 
 ## Roadmap
 
