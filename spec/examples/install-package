@@ -4,6 +4,9 @@ const {connect} = require('../../index')
 const {readFileSync} = require("fs")
 const {basename} = require("path")
 
+// read connection options from ENV
+const connectionOptions = require('../db-connection.js')
+
 function usage() {
   console.log("Usage: install-package [local path to XAR]")
   console.log("Example: install-package ./my-app.xar")
@@ -59,21 +62,6 @@ if (!process.argv[2]){
 if (!process.argv[2].match(/\.xar$/i)) {
   console.error("Package must have .xar file extension")
   usage()
-}
-
-// read connection options from ENV
-const user = process.env.EXISTDB_USER || 'admin'
-const pass = process.env.EXISTDB_PASS || ''
-const server = process.env.EXISTDB_SERVER || 'http://localhost:8080'
-const { port, hostname, protocol } = new URL(server)
-const secure = protocol === 'https:'
-
-const connectionOptions = {
-  rejectUnauthorized: secure && !(hostname === 'localhost'),
-  secure,
-  basic_auth: { user, pass },
-  host: hostname,
-  port
 }
 
 install(connectionOptions, process.argv[2])
