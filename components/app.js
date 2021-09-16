@@ -51,7 +51,7 @@ function install (client, xarName, customPackageRepoUrl) {
     .then(result => JSON.parse(result.pages.toString()))
     .then(result => {
       if (!result.success) {
-        const errorMessage = result.error.code + " " + (result.error.description || result.error.value)
+        const errorMessage = result.error.code + ' ' + (result.error.description || result.error.value)
         return {
           success: false,
           error: new Error(errorMessage)
