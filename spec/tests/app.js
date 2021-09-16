@@ -92,11 +92,9 @@ test('empty application XAR', function (t) {
   t.test('install app', function (st) {
     db.app.install(xarName)
       .then(response => {
-        if (!response.error.code) { return Promise.reject(response.error) }
-        st.plan(3)
+        st.plan(2)
         st.equal(response.success, false)
-        st.equal(response.error.code, 'experr:EXPATH00')
-        st.equal(response.error.value, 'Missing descriptor from package: /db/system/repo/test-empty-app.xar')
+        st.equal(response.error.message, 'experr:EXPATH00 Missing descriptor from package: /db/system/repo/test-empty-app.xar')
       })
       .catch(e => {
         st.fail(e)
