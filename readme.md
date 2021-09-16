@@ -6,8 +6,10 @@
 Mostly a shallow wrapper for [eXist's XML-RPC API](http://exist-db.org/exist/apps/doc/devguide_xmlrpc.xml).
 Attempts to translate terminologies into node world. Uses promises.
 
-
-- [Command Line Scripts](#commmandlinescripts)
+- [Install](#install)
+- [Use](#use)
+- [Command Line Scripts](#command-line-scripts)
+- [Test](#test)
 - [Roadmap](#roadmap)
 - [Compatibility](#compatibility)
 - [Disclaimer](#disclaimer)
@@ -295,7 +297,7 @@ by default.
 If you want to use a different repository provide the optional `customPackageRepoUrl`.
 
 ```js
-db.app.install(xarName, [, customPackageRepoUrl])
+db.app.install(xarName[, customPackageRepoUrl])
 ```
 
 **Example:**
@@ -322,11 +324,8 @@ db.app.install('test-app.xar')
 
 ```js
 {
-  "success": false,
-  "error": {
-    "code": "err:EXPATH00",
-    "value": "Missing descriptor from package: /db/system/repo/test-app.xar"
-  }
+  success: false,
+  error: Error
 }
 ```
 
@@ -400,6 +399,11 @@ db.server.shutdown()
 
 Note: There is no way to bring it up again.
 
+## Command Line Scripts
+
+You can use this library to interact with local or remote existdb instances on the command line.
+You can find a few basic [examples](spec/examples) in this repository.
+
 ## Test
 
 All tests are in **spec/tests** and written for [tape](https://npmjs.org/tape)
@@ -407,11 +411,6 @@ All tests are in **spec/tests** and written for [tape](https://npmjs.org/tape)
 ```sh
 npm test
 ```
-
-## Command Line Scripts
-
-You can use this library to interact with local or remote existdb instances on the command line.
-You can find a few basic [examples](spec/examples) in this repository.
 
 ## Roadmap
 
