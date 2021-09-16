@@ -3,6 +3,9 @@
 const {connect} = require('../../index')
 const {readFileSync} = require("fs")
 
+// read connection options from ENV
+const connectionOptions = require('../db-connection.js')
+
 if (!process.argv[3]) {
   console.log("Usage: upload [local file] [remote file]")
   console.log("Example: upload ./test.xml /db/test.xml")
@@ -12,21 +15,6 @@ if (!process.argv[3]) {
 // read parameters
 const localFilePath = process.argv[2]
 const remoteFilePath = process.argv[3]
-
-// read connection options from ENV
-const user = process.env.EXISTDB_USER || 'admin'
-const pass = process.env.EXISTDB_PASS || ''
-const server = process.env.EXISTDB_SERVER || 'http://localhost:8080'
-const { port, hostname, protocol } = new URL(server)
-const secure = protocol === 'https:'
-
-const connectionOptions = {
-  rejectUnauthorized: secure && !(hostname === 'localhost'),
-  secure,
-  basic_auth: { user, pass },
-  host: hostname,
-  port
-}
 
 ;(async function () {
   try {
