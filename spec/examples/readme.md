@@ -39,5 +39,5 @@ npm install -g dotenv-cli
 example
 
 ```bash
-dotenv ./exist /db/apps
+dotenv ./exist-ls /db/apps
 ```
