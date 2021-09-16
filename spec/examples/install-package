@@ -1,0 +1,82 @@
+#!/usr/bin/env node
+
+const {connect} = require('../../index')
+const {readFileSync} = require("fs")
+const {basename} = require("path")
+
+function usage() {
+  console.log("Usage: install-package [local path to XAR]")
+  console.log("Example: install-package ./my-app.xar")
+  process.exit(9)
+}
+
+async function install (connectionOptions, localFilePath) {
+  try {
+    const db = connect(connectionOptions)
+    const xarName = basename(localFilePath)
+    const contents = readFileSync(localFilePath)
+    const msg = `Install ${xarName} on ${hostname}:\n`
+    process.stdout.write(msg)
+
+    process.stdout.write("uploading...")
+    const uploadResult = await db.app.upload(contents, xarName)
+    
+    if (!uploadResult.success) {
+      throw new Error(uploadResult.error)
+    }
+
+    process.stdout.clearLine()
+    process.stdout.cursorTo(0)
+    process.stdout.write("✔︎ uploaded\n");
+
+    process.stdout.write("installing...")
+    const installResult = await db.app.install(xarName)
+
+    if (!installResult.success) {
+      throw new Error(installResult.error)
+    }
+
+    process.stdout.clearLine()
+    process.stdout.cursorTo(0)
+    process.stdout.write("✔︎ installed\n");
+
+    return 0
+  }
+  catch (e) { 
+    let message = e.faultString ? e.faultString : e.message
+    console.error(message)
+    return 1
+  }
+}
+
+// main
+
+if (!process.argv[2]){ 
+  console.error("No package given")
+  usage()
+}
+
+if (!process.argv[2].match(/\.xar$/i)) {
+  console.error("Package must have .xar file extension")
+  usage()
+}
+
+// read connection options from ENV
+const user = process.env.EXISTDB_USER || 'admin'
+const pass = process.env.EXISTDB_PASS || ''
+const server = process.env.EXISTDB_SERVER || 'http://localhost:8080'
+const { port, hostname, protocol } = new URL(server)
+const secure = protocol === 'https:'
+
+const connectionOptions = {
+  rejectUnauthorized: secure && !(hostname === 'localhost'),
+  secure,
+  basic_auth: { user, pass },
+  host: hostname,
+  port
+}
+
+install(connectionOptions, process.argv[2])
+  .then(code => process.exit(code))
+  .catch(code => process.exit(code))
+
