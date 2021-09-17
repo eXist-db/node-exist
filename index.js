@@ -1,3 +1,19 @@
+/**
+ * @typedef { import("./components/connection").NodeExistConnectionOptions } NodeExistConnectionOptions
+ */
+/**
+ * @typedef {Object} NodeExist
+ * @prop { import("xmlrpc").Client } client
+ * @prop {{shutdown:function, syncToDisk:function}} server
+ * @prop {{read:function, readAll:function, execute:function, count:function, retrieve:function, retrieveAll:function, releaseResult:function}} queries
+ * @prop {{describe:function, setPermissions:function, getPermissions:function}} resources
+ * @prop {{upload:function, parseLocal:function, read:function, remove:function}} documents
+ * @prop {{create:function, remove:function, describe:function, read:function}} collections
+ * @prop {Object} indices
+ * @prop {{getUserInfo:function, list:function}} users
+ * @prop {{install:function, upload:function, deploy:function, remove:function}} app
+ */
+
 const mime = require('mime')
 
 // components
@@ -34,6 +50,11 @@ function applyEachWith (module, client) {
   return methods
 }
 
+/**
+ * Receive set of bound components to interact with an exist-db instance
+ * @param {NodeExistConnectionOptions} options set who connects to which server and how
+ * @returns {NodeExist} bound components to interact with an exist-db instance
+ */
 function connect (options) {
   const client = connection.connect(options)
 
