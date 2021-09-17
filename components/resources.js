@@ -11,7 +11,7 @@ function getPermissions (client, resourceIdentifier) {
 }
 
 module.exports = {
-  describe: describe,
-  setPermissions: setPermissions,
-  getPermissions: getPermissions
+  describe,
+  setPermissions,
+  getPermissions
 }

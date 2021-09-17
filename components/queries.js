@@ -32,18 +32,18 @@ function execute (client, queryStringOrBuffer, options) {
   return client.promisedMethodCall('executeQuery', [queryStringOrBuffer, options])
 }
 
-function getHits (client, resultHandle) {
+function count (client, resultHandle) {
   return client.promisedMethodCall('getHits', [resultHandle])
 }
 
-function retrieveResult (client, handle, position) {
+function retrieve (client, handle, position) {
   return client.promisedMethodCall('retrieve', [handle, position, {}])
 }
 
-function getAllResults (client, handle, position) {
+function retrieveAll (client, handle, position) {
   const results = []
   while (position--) {
-    results.push(retrieveResult(client, handle, position))
+    results.push(retrieve(client, handle, position))
   }
   return Promise.all(results.reverse()) // array of results is in reverse order
 }
@@ -60,11 +60,11 @@ function readAll (client, queryStringOrBuffer, options) {
   return execute(client, queryStringOrBuffer, options)
     .then(function (handle) {
       resultHandle = handle
-      return getHits(client, handle)
+      return count(client, handle)
     })
     .then(function (hits) {
       resultPages = hits
-      return getAllResults(client, resultHandle, hits)
+      return retrieveAll(client, resultHandle, hits)
     })
     .then(function (pages) {
       results = {
@@ -93,11 +93,11 @@ function readAll (client, queryStringOrBuffer, options) {
 }
 
 module.exports = {
-  read: read,
-  readAll: readAll,
-  execute: execute,
-  count: getHits,
-  retrieve: retrieveResult,
-  retrieveAll: getAllResults,
-  releaseResult: releaseResult
+  read,
+  readAll,
+  execute,
+  count,
+  retrieve,
+  retrieveAll,
+  releaseResult
 }

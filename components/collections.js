@@ -19,8 +19,8 @@ function read (client, name) {
 }
 
 module.exports = {
-  create: create,
-  remove: remove,
-  describe: describe,
-  read: read
+  create,
+  remove,
+  describe,
+  read
 }

@@ -94,8 +94,8 @@ function remove (client, packageUri) {
 }
 
 module.exports = {
-  install: install,
-  upload: upload,
-  remove: remove,
-  deploy: deploy
+  install,
+  upload,
+  remove,
+  deploy
 }

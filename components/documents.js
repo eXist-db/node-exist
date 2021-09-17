@@ -21,8 +21,8 @@ function remove (client, documentName) {
 }
 
 module.exports = {
-  upload: upload,
-  parseLocal: parseLocal,
-  read: read,
-  remove: remove
+  upload,
+  parseLocal,
+  read,
+  remove
 }
