@@ -34,8 +34,15 @@ function useSecureConnection (options) {
  */
 function connect (options) {
   const _options = assign({}, defaultRPCoptions, options)
-  delete _options.secure // prevent pollution of xmlprc options
+  delete _options.secure // prevent pollution of XML-RPC options
+
   if (useSecureConnection(options)) {
+    // allow invalid and self-signed certificates on localhost, if not explicitly
+    // enforced by setting options.rejectUnauthorized to true
+    _options.rejectUnauthorized = ('rejectUnauthorized' in _options)
+      ? _options.rejectUnauthorized
+      : !isLocalDB(_options.host)
+
     const secureClient = xmlrpc.createSecureClient(_options)
     secureClient.promisedMethodCall = promisedMethodCall(secureClient)
     return secureClient
@@ -48,4 +55,34 @@ function connect (options) {
   return client
 }
 
-module.exports = connect
+function readOptionsFromEnv () {
+  const environmentOptions = {}
+
+  if (process.env.EXISTDB_USER && process.env.EXISTDB_PASS) {
+    environmentOptions.basic_auth = {
+      user: process.env.EXISTDB_USER,
+      pass: process.env.EXISTDB_PASS
+    }
+  }
+
+  if (process.env.EXISTDB_SERVER) {
+    const server = process.env.EXISTDB_SERVER
+    const { port, hostname, protocol } = new URL(server)
+
+    if (!['https:', 'http:'].includes(protocol)) {
+      throw new Error('Unknown protocol: "' + protocol + '"!')
+    }
+
+    environmentOptions.secure = protocol === 'https:'
+    environmentOptions.host = hostname
+    environmentOptions.port = port
+  }
+
+  return environmentOptions
+}
+
+module.exports = {
+  connect,
+  readOptionsFromEnv,
+  defaultRPCoptions
+}

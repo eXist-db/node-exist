@@ -34,22 +34,25 @@ function applyEachWith (module, client) {
   return methods
 }
 
-module.exports = {
-  connect: function (options) {
-    const client = connection(options)
+function connect (options) {
+  const client = connection.connect(options)
 
-    return {
-      client: client,
-      server: applyEachWith(database, client),
-      queries: applyEachWith(queries, client),
-      resources: applyEachWith(resources, client),
-      documents: applyEachWith(documents, client),
-      collections: applyEachWith(collections, client),
-      indices: applyEachWith(indices, client),
-      users: applyEachWith(users, client),
-      app: applyEachWith(app, client)
-    }
-  },
+  return {
+    client: client,
+    server: applyEachWith(database, client),
+    queries: applyEachWith(queries, client),
+    resources: applyEachWith(resources, client),
+    documents: applyEachWith(documents, client),
+    collections: applyEachWith(collections, client),
+    indices: applyEachWith(indices, client),
+    users: applyEachWith(users, client),
+    app: applyEachWith(app, client)
+  }
+}
+
+module.exports = {
+  readOptionsFromEnv: connection.readOptionsFromEnv,
+  connect,
   defineMimeTypes: function (mimeTypes) {
     mime.define(mimeTypes)
   },
