@@ -9,8 +9,8 @@
   },
   "bin": {
     "exist-ls" : "spec/examples/exist-ls",
-    "exist-upload" : "spec/examples/upload",
-    "exist-install" : "spec/examples/install-package"
+    "exist-upload" : "spec/examples/exist-upload",
+    "exist-install" : "spec/examples/exist-install"
   },
   "standard": {
     "ignore": [
