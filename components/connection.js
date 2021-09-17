@@ -2,6 +2,24 @@ const xmlrpc = require('xmlrpc')
 const assign = require('lodash.assign')
 const promisedMethodCall = require('./promisedMethodCall')
 
+/**
+ * @typedef { import("xmlrpc").Client } XMLRPCClient
+ */
+
+/**
+ * @typedef {Object} NodeExistConnectionOptions
+ * @prop {string} [host] database host, default: "localhost"
+ * @prop {string} [port] database port, default: "8443"
+ * @prop {boolean} [secure] use HTTPS? default: true
+ * @prop {boolean} [rejectUnauthorized] enforce valid SSL connection, default: true
+ * @prop {string} [path] path to XMLRPC, default: "/exist/xmlrpc"
+ * @prop {{user:string, pass:string}} [basic_auth] database user credentials, default: {"user":"guest","pass":"guest"}
+ */
+
+/**
+ * Default connection options
+ * @type {NodeExistConnectionOptions}
+ */
 const defaultRPCoptions = {
   host: 'localhost',
   port: '8443',
@@ -29,8 +47,8 @@ function useSecureConnection (options) {
 
 /**
  * Connect to database via XML-RPC
- * @param {Object} options
- * @returns {Object} XMLRPC-client
+ * @param {NodeExistConnectionOptions} options
+ * @returns {XMLRPCClient} XMLRPC-client
  */
 function connect (options) {
   const _options = assign({}, defaultRPCoptions, options)
@@ -55,6 +73,12 @@ function connect (options) {
   return client
 }
 
+/**
+ * Read connection options from ENV
+ * NOTE: The connection options returned from this function
+ * have a separate set of defaults.
+ * @returns {NodeExistConnectionOptions}
+ */
 function readOptionsFromEnv () {
   const environmentOptions = {}
 

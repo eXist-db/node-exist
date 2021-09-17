@@ -1,8 +1,12 @@
 /**
+ * @typedef { import("xmlrpc").Client } XMLRPCClient
+ */
+
+/**
  * returns a promise for a result (sub)set
- * @param client
- * @param query
- * @param options - options.limit and options.start control which
+ * @param {XMLRPCClient} client
+ * @param {String} query
+ * @param {{limit:number, start:number}} [options] - options.limit and options.start control which
  * @returns {Promise}
  */
 function read (client, query, options) {
@@ -18,10 +22,10 @@ function read (client, query, options) {
 }
 
 /**
- *
- * @param client
- * @param queryStringOrBuffer
- * @param options
+ * Execute a query on the database
+ * @param {XMLRPCClient} client
+ * @param {String|Buffer} queryStringOrBuffer
+ * @param {Object} options
  * @returns {Promise}
  */
 function execute (client, queryStringOrBuffer, options) {
