@@ -11,7 +11,7 @@ by setting environment variables prefixed with `EXISTDB`.
 |----|----|----
 | `EXISTDB_USER` | `admin` | the user used to connect to the database and to execute queries with
 | `EXISTDB_PASS` | _empty_ | the password to authenticate the user against the database
-| `EXISTDB_SERVER` | `http://localhost:8080` | the URL of the database instance to connect, using https is possible if you have a correct certificate
+| `EXISTDB_SERVER` | `https://localhost:8443` | the URL of the database instance to connect to (only http and https protocols are allowed)
 
 ## dotenv
 
@@ -19,25 +19,31 @@ dotenv(-cli) is a small script that allows you to read environment variables fro
 
 ### preparation
 
-- create .env file
+- Install [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) globally    
+    ```bash
+    npm install -g dotenv-cli
+    ```
+
+- create .env file in a folder with the settings that you need
     ```bash
     EXISTDB_USER=admin
     EXISTDB_PASS=
     EXISTDB_SERVER=http://localhost:8080
     ```
 
-- Install [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) globally
-    
-```bash
-npm install -g dotenv-cli
-```
 
 ### use
 
-- prepend command line script with `dotenv`
+prepend command line script with `dotenv` in the folder you created the .env file in
 
-example
+Example (here in the root of the cloned repository):
 
 ```bash
-dotenv ./exist-ls /db/apps
+dotenv spec/examples/exist-ls /db/apps
+```
+
+That also works when running the tests (on a remote server maybe or a different user)
+
+```bash
+dotenv npm test
 ```

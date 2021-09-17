@@ -93,6 +93,25 @@ Connect to a server with an **invalid** or **expired** certificate
 exist.connect({ rejectUnauthorized: false })
 ```
 
+### Read configuration from environment variables
+
+`readOptionsFromEnv` offers an comfortable way to read the connection options
+from a set of environment variables
+
+| variable name | default | description
+|----|----|----
+| `EXISTDB_USER` | _none_ | the user used to connect to the database and to execute queries with
+| `EXISTDB_PASS` | _none_ | the password to authenticate the user against the database
+| `EXISTDB_SERVER` | `https://localhost:8443` | the URL of the database instance to connect to (only http and https protocol allowed)
+
+```js
+const {connect, readOptionsFromEnv} = require('@existdb/node-exist')
+const db = connect(readOptionsFromEnv())
+```
+
+For more details you can have a look how it is used in the [connection script](spec/connection.js)
+that is used for testing and in all example scripts and the [examples](spec/examples).
+
 ### Defaults
 
 ```js
@@ -404,18 +423,41 @@ Note: There is no way to bring it up again.
 You can use this library to interact with local or remote existdb instances on the command line.
 You can find a few basic [examples](spec/examples) in this repository.
 
+To give you a taste all example scripts are exposed as binaries in the __node_modules/.bin__ folder when you install this package.
+If you want you can even install this package globally and then use these scripts like `ls` or `cd`.
+
+```bash
+npm install -g @existdb/node-exist
+```
+Now you can type
+
+```bash
+exist-ls /db/apps
+```
+
+anywhere on the system.
+
 ## Test
 
 All tests are in **spec/tests** and written for [tape](https://npmjs.org/tape)
 
-```sh
+```bash
 npm test
+```
+
+__NOTE:__ You can override connection settings with environment variables. See [examples](spec/examples/readme.md) for more information.
+
+To execute a single run using a different server you can also just define the variable directly:
+
+```bash
+EXISTDB_SERVER=http://localhost:8888 npm test
 ```
 
 ## Roadmap
 
 - [ ] switch to use eXist-db's REST-API.
 - [ ] refactor to ES6 modules
+- [ ] better type hints
 
 ## Compatibility
 
