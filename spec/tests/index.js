@@ -1,17 +1,17 @@
 // tests
 
 const test = require('tape')
-const exist = require('../../index')
-const connectionOptions = require('../db-connection')
+const { connect, getMimeType, defineMimeTypes } = require('../../index')
+const connectionOptions = require('../connection')
 
 test('check for default mime type extensions', function (t) {
-  t.equal(exist.getMimeType('test.xq'), 'application/xquery')
-  t.equal(exist.getMimeType('test.xqs'), 'application/xquery')
-  t.equal(exist.getMimeType('test.xquery'), 'application/xquery')
-  t.equal(exist.getMimeType('test.xql'), 'application/xquery')
-  t.equal(exist.getMimeType('test.xqm'), 'application/xquery')
-  t.equal(exist.getMimeType('test.xconf'), 'application/xml')
-  t.equal(exist.getMimeType('test.odd'), 'application/xml')
+  t.equal(getMimeType('test.xq'), 'application/xquery')
+  t.equal(getMimeType('test.xqs'), 'application/xquery')
+  t.equal(getMimeType('test.xquery'), 'application/xquery')
+  t.equal(getMimeType('test.xql'), 'application/xquery')
+  t.equal(getMimeType('test.xqm'), 'application/xquery')
+  t.equal(getMimeType('test.xconf'), 'application/xml')
+  t.equal(getMimeType('test.odd'), 'application/xml')
   t.end()
 })
 
@@ -22,14 +22,14 @@ test('extend mime type definitions', function (t) {
   const testTypeMap = {}
   testTypeMap[testMimeType] = [testExtension]
 
-  t.notEqual(exist.getMimeType(testPath), testMimeType, 'previously undefined extension for ' + testExtension)
-  exist.defineMimeTypes(testTypeMap)
-  t.equal(exist.getMimeType(testPath), testMimeType, 'added new extension for ' + testExtension)
+  t.notEqual(getMimeType(testPath), testMimeType, 'previously undefined extension for ' + testExtension)
+  defineMimeTypes(testTypeMap)
+  t.equal(getMimeType(testPath), testMimeType, 'added new extension for ' + testExtension)
   t.end()
 })
 
 test('create connection with default settings', function (t) {
-  const db = exist.connect()
+  const db = connect()
   const components = ['collections', 'queries', 'documents', 'users', 'indices']
 
   components.forEach(function (component) {
@@ -40,13 +40,13 @@ test('create connection with default settings', function (t) {
 })
 
 test('create connection using http://', function (t) {
-  const db = exist.connect({ secure: false, port: 8080 })
+  const db = connect({ secure: false, port: 8080 })
   t.equal(db.client.isSecure, false, 'insecure client used')
   t.end()
 })
 
 test('get collection permissions', function (t) {
-  const db = exist.connect(connectionOptions)
+  const db = connect(connectionOptions)
   db.resources.getPermissions('/db')
     .then(function (result) {
       t.ok(result)

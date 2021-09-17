@@ -1,10 +1,10 @@
 const test = require('tape')
 const fs = require('fs')
-const exist = require('../../index')
-const connectionOptions = require('../db-connection')
+const { connect } = require('../../index')
+const connectionOptions = require('../connection')
 
 test('upload document', function (t) {
-  const db = exist.connect(connectionOptions)
+  const db = connect(connectionOptions)
   const buffer = Buffer.from('test')
 
   db.documents.upload(buffer, buffer.length)
@@ -19,7 +19,7 @@ test('upload document', function (t) {
 })
 
 test('upload invalid XML', function (t) {
-  const db = exist.connect(connectionOptions)
+  const db = connect(connectionOptions)
   const buffer = fs.readFileSync('spec/files/invalid.xml')
 
   db.documents.upload(buffer, buffer.length)
@@ -38,7 +38,7 @@ test('upload invalid XML', function (t) {
 })
 
 test('upload valid XML', function (t) {
-  const db = exist.connect(connectionOptions)
+  const db = connect(connectionOptions)
   const remoteFileName = '/test.xml'
 
   db.documents.upload(fs.readFileSync('spec/files/test.xml'))
@@ -61,7 +61,7 @@ test('upload valid XML', function (t) {
 })
 
 test('download test.xml', function (t) {
-  const db = exist.connect(connectionOptions)
+  const db = connect(connectionOptions)
   const localContents = fs.readFileSync('spec/files/test.xml').toString()
   const expectedContents = localContents.substr(0, localContents.length - 1) // for some reason the last newline is removed
   const options = { 'omit-xml-declaration': 'no' } // xml header is cut off by default

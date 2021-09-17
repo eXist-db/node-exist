@@ -1,13 +1,8 @@
-const exist = require('../../index')
+const { connect } = require('../../index')
+const connectionOptions = require('../connection')
+const db = connect(connectionOptions)
 
-const db = exist.connect({
-  basic_auth: {
-    user: 'hans',
-    pass: '********************'
-  }
-})
-
-const collection = 'fo0o'
+const collection = 'foO0o'
 
 db.collections.create(collection)
   .then(function (result) {

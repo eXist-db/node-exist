@@ -5,7 +5,7 @@ const {readFileSync} = require("fs")
 const {basename} = require("path")
 
 // read connection options from ENV
-const connectionOptions = require('../db-connection.js')
+const connectionOptions = require('../connection')
 
 function usage() {
   console.log("Usage: install-package [local path to XAR]")
