@@ -4,7 +4,7 @@ const {connect} = require('../../index')
 const {readFileSync} = require("fs")
 
 // read connection options from ENV
-const connectionOptions = require('../db-connection.js')
+const connectionOptions = require('../connection')
 
 if (!process.argv[3]) {
   console.log("Usage: upload [local file] [remote file]")

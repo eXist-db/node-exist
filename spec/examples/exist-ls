@@ -3,7 +3,7 @@
 const {connect} = require('../../index')
 
 // read connection options from ENV
-const connectionOptions = require('../db-connection.js')
+const connectionOptions = require('../connection')
 
 async function ls (connectionOptions, collection) {
     try {

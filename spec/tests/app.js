@@ -2,6 +2,7 @@ const fs = require('fs')
 const test = require('tape')
 const app = require('../../components/app')
 const { connect } = require('../../index')
+const connectionOptions = require('../connection')
 
 test('app component exports install method', function (t) {
   t.equal(typeof app.install, 'function')
@@ -19,7 +20,7 @@ test('app component exports upload method', function (t) {
 })
 
 test('upload and install application XAR', function (t) {
-  const db = connect(require('../db-connection'))
+  const db = connect(connectionOptions)
 
   const xarBuffer = fs.readFileSync('spec/files/test-app.xar')
   const xarName = 'test-app.xar'
@@ -77,7 +78,7 @@ test('upload and install application XAR', function (t) {
 })
 
 test('empty application XAR', function (t) {
-  const db = connect(require('../db-connection'))
+  const db = connect(connectionOptions)
 
   const xarBuffer = Buffer.from('')
   const xarName = 'test-empty-app.xar'

@@ -1,9 +1,9 @@
 const test = require('tape')
-const exist = require('../../index')
-const connectionOptions = require('../db-connection')
+const { connect } = require('../../index')
+const connectionOptions = require('../connection')
 
 test('call remote procedure through methodCall', function (t) {
-  const db = exist.connect(connectionOptions)
+  const db = connect(connectionOptions)
   let resultHandle = null
   const queryString = '<result>{for $i in (1,2) return <i>{$i + $a}</i>}</result>'
   const queryOptions = { variables: { a: 1 } }
@@ -35,7 +35,7 @@ test('call remote procedure through methodCall', function (t) {
 })
 
 test('call promised query', function (t) {
-  const db = exist.connect(connectionOptions)
+  const db = connect(connectionOptions)
   const queryString = 'for $i in (1, 2, 3) return $i'
   const options = { start: 2, limit: 1 }
   const expectedResult = '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist" hits="3" start="2" count="1">\n<exist:value type="xs:integer">2</exist:value>\n</exist:result>'
@@ -52,7 +52,7 @@ test('call promised query', function (t) {
 })
 
 test('call queryAll method', function (t) {
-  const db = exist.connect(connectionOptions)
+  const db = connect(connectionOptions)
   const queryString = 'for $i in (1,2) return $i + $a'
   const queryOptions = { variables: { a: 10 } }
   const expectedResult = '11,12'

@@ -1,8 +1,8 @@
 const test = require('tape')
-const exist = require('../../index')
-const connectionOptions = require('../db-connection')
+const { connect } = require('../../index')
+const connectionOptions = require('../connection')
 const testCollection = '/tests'
-const db = exist.connect(connectionOptions)
+const db = connect(connectionOptions)
 
 function testGetPermissions (t) {
   // setup
@@ -69,7 +69,7 @@ function testSetPermissions (t) {
 }
 
 test('resources:', function (t) {
-  const db = exist.connect(connectionOptions)
+  const db = connect(connectionOptions)
 
   t.test('setup', function (setup) {
     db.collections.create(testCollection)
