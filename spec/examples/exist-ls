@@ -5,19 +5,31 @@ const {connect} = require('../../index')
 // read connection options from ENV
 const connectionOptions = require('../connection')
 
+// the more complex a query gets that is executed
+// the more sense it makes to read it from a file
+// see db.app.install and how it uses xquery/install-package.xq 
+const query = `xquery version "3.1";
+declare variable $collection external;
+declare function local:map-child ($child, $type) {
+    map {
+        "type": $type,
+        "name": $child
+    }
+};
+
+(
+    xmldb:get-child-collections($collection)
+    => for-each(local:map-child(?, "collection")),
+    xmldb:get-child-resources($collection)
+    => for-each(local:map-child(?, "resource"))
+)
+    => (function ($children) { array { $children } })()
+    => serialize(map { "method": "json" })
+`
+
 async function ls (connectionOptions, collection) {
     try {
         const db = connect(connectionOptions)
-        const query = `
-        declare variable $collection external;
-
-        (
-            xmldb:get-child-collections($collection),
-            xmldb:get-child-resources($collection)
-        )
-            => (function ($collections) { array { $collections } })()
-            => serialize(map { "method": "json" })
-        `
         const result = await db.queries.readAll(query, { variables: {collection} })
         const json = JSON.parse(result.pages.toString())
         console.log(json)
