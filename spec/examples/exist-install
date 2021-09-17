@@ -8,8 +8,8 @@ const {basename} = require("path")
 const connectionOptions = require('../connection')
 
 function usage() {
-  console.log("Usage: install-package [local path to XAR]")
-  console.log("Example: install-package ./my-app.xar")
+  console.log("Usage: exist-install [local path to XAR]")
+  console.log("Example: exist-install ./my-app.xar")
   process.exit(9)
 }
 

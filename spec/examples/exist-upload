@@ -7,8 +7,8 @@ const {readFileSync} = require("fs")
 const connectionOptions = require('../connection')
 
 if (!process.argv[3]) {
-  console.log("Usage: upload [local file] [remote file]")
-  console.log("Example: upload ./test.xml /db/test.xml")
+  console.log("Usage: exist-upload [local file] [remote file]")
+  console.log("Example: exist-upload ./test.xml /db/test.xml")
   process.exit(9)
 }
 

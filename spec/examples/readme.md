@@ -1,8 +1,8 @@
 # node-exist Command Line Scripts
 
 - `exist-ls` list the contents of a collection in exist-db
-- `upload` upload a file to an exist-db instance
-- `install-package` upload and install a package into an existdb-instance
+- `exist-upload` upload a file to an exist-db instance
+- `exist-install` upload and install a package into an existdb-instance
 
 The three command line script examples allow you to override the connection
 by setting environment variables prefixed with `EXISTDB`.
