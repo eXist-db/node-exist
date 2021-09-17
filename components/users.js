@@ -1,4 +1,4 @@
-function byName (client, userName) {
+function getUserInfo (client, userName) {
   return client.promisedMethodCall('getUser', [userName])
 }
 
@@ -7,6 +7,6 @@ function list (client) {
 }
 
 module.exports = {
-  getUserInfo: byName,
-  list: list
+  getUserInfo,
+  list
 }
