@@ -8,9 +8,9 @@
     "travis-deploy-once": "travis-deploy-once"
   },
   "bin": {
-    "exist-ls" : "spec/examples/exist-ls",
-    "exist-upload" : "spec/examples/exist-upload",
-    "exist-install" : "spec/examples/exist-install"
+    "exist-ls": "spec/examples/exist-ls",
+    "exist-upload": "spec/examples/exist-upload",
+    "exist-install": "spec/examples/exist-install"
   },
   "standard": {
     "ignore": [
