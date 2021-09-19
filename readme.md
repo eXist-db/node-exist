@@ -424,11 +424,19 @@ You can use this library to interact with local or remote existdb instances on t
 You can find a few basic [examples](spec/examples) in this repository.
 
 To give you a taste all example scripts are exposed as binaries in the __node_modules/.bin__ folder when you install this package.
+
+You can run them using `npx`
+
+```bash
+npx -p @existdb/node-exist exist-ls /db/apps
+```
+
 If you want you can even install this package globally and then use these scripts like `ls` or `cd`.
 
 ```bash
 npm install -g @existdb/node-exist
 ```
+
 Now you can type
 
 ```bash
