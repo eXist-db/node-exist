@@ -82,7 +82,7 @@ function connect (options) {
 function readOptionsFromEnv () {
   const environmentOptions = {}
 
-  if (process.env.EXISTDB_USER && process.env.EXISTDB_PASS) {
+  if (process.env.EXISTDB_USER && 'EXISTDB_PASS' in process.env) {
     environmentOptions.basic_auth = {
       user: process.env.EXISTDB_USER,
       pass: process.env.EXISTDB_PASS
