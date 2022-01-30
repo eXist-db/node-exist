@@ -8,6 +8,7 @@
     "travis-deploy-once": "travis-deploy-once"
   },
   "bin": {
+    "exist-tree": "spec/examples/exist-tree",
     "exist-ls": "spec/examples/exist-ls",
     "exist-upload": "spec/examples/exist-upload",
     "exist-install": "spec/examples/exist-install"
@@ -28,7 +29,8 @@
     "rpc",
     "api",
     "promise",
-    "lib"
+    "lib",
+    "cli"
   ],
   "repository": {
     "type": "git",
@@ -50,7 +52,8 @@
   "dependencies": {
     "lodash.assign": "^4.0.2",
     "mime": "^2.3.1",
-    "xmlrpc": "^1.3.1"
+    "xmlrpc": "^1.3.1",
+    "yargs": "16.2.0"
   },
   "version": "0.0.0-development"
 }
