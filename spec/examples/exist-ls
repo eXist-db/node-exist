@@ -155,11 +155,11 @@ const padReducer = (res, next) => {
 const getPaddings = (list) => list.reduce(padReducer, initialPaddings);
 
 const timeFormat = {
-  timeStyle: "short"
+  timeStyle: "short",
+  hourCycle: "h23"
 }
 const dateFormat = {
-  month: "short",
-  day: "numeric",
+  month: "short"
 };
 
 const currentYear = (new Date()).getFullYear()
@@ -167,11 +167,13 @@ const currentYear = (new Date()).getFullYear()
 function formatDateTime(xsDateTime) {
   const date = new Date(xsDateTime)
   const year = date.getFullYear()
-  const dayMonth = date.toLocaleDateString("iso", dateFormat)
+  const month = date.toLocaleDateString("iso", dateFormat)
+  const day = date.getDate().toString().padStart(3)
   if (year < currentYear) {
-    return dayMonth + " " + year
+    return month + day + year.padStart(6)
   }
-  return dayMonth + " " + date.toLocaleDateString("iso", timeFormat)
+  const time = date.toLocaleDateString("iso", timeFormat).padStart(6)
+  return month + day + time
 }
 
 function formatName(item, color) {
