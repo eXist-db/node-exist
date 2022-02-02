@@ -399,12 +399,14 @@ Status: TODO
 
 ### Users
 
-Status: failing
+Status: partly working
 
-#### byName
+#### getUserInfo
+
+Will return the information about the given user.
 
 ```js
-db.users.byName(username)
+db.users.getUserInfo(username)
 ```
 
 #### list
@@ -482,8 +484,8 @@ EXISTDB_SERVER=http://localhost:8888 npm test
 
 ## Compatibility
 
-**node-exist** is tested to be compatible with **eXist-db 4 and 5**.
-It should be compatible with version 3, except XAR installation.
+**node-exist** is tested to be compatible with **eXist-db 4, 5 and 6**.
+It should be compatible with version 3, except for the XAR installation.
 
 ## Disclaimer
 
