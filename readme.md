@@ -283,6 +283,19 @@ db.collections.describe(collectionPath)
 db.collections.read(collectionPath)
 ```
 
+#### existsAndCanOpen
+
+This function checks if the collection exists and if it does, if the current user can access it.
+
+- returns `true` if the collection exists and the current user can open it
+- returns `false` if the collection does not exist
+- throws an exception if the collection exists but the current user cannot
+  access it
+
+```js
+db.collections.existsAndCanOpen(collectionPath)
+```
+
 ### App
 
 Status: working
