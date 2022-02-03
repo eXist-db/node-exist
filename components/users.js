@@ -3,7 +3,7 @@ function getUserInfo (client, userName) {
 }
 
 function list (client) {
-  return client.promisedMethodCall('getUsers', [])
+  return client.promisedMethodCall('getAccounts', [])
 }
 
 module.exports = {

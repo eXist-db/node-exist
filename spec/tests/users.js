@@ -1,16 +1,43 @@
 const test = require('tape')
 const { connect } = require('../../index')
 const connectionOptions = require('../connection')
+const asGuest = Object.assign({},
+  connectionOptions,
+  { basic_auth: { user: 'guest', pass: 'guest' } }
+)
 
-test.skip('list users', function (t) {
+test('list users', function (t) {
   const db = connect(connectionOptions)
   db.users.list()
-    .then(function (r) {
-      console.log(r)
+    .then(function (list) {
+      t.plan(8)
+      t.ok(list.length, 'Returns a non-empty list of users')
+
+      const names = list.map(u => u.name)
+      t.true(names.includes('SYSTEM'), 'found user SYSTEM')
+      t.true(names.includes('admin'), 'found user admin')
+      t.true(names.includes('nobody'), 'found user nobody')
+      t.true(names.includes('guest'), 'found user guest')
+      t.true(names.includes('monex'), 'found user monex')
+      t.true(names.includes('eXide'), 'found user eXide')
+      t.true(names.includes('packageservice'), 'found user packageservice')
       t.end()
     })
     .catch(function (e) {
-      console.error(e)
+      t.fail()
+      t.end()
+    })
+})
+
+test('list users as guest', function (t) {
+  const db = connect(asGuest)
+  db.users.list()
+    .then(function (list) {
+      t.ok(list.length, 'Returns a non-empty list of users')
+      t.end()
+    })
+    .catch(function (e) {
+      t.fail(e)
       t.end()
     })
 })
