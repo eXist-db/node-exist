@@ -399,7 +399,7 @@ Status: TODO
 
 ### Users
 
-Status: partly working
+Status: working
 
 #### getUserInfo
 
@@ -409,11 +409,38 @@ Will return the information about the given user.
 db.users.getUserInfo(username)
 ```
 
+Example:
+
+```js
+db.users.getUserInfo('admin')
+```
+
+Returns:
+
+```js
+{
+    uid: 1048574,
+    'default-group-id': 1048575,
+    umask: 18,
+    metadata: {
+      'http://exist-db.org/security/description': 'System Administrator',
+      'http://axschema.org/namePerson': 'admin'
+    },
+    'default-group-name': 'dba',
+    'default-group-realmId': 'exist',
+    name: 'admin',
+    groups: [ 'dba' ],
+    enabled: 'true'
+}
+```
+
 #### list
 
 ```js
 db.users.list()
 ```
+
+Returns an array of user info objects (see [getUserInfo()](#getuserinfo)).
 
 ### server
 
