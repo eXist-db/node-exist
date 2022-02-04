@@ -10,7 +10,7 @@ test('list users', function (t) {
   const db = connect(connectionOptions)
   db.users.list()
     .then(function (list) {
-      t.plan(8)
+      t.plan(7)
       t.ok(list.length, 'Returns a non-empty list of users')
 
       const names = list.map(u => u.name)
@@ -20,7 +20,8 @@ test('list users', function (t) {
       t.true(names.includes('guest'), 'found user guest')
       t.true(names.includes('monex'), 'found user monex')
       t.true(names.includes('eXide'), 'found user eXide')
-      t.true(names.includes('packageservice'), 'found user packageservice')
+      // exist 4.7.1 does not have this user
+      // t.true(names.includes('packageservice'), 'found user packageservice')
       t.end()
     })
     .catch(function (e) {
