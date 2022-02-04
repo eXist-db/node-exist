@@ -20,7 +20,7 @@ dotenv(-cli) is a small script that allows you to read environment variables fro
 
 ### preparation
 
-- Install [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) globally    
+- Install [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) globally
     ```bash
     npm install -g dotenv-cli
     ```
