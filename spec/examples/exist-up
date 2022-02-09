@@ -30,7 +30,6 @@ async function getUserInfo(db) {
  */
 async function uploadResource (db, verbose, path, root, baseCollection) {
   try {
-    console.log(verbose, path, root, baseCollection)
     const localFilePath = resolve(root, path)
     const remoteFilePath = baseCollection + '/' + path
     const fileContents = readFileSync(localFilePath);
@@ -149,7 +148,6 @@ async function uploadFileOrFolder(db, source, target, options) {
 
   const confCols = new Map()
   for (const pathParts of parts) {
-    // ['db', 'apps', 'myapp']
     let tmpPath = ''
     for (const p of pathParts) {
       tmpPath += '/' + p
