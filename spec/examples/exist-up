@@ -141,23 +141,26 @@ async function uploadFileOrFolder(db, source, target, options) {
     console.log("Uploading directory tree")
   }
 
-  // are there collection.xconf files in the resources?
-  // copy them over to the appropriate place
-  const xConf = resources.filter(r => /\.xconf$/.test(r))
-  const parts = xConf.map(r => (target + "/" + r).split("/").slice(1,-1))
-
   const confCols = new Map()
-  for (const pathParts of parts) {
-    let tmpPath = ''
-    for (const p of pathParts) {
-      tmpPath += '/' + p
-      if (confCols.has(tmpPath)) { continue }
-      confCols.set(tmpPath, true)
+  let xConf = []
+  if (options.applyXconf) {
+    // are there collection.xconf files in the resources?
+    // copy them over to the appropriate place
+    xConf = resources.filter(r => /\.xconf$/.test(r))
+    const parts = xConf.map(r => (target + "/" + r).split("/").slice(1,-1))
+
+    for (const pathParts of parts) {
+      let tmpPath = ''
+      for (const p of pathParts) {
+        tmpPath += '/' + p
+        if (confCols.has(tmpPath)) { continue }
+        confCols.set(tmpPath, true)
+      }
     }
   }
 
   if (options.dryRun) {
-    if (xConf.length) {
+    if (options.applyXconf && xConf.length) {
       console.log("\nIndex configurations:\n")
       console.log(xConf.join("\n"))
     }
