@@ -7,8 +7,6 @@ const {resolve} = require("path")
 // read connection options from ENV
 const {connect} = require('../../index')
 
-let connectionOptions, db, isAdmin
-
 const stringList = {
     type: 'string',
     array: true,
@@ -30,7 +28,7 @@ async function getUserInfo(db) {
  * @param {String} root 
  * @param {String} baseCollection 
  */
-async function uploadResource (verbose, path, root, baseCollection) {
+async function uploadResource (db, verbose, path, root, baseCollection) {
   try {
     console.log(verbose, path, root, baseCollection)
     const localFilePath = resolve(root, path)
@@ -52,7 +50,7 @@ async function uploadResource (verbose, path, root, baseCollection) {
  * @param {String} collection 
  * @param {String} baseCollection 
  */
-async function createCollection (verbose, collection, baseCollection) {
+async function createCollection (db, verbose, collection, baseCollection) {
   const absCollection = baseCollection +
     (collection.startsWith('/') ? '' : '/') +
     collection
@@ -88,7 +86,7 @@ function handleError (e, path) {
  * @param {{pattern: [String], threads: Number, mintime: Number}} options 
  * @returns 
  */
-async function uploadFileOrFolder(source, target, options) {
+async function uploadFileOrFolder(db, source, target, options) {
   // read parameters
   const root = resolve(source)
 
@@ -119,8 +117,8 @@ async function uploadFileOrFolder(source, target, options) {
       return 0
     }
     // ensure target collection exists
-    await createCollection(options.verbose, '', target)
-    await uploadResource(options.verbose, name, dir, target)
+    await createCollection(db, options.verbose, '', target)
+    await uploadResource(db, options.verbose, name, dir, target)
     console.log(`uploaded ${source} in ${Date.now() - start}ms`)
     return 0
   }
@@ -183,15 +181,15 @@ async function uploadFileOrFolder(source, target, options) {
     maxConcurrent: options.threads,
     minTime: options.mintime // pick a value that makes sense for your use case
   })
-  const createCollectionThrottled = limiter.wrap(createCollection.bind(null, options.verbose))
-  const uploadResourceThrottled = limiter.wrap(uploadResource.bind(null, options.verbose))
+  const createCollectionThrottled = limiter.wrap(createCollection.bind(null, db, options.verbose))
+  const uploadResourceThrottled = limiter.wrap(uploadResource.bind(null, db, options.verbose))
 
   // create all collections upfront
   await Promise.all(collections.map(c => createCollectionThrottled(c, target)))
 
   // requires user to be a member of DBA
   // apply collection configurations
-  if (isAdmin) {
+  if (options.applyXconf) {
     const promises = []
     for (const cpath of confCols.keys()) {
       createCollectionThrottled(cpath, "/db/system/config")
@@ -234,6 +232,7 @@ Usage:
   .option('d', {alias: 'dry-run', describe: 'Show what would be uploaded', type: 'boolean', group: 'Options'})
   .option('t', {alias: 'threads', describe: 'The maximum number of concurrent threads that will be used to upload data', type: 'number', default: 4, group: 'Options'})
   .option('m', {alias: 'mintime', describe: 'The minimum time each upload will take', type: 'number', default: 0, group: 'Options'})
+  .option('a', {alias: 'apply-xconf', describe: 'If set, will upload and apply index configurations that are in the fileset first before all other data is uploaded. The user must be a member of the dba group.', default: false, type: 'boolean', group: 'Options'})
   .option('h', {alias: 'help', group: 'Options'})
   // .option('v', {alias: 'version', group: 'Options'})
   .nargs({'i': 1, 'e': 1})
@@ -261,14 +260,20 @@ Usage:
       throw Error(source + ' not found!')
     }
 
-    connectionOptions = require('../connection')
-    db = connect(connectionOptions)
-    accountInfo = await getUserInfo(db)
-    isAdmin = accountInfo.groups.includes('dba')
-    const existsAndCanOpenCollection = await db.collections.existsAndCanOpen(target)
-    console.log("target exists:", existsAndCanOpenCollection)
+    const db = connect(require('../connection'))
 
-    return uploadFileOrFolder(source, target, parsed)
+    accountInfo = await getUserInfo(db)
+    const isAdmin = accountInfo.groups.includes('dba')
+    if (parsed.applyXconf && !isAdmin) {
+      throw Error("To apply configurations you must be member of the dba group.")
+    }
+
+    const existsAndCanOpenCollection = await db.collections.existsAndCanOpen(target)
+    if (parsed.verbose) {
+      console.log("target exists:", existsAndCanOpenCollection)
+    }
+
+    return uploadFileOrFolder(db, source, target, parsed)
   }
   catch (error) {
     if (error.name !== 'YError') {
