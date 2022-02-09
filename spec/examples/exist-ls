@@ -170,7 +170,7 @@ function formatDateTime(xsDateTime) {
   const month = date.toLocaleDateString("iso", dateFormat)
   const day = date.getDate().toString().padStart(3)
   if (year < currentYear) {
-    return month + day + year.padStart(6)
+    return month + day + year.toString().padStart(6)
   }
   const time = date.toLocaleDateString("iso", timeFormat).padStart(6)
   return month + day + time
