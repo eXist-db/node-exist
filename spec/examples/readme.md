@@ -2,7 +2,7 @@
 
 - `exist-ls` list the contents of a collection in exist-db
 - `exist-tree` list the contents of a collection in exist-db as a tree
-- `exist-upload` upload a file to an exist-db instance
+- `exist-upload` upload a files and folders to a collection in exist-db
 - `exist-install` upload and install a package into an existdb-instance
 
 The three command line script examples allow you to override the connection
@@ -37,9 +37,9 @@ dotenv(-cli) is a small script that allows you to read environment variables fro
 
 prepend command line script with `dotenv` in the folder you created the .env file in
 
-Example
+#### Examples
 
-If you installe node-exist globally (`npm install -g @existdb/node-exist`)
+If you installed node-exist globally (`npm install -g @existdb/node-exist`)
 
 ```bash
 dotenv exist-ls /db/apps
@@ -48,7 +48,7 @@ dotenv exist-ls /db/apps
 If you installed node-exist as a local package (npm dependency)
 
 ```bash
-dotenv node_module/.bin/exist-ls /db/apps
+dotenv node_modules/.bin/exist-ls /db/apps
 ```
 
 If you cloned this repository
