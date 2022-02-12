@@ -1,16 +1,17 @@
 #!/usr/bin/env node
+const { connect } = require("../../index")
+const { argv } = require("process") // eslint-disable-line node/prefer-global/process
 
-const {connect} = require('../../index')
 const {readFileSync} = require("fs")
 const {basename} = require("path")
 
 // read connection options from ENV
 const connectionOptions = require('../connection')
+const db = connect(connectionOptions)
 
-function usage() {
-  console.log("Usage: exist-install [local path to XAR]")
-  console.log("Example: exist-install ./my-app.xar")
-  process.exit(9)
+async function getUserInfo(db) {
+  const {user} = db.client.options.basic_auth
+  return await db.users.getUserInfo(user)
 }
 
 function serverName(db) {
@@ -27,9 +28,8 @@ function serverName(db) {
   return `${protocol}//${options.host}:${options.port}`
 }
 
-async function install (connectionOptions, localFilePath) {
+async function install (db, localFilePath) {
   try {
-    const db = connect(connectionOptions)
     const xarName = basename(localFilePath)
     const contents = readFileSync(localFilePath)
 
@@ -66,19 +66,63 @@ async function install (connectionOptions, localFilePath) {
   }
 }
 
-// main
+async function run() {
+  const cli = require("yargs")
+    .command("$0", "Install XAR package", (yargs) => {
+      yargs.demandCommand(1, 1).usage(`Install XAR package
+  
+  Usage:
+    exist-install package`);
+    })
+    .option("h", { alias: "help", group: "Options" })
+    .option("v", { alias: "version", group: "Options" })
+    .strict(false)
+    .exitProcess(false);
 
-if (!process.argv[2]){ 
-  console.error("No package given")
-  usage()
+  try {
+    const parsed = cli.parse(argv.slice(2));
+    if (Boolean(parsed.help) || Boolean(parsed.version)) {
+      return 0;
+    }
+
+    // main
+    const xarPath = parsed._[0]
+
+    if (!xarPath.match(/\.xar$/i)) {
+      throw Error("Package must have the file extension .xar!")
+    }
+
+    // check permissions (and therefore implicitly the connection)
+    const accountInfo = await getUserInfo(db)
+    const isAdmin = accountInfo.groups.includes('dba')
+    if (!isAdmin) {
+      throw Error(`Package installation failed. User "${accountInfo.name}" is not a member of the "dba" group.`)
+    }
+
+    return install(db, xarPath)
+  } catch (error) {
+    if (
+      error.code === 'EPROTO' ||
+      error.code === 'ECONNREFUSED' ||
+      error.code === 'ECONNRESET'
+    ) {
+      console.error(`Could not connect to DB at ${serverName(db)} - Reason: ${error.code}`)
+      return 1
+    }
+    if (error.name !== 'YError') {
+      const msg = error.message ? error.message : error.faultString ? error.faultString : error
+      console.error(msg)
+    }
+    return 1
+  }
 }
 
-if (!process.argv[2].match(/\.xar$/i)) {
-  console.error("Package must have .xar file extension")
-  usage()
-}
-
-install(connectionOptions, process.argv[2])
-  .then(code => process.exit(code))
-  .catch(code => process.exit(code))
-
+run()
+  .then((exitCode) => {
+    process.exitCode = exitCode
+  })
+  .catch((error) => {
+    console.error(error)
+    process.exitCode = 1
+  })
+  
