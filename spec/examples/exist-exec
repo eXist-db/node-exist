@@ -1,0 +1,82 @@
+#!/usr/bin/env node
+
+const {argv} = require('process'); // eslint-disable-line node/prefer-global/process
+const {connect} = require('../../index')
+const {readFileSync, fstat} = require("fs")
+
+// read connection options from ENV
+const connectionOptions = require('../connection')
+
+async function execute(db, query, variables) {
+    const result = await db.queries.readAll(query, { variables })
+    console.log(result.pages.toString())
+    return 0
+}
+
+async function run() {
+    const cli = require('yargs')
+    .command('$0', 'Execute queries in an exist-db', (yargs) => {
+      yargs.demandCommand(0, 1).usage(`Execute queries in an exist-db
+  
+  Usage:
+    exist-exec [options] [query]`);
+    })
+    .option('f', {alias: 'file', describe: 'Read query File', type: 'string', default: '', group: 'Options'})
+    .option('b', {alias: 'bound-variables', describe: 'bound variables as JSON', type: 'string', coerce: JSON.parse, default: {}, group: 'Options'})
+    .option('h', {alias: 'help', group: 'Options'})
+    .option('v', {alias: 'version', group: 'Options'})
+    .strict(false)
+    .exitProcess(false);
+  
+    try {
+      const parsed = cli.parse(argv.slice(2))
+      if (Boolean(parsed.help) || Boolean(parsed.version)) {
+        return 0
+      }
+      const {file, boundVariables} = parsed
+      const query = parsed._[0]
+
+      if (file === '' && !query) {
+        console.error('nothing to do')
+        return 1
+      }
+
+      if (file !== '' && query && query !== '') {
+        console.error('Cannot use both query string and query file')
+        return 1
+      }
+
+      const db = connect(connectionOptions)
+
+      if (file !== '') {
+        const xqf = readFileSync(file)
+        return await execute(db, xqf, boundVariables)
+      }
+
+      return await execute(db, query, boundVariables)
+    }
+    catch (error) {
+        if (
+            error.code === 'EPROTO' ||
+            error.code === 'ECONNREFUSED' ||
+            error.code === 'ECONNRESET'
+        ) {
+            console.error(`Could not connect to DB at ${serverName(db)} - Reason: ${error.code}`)
+            return 1
+        }
+        if (error.name !== 'YError') {
+            const msg = error.message ? error.message : error.faultString ? error.faultString : error
+            console.error(msg)
+        }
+        return 1
+    }
+  }
+  
+run()
+    .then((exitCode) => {
+        process.exitCode = exitCode
+    })
+    .catch((error) => {
+        console.error(error)
+        process.exitCode = 1
+    })
