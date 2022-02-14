@@ -2,7 +2,7 @@
 
 const {argv} = require('process'); // eslint-disable-line node/prefer-global/process
 const {connect} = require('../../index')
-const {readFileSync, fstat} = require("fs")
+const {readFileSync} = require("fs")
 
 // read connection options from ENV
 const connectionOptions = require('../connection')
