@@ -11,7 +11,8 @@
     "exist-tree": "spec/examples/exist-tree",
     "exist-ls": "spec/examples/exist-ls",
     "exist-upload": "spec/examples/exist-upload",
-    "exist-install": "spec/examples/exist-install"
+    "exist-install": "spec/examples/exist-install",
+    "exist-exec": "spec/examples/exist-exec"
   },
   "standard": {
     "ignore": [

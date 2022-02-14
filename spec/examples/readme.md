@@ -4,6 +4,7 @@
 - `exist-tree` list the contents of a collection in exist-db as a tree
 - `exist-upload` upload a files and folders to a collection in exist-db
 - `exist-install` upload and install a package into an existdb-instance
+- `exist-exec` execute queries in an existdb-instance
 
 The three command line script examples allow you to override the connection
 by setting environment variables prefixed with `EXISTDB`.
