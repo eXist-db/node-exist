@@ -7,6 +7,51 @@ const {readFileSync} = require("fs")
 // read connection options from ENV
 const connectionOptions = require('../connection')
 
+function parseVars (raw) {
+    let stringified = raw
+    if (raw === '-') {
+        stringified = readFileSync(process.stdin.fd)
+    }
+    if (stringified) {
+        return JSON.parse(stringified)
+    }
+    return {}
+}
+
+function getQuery (file, query) {
+    const hasQueryFile = file && file !== ''
+    const hasQueryString = query && query !== ''
+    
+    if (!hasQueryFile && !hasQueryString) {
+        console.error('No query given, nothing to do!')
+        return 1
+    }
+
+    if (hasQueryFile && hasQueryString) {
+        console.error('Cannot use both query string and query file')
+        return 1
+    }
+
+    // read query from standard input
+    if (query === '-') {
+        return readFileSync(process.stdin.fd, 'utf-8')
+    }
+
+    if (hasQueryString) {
+        return query
+    }
+
+    // read query file content
+    let path = file
+
+    // from standard input
+    if (file === '-') {
+        path = readFileSync(process.stdin.fd, 'utf-8').trim()
+    }
+
+    return readFileSync(path, 'utf-8')
+}
+
 async function execute(db, query, variables) {
     const result = await db.queries.readAll(query, { variables })
     console.log(result.pages.toString())
@@ -18,13 +63,13 @@ async function run() {
     .command('$0', 'Execute queries in an exist-db', (yargs) => {
       yargs.demandCommand(0, 1).usage(`Execute queries in an exist-db
   
-  Usage:
+Usage
     exist-exec [options] [query]`);
     })
-    .option('f', {alias: 'file', describe: 'Read query File', type: 'string', default: '', group: 'Options'})
-    .option('b', {alias: 'bound-variables', describe: 'bound variables as JSON', type: 'string', coerce: JSON.parse, default: {}, group: 'Options'})
+    .option('f', {alias: 'file', describe: 'Read query File (pass - to read from standard input)', group: 'Options'})
+    .option('b', {alias: 'bind', describe: 'Bind variables (either as JSON string or - to read from standard input)', coerce: parseVars, default: () => {}, group: 'Options'})
     .option('h', {alias: 'help', group: 'Options'})
-    .option('v', {alias: 'version', group: 'Options'})
+    .nargs({'f': 1,'b': 1})
     .strict(false)
     .exitProcess(false);
   
@@ -33,27 +78,12 @@ async function run() {
       if (Boolean(parsed.help) || Boolean(parsed.version)) {
         return 0
       }
-      const {file, boundVariables} = parsed
-      const query = parsed._[0]
+      const {file, bind} = parsed
 
-      if (file === '' && !query) {
-        console.error('nothing to do')
-        return 1
-      }
-
-      if (file !== '' && query && query !== '') {
-        console.error('Cannot use both query string and query file')
-        return 1
-      }
-
+      const query = getQuery(file, parsed._[0])
       const db = connect(connectionOptions)
 
-      if (file !== '') {
-        const xqf = readFileSync(file)
-        return await execute(db, xqf, boundVariables)
-      }
-
-      return await execute(db, query, boundVariables)
+      return await execute(db, query, bind)
     }
     catch (error) {
         if (
