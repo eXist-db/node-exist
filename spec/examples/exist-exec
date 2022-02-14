@@ -23,13 +23,11 @@ function getQuery (file, query) {
     const hasQueryString = query && query !== ''
     
     if (!hasQueryFile && !hasQueryString) {
-        console.error('No query given, nothing to do!')
-        return 1
+        throw Error('No query given, nothing to do!')
     }
 
     if (hasQueryFile && hasQueryString) {
-        console.error('Cannot use both query string and query file')
-        return 1
+        throw Error('Cannot use both query string and query file')
     }
 
     // read query from standard input
@@ -61,14 +59,21 @@ async function execute(db, query, variables) {
 async function run() {
     const cli = require('yargs')
     .command('$0', 'Execute queries in an exist-db', (yargs) => {
-      yargs.demandCommand(0, 1).usage(`Execute queries in an exist-db
-  
-Usage
+      yargs.demandCommand(0, 1).usage(`
+Usage:
     exist-exec [options] [query]`);
     })
-    .option('f', {alias: 'file', describe: 'Read query File (pass - to read from standard input)', group: 'Options'})
-    .option('b', {alias: 'bind', describe: 'Bind variables (either as JSON string or - to read from standard input)', coerce: parseVars, default: () => {}, group: 'Options'})
-    .option('h', {alias: 'help', group: 'Options'})
+    .option('f', {
+        alias: 'file',
+        describe: 'Read query File (pass - to read from standard input)'
+    })
+    .option('b', {
+        alias: 'bind',
+        describe: 'Bind variables (either as JSON string or - to read from standard input)', 
+        coerce: parseVars, 
+        default: () => {}
+    })
+    .option('h', {alias: 'help'})
     .nargs({'f': 1,'b': 1})
     .strict(false)
     .exitProcess(false);
