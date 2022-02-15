@@ -115,22 +115,24 @@ async function tree (collection, level) {
 
 async function run() {
     const cli = require('yargs')
-    .command('$0', 'Upload resources into an exist-db', (yargs) => {
-      yargs.demandCommand(1, 1).usage(`List a collection and its contents as a tree
-  
-  Usage:
+    .command('$0', 'List a collection and its contents as a tree', (yargs) => {
+      yargs.demandCommand(1, 1).usage(`  
+Usage:
     exist-tree [options] collection`);
     })
-    // .option('d', {alias: 'dry-run', describe: 'Show what would be uploaded', type: 'boolean', group: 'Options'})
-    .option('l', {alias: 'level', describe: 'The maximum depth of the tree. Setting this to zero will output the complete tree.', type: Number, default: 0, group: 'Options'})
-    .option('h', {alias: 'help', group: 'Options'})
-    .option('v', {alias: 'version', group: 'Options'})
+    .option('l', {
+        alias: 'level',
+        describe: 'The maximum depth of the tree. Setting this to zero will output the complete tree.', 
+        type: Number,
+        default: 0
+    })
+    .option('h', {alias: 'help'})
     .strict(false)
     .exitProcess(false);
   
     try {
       const parsed = cli.parse(argv.slice(2))
-      if (Boolean(parsed.help) || Boolean(parsed.version)) {
+      if (Boolean(parsed.help)) {
         return 0
       }
       const {level} = parsed

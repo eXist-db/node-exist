@@ -144,8 +144,7 @@ async function ls(collection, options) {
 async function run() {
   const cli = require("yargs")
     .command("$0", "List connection contents", (yargs) => {
-      yargs.demandCommand(1, 1).usage(`List connection contents
-  
+      yargs.demandCommand(1, 1).usage(`
   Usage:
     exist-ls [options] collection`);
     })
@@ -154,14 +153,12 @@ async function run() {
       describe: "Color the output",
       default: false,
       type: "boolean",
-      group: "Options",
     })
     .option("l", {
       alias: "extended",
       describe: "Display more information for each item",
       default: false,
       type: "boolean",
-      group: "Options",
     })
     .option("g", {
       alias: "glob",
@@ -169,16 +166,14 @@ async function run() {
         "Include only collection names and resources whose name match the pattern.",
       type: String,
       default: "*",
-      group: "Options",
     })
-    .option("h", { alias: "help", group: "Options" })
-    .option("v", { alias: "version", group: "Options" })
+    .option("h", { alias: "help"})
     .strict(false)
     .exitProcess(false);
 
   try {
     const parsed = cli.parse(argv.slice(2));
-    if (Boolean(parsed.help) || Boolean(parsed.version)) {
+    if (Boolean(parsed.help)) {
       return 0;
     }
 
