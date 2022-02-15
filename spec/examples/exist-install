@@ -69,19 +69,17 @@ async function install (db, localFilePath) {
 async function run() {
   const cli = require("yargs")
     .command("$0", "Install XAR package", (yargs) => {
-      yargs.demandCommand(1, 1).usage(`Install XAR package
-  
-  Usage:
+      yargs.demandCommand(1, 1).usage(`
+Usage:
     exist-install package`);
     })
-    .option("h", { alias: "help", group: "Options" })
-    .option("v", { alias: "version", group: "Options" })
+    .option("h", { alias: "help"})
     .strict(false)
     .exitProcess(false);
 
   try {
     const parsed = cli.parse(argv.slice(2));
-    if (Boolean(parsed.help) || Boolean(parsed.version)) {
+    if (Boolean(parsed.help)) {
       return 0;
     }
 

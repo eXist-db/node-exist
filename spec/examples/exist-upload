@@ -209,9 +209,8 @@ async function uploadFileOrFolder(db, source, target, options) {
 
 async function run() {
   const cli = require('yargs')
-  .command('$0', 'Upload resources into an exist-db', (yargs) => {
-    yargs.demandCommand(2, 2).usage(`Upload files and directories to a target collection in exist-db
-
+  .command('$0', 'Upload files and directories to a target collection in exist-db', (yargs) => {
+    yargs.demandCommand(2, 2).usage(`
 Usage:
   exist-up [options] source target`);
   })
@@ -219,30 +218,51 @@ Usage:
     alias: 'include', 
     describe: 'Include only files matching one or more of include patterns (comma separated)',
     default: "**",
-    ...stringList, 
-    group: 'Options'
+    ...stringList
   })
   .option('e', {
     alias: 'exclude', 
     describe: 'Exclude any file matching one or more of exclude patterns (comma separated)',
     default: [],
-    ...stringList, 
-    group: 'Options'
+    ...stringList
   })
-  .option('v', {alias: 'verbose', describe: 'Log every file and resource that was created', type: 'boolean', default: false, group: 'Options'})
-  .option('d', {alias: 'dry-run', describe: 'Show what would be uploaded', type: 'boolean', group: 'Options'})
-  .option('t', {alias: 'threads', describe: 'The maximum number of concurrent threads that will be used to upload data', type: 'number', default: 4, group: 'Options'})
-  .option('m', {alias: 'mintime', describe: 'The minimum time each upload will take', type: 'number', default: 0, group: 'Options'})
-  .option('a', {alias: 'apply-xconf', describe: 'If set, will upload and apply index configurations that are in the fileset first before all other data is uploaded. The user must be a member of the dba group.', default: false, type: 'boolean', group: 'Options'})
-  .option('h', {alias: 'help', group: 'Options'})
-  // .option('v', {alias: 'version', group: 'Options'})
+  .option('v', {
+    alias: 'verbose',
+    describe: 'Log every file and resource that was created',
+    type: 'boolean',
+    default: false
+  })
+  .option('d', {
+    alias: 'dry-run',
+    describe: 'Show what would be uploaded',
+    type: 'boolean'
+  })
+  .option('t', {
+    alias: 'threads',
+    describe: 'The maximum number of concurrent threads that will be used to upload data',
+    type: 'number',
+    default: 4
+  })
+  .option('m', {
+    alias: 'mintime',
+    describe: 'The minimum time each upload will take',
+    type: 'number',
+    default: 0
+  })
+  .option('a', {
+    alias: 'apply-xconf',
+    describe: 'If set, will upload and apply index configurations that are in the fileset first before all other data is uploaded. The user must be a member of the dba group.',
+    default: false,
+    type: 'boolean'
+  })
+  .option('h', {alias: 'help'})
   .nargs({'i': 1, 'e': 1})
   .strict(false)
   .exitProcess(false);
 
   try {
     const parsed = cli.parse(argv.slice(2))
-    if (Boolean(parsed.help) || Boolean(parsed.version)) {
+    if (Boolean(parsed.help)) {
       return 0
     }
     const {verbose, dryRun, include, exclude, threads, mintime} = parsed
