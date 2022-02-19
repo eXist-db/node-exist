@@ -1,13 +1,23 @@
 # node-exist Command Line Scripts
 
-- `exist-ls` list the contents of a collection in exist-db
-- `exist-tree` list the contents of a collection in exist-db as a tree
-- `exist-upload` upload a files and folders to a collection in exist-db
-- `exist-install` upload and install a package into an existdb-instance
-- `exist-exec` execute queries in an existdb-instance
+- `exist-ls` list the contents of a collection in eXist-db
+- `exist-tree` list the contents of a collection in eXist-db as a tree
+- `exist-upload` upload a files and folders to a collection in eXist-db
+- `exist-install` upload and install a package into eXist-db
+- `exist-exec` execute queries in an eXist-db
 
-The three command line script examples allow you to override the connection
-by setting environment variables prefixed with `EXISTDB`.
+**NOTE:** These scripts connect to a running eXist-db instance and XML-RPC has
+to be enabled.
+
+## connecting to your eXist-db instance
+
+The command line scripts allow you to connect to any instance that has XML-RPC
+enabaled. By default they will attempt to connect to a local development server
+with default passwords.
+
+Override any of the default connection parameters by setting environment 
+variables prefixed with `EXISTDB`. In the following table you see a list of the 
+parameters with their default values and a description.
 
 | variable name | default | description
 |----|----|----
