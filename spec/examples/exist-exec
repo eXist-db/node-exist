@@ -5,8 +5,15 @@ const {connect} = require('../../index')
 const {readFileSync} = require("fs")
 
 // read connection options from ENV
-const connectionOptions = require('../connection')
+const connectionOptions = require('../connection');
+const NodeExist = require('../../index');
 
+/**
+ * parse bindings
+ * '-' will read bindings from standard input
+ * @param {'-'|JSON} raw JSON string or '-'
+ * @returns {object} parsed variable bindings
+ */
 function parseVars (raw) {
     let stringified = raw
     if (raw === '-') {
@@ -18,6 +25,13 @@ function parseVars (raw) {
     return {}
 }
 
+/**
+ * get query from file or passed string
+ * 
+ * @param {string} file path to query file
+ * @param {string} query query string
+ * @returns {string|Buffer}
+ */
 function getQuery (file, query) {
     const hasQueryFile = file && file !== ''
     const hasQueryString = query && query !== ''
@@ -50,6 +64,14 @@ function getQuery (file, query) {
     return readFileSync(path, 'utf-8')
 }
 
+/**
+ * query db, output to standard out
+ * 
+ * @param {NodeExist.BoundModules} db bound NodeExist modules
+ * @param {string|Buffer} query the query to execute
+ * @param {object} variables the bound variables
+ * @returns {Number}
+ */
 async function execute(db, query, variables) {
     const result = await db.queries.readAll(query, { variables })
     console.log(result.pages.toString())
@@ -65,15 +87,17 @@ Usage:
     })
     .option('f', {
         alias: 'file',
+        type: 'string',
         describe: 'Read query File (pass - to read from standard input)'
     })
     .option('b', {
         alias: 'bind',
+        type: 'string',
         describe: 'Bind variables (either as JSON string or - to read from standard input)', 
         coerce: parseVars, 
         default: () => {}
     })
-    .option('h', {alias: 'help'})
+    .option('h', {alias: 'help', type: 'boolean'})
     .nargs({'f': 1,'b': 1})
     .strict(false)
     .exitProcess(false);
