@@ -80,7 +80,7 @@ Usage:
   
     try {
       const parsed = cli.parse(argv.slice(2))
-      if (Boolean(parsed.help) || Boolean(parsed.version)) {
+      if (Boolean(parsed.help)) {
         return 0
       }
       const {file, bind} = parsed
