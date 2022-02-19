@@ -265,14 +265,12 @@ Usage:
     if (Boolean(parsed.help)) {
       return 0
     }
-    const {verbose, dryRun, include, exclude, threads, mintime} = parsed
+    const {threads, mintime} = parsed
     if (typeof mintime !== 'number' || mintime < 0) {
-      console.error('Invalid value for option "mintime"; must be an integer equal or greater than zero.')
-      return 1
+      throw Error('Invalid value for option "mintime"; must be an integer equal or greater than zero.')
     }
     if (typeof threads !== 'number' || threads <= 0) {
-      console.error('Invalid value for option "threads"; must be an integer equal or greater than zero.')
-      return 1
+      throw Error('Invalid value for option "threads"; must be an integer equal or greater than zero.')
     }
 
     const [source, target] = parsed._
@@ -286,7 +284,7 @@ Usage:
     accountInfo = await getUserInfo(db)
     const isAdmin = accountInfo.groups.includes('dba')
     if (parsed.applyXconf && !isAdmin) {
-      throw Error("To apply configurations you must be member of the dba group.")
+      throw Error("To apply collection configurations you must be member of the dba group.")
     }
 
     const existsAndCanOpenCollection = await db.collections.existsAndCanOpen(target)
