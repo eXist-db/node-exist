@@ -12,7 +12,7 @@ to be enabled.
 ## connecting to your eXist-db instance
 
 The command line scripts allow you to connect to any instance that has XML-RPC
-enabaled. By default they will attempt to connect to a local development server
+enabled. By default they will attempt to connect to a local development server
 with default passwords.
 
 Override any of the default connection parameters by setting environment 
