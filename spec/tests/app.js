@@ -71,7 +71,7 @@ test('upload and install application XAR', function (t) {
     st.plan(2)
     db.app.remove(packageUri)
       .then(response => st.equal(response.success, true, 'uninstalled'))
-      .then(_ => db.documents.remove('/db/system/repo/test-app.xar'))
+      .then(_ => db.documents.remove(`${app.packageCollection}/test-app.xar`))
       .then(response => st.equal(response, true, 'removed'))
       .catch(e => st.fail(e))
   })
@@ -95,7 +95,7 @@ test('empty application XAR', function (t) {
       .then(response => {
         st.plan(2)
         st.equal(response.success, false)
-        st.equal(response.error.message, 'experr:EXPATH00 Missing descriptor from package: /db/system/repo/test-empty-app.xar')
+        st.equal(response.error.message, `experr:EXPATH00 Missing descriptor from package: ${app.packageCollection}/test-empty-app.xar`)
       })
       .catch(e => {
         st.fail(e)
@@ -105,7 +105,7 @@ test('empty application XAR', function (t) {
 
   t.test('cleanup', function (st) {
     st.plan(1)
-    db.documents.remove('/db/system/repo/test-empty-app.xar')
+    db.documents.remove(`${app.packageCollection}/test-empty-app.xar`)
       .then(response => st.equal(response, true))
       .catch(e => st.fail(e))
   })
