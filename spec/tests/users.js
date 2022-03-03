@@ -10,18 +10,19 @@ test('list users', function (t) {
   const db = connect(connectionOptions)
   db.users.list()
     .then(function (list) {
-      t.plan(6)
+      t.plan(4)
       t.ok(list.length, 'Returns a non-empty list of users')
 
       const names = list.map(u => u.name)
       t.true(names.includes('SYSTEM'), 'found user SYSTEM')
       t.true(names.includes('admin'), 'found user admin')
       t.true(names.includes('guest'), 'found user guest')
-      t.true(names.includes('monex'), 'found user monex')
-      t.true(names.includes('eXide'), 'found user eXide')
-      // exist 4.7.1 does not have these users
-      // t.true(names.includes('nobody'), 'found user nobody')
+      // when testing on a package-less installation these users will not be created
+      // t.true(names.includes('monex'), 'found user monex')
+      // t.true(names.includes('eXide'), 'found user eXide')
       // t.true(names.includes('packageservice'), 'found user packageservice')
+      // exist 4.7.1 does not have this user
+      // t.true(names.includes('nobody'), 'found user nobody')
       t.end()
     })
     .catch(function (e) {

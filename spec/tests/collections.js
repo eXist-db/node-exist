@@ -83,9 +83,9 @@ test('collection exists and guest cannot open it', function (t) {
 
 test('collection exists and guest can open it', function (t) {
   const db = connect(asGuest)
-  db.collections.existsAndCanOpen('/db/apps/dashboard')
+  db.collections.existsAndCanOpen('/db/apps')
     .then(function (success) {
-      t.true(success, '/db/apps/dashboard exists and user guest can access it')
+      t.true(success, '/db/apps exists and user guest can access it')
       t.end()
     })
     .catch(function (e) {
