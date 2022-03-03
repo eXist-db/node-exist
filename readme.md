@@ -393,6 +393,18 @@ db.app.remove('http://exist-db.org/apps/test-app')
 }
 ```
 
+#### packageCollection
+
+The path to the collection where node-exist will upload
+packages to (`/db/pkgtmp`). Useful for cleanup after
+succesful installation.
+
+**Example:**
+
+```js
+db.documents.remove(`${db.app.packageCollection}/test-app.xar`)
+```
+
 ### Indices
 
 Status: TODO
