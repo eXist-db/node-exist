@@ -20,6 +20,10 @@ jobs:
         image: existdb/existdb:${{ matrix.exist-version }}
         ports:
           - 8443:8443
+        volumes:
+          - ${{ github.workspace }}/xquery:/exist/autodeploy
+        options: >-
+          --health-interval 4s
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
