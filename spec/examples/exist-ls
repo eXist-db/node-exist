@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 const { connect } = require("../../index")
 const { argv } = require("process") // eslint-disable-line node/prefer-global/process
 
@@ -63,8 +62,9 @@ const padReducer = (res, next) => {
 const getPaddings = (list) => list.reduce(padReducer, initialPaddings);
 
 const timeFormat = {
-  timeStyle: "short",
-  hourCycle: "h23"
+  hour12:false,
+  hour: '2-digit',
+  minute: '2-digit'
 }
 const dateFormat = {
   month: "short"
@@ -75,12 +75,12 @@ const currentYear = (new Date()).getFullYear()
 function formatDateTime(xsDateTime) {
   const date = new Date(xsDateTime)
   const year = date.getFullYear()
-  const month = date.toLocaleDateString("iso", dateFormat)
+  const month = date.toLocaleDateString('iso', dateFormat)
   const day = date.getDate().toString().padStart(3)
   if (year < currentYear) {
     return month + day + year.toString().padStart(6)
   }
-  const time = date.toLocaleDateString("iso", timeFormat).padStart(6)
+  const time = date.toLocaleTimeString('iso', timeFormat).padStart(6)
   return month + day + time
 }
 
