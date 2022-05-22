@@ -69,9 +69,9 @@ function readAll (client, queryStringOrBuffer, options) {
     .then(function (pages) {
       results = {
         query: queryStringOrBuffer,
-        options: options,
+        options,
         hits: resultPages,
-        pages: pages
+        pages
       }
 
       return releaseResult(client, resultHandle)
