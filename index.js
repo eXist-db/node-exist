@@ -51,15 +51,15 @@ function applyEachWith (module, client) {
 }
 
 /**
- * Receive set of bound components to interact with an exist-db instance
- * @param {NodeExistConnectionOptions} options set who connects to which server and how
- * @returns {NodeExist} bound components to interact with an exist-db instance
- */
+  * Receive set of bound components to interact with an exist-db instance
+  * @param {NodeExistConnectionOptions} options set who connects to which server and how
+  * @returns {NodeExist} bound components to interact with an exist-db instance
+  */
 function connect (options) {
   const client = connection.connect(options)
 
   return {
-    client: client,
+    client,
     server: applyEachWith(database, client),
     queries: applyEachWith(queries, client),
     resources: applyEachWith(resources, client),
@@ -71,13 +71,12 @@ function connect (options) {
   }
 }
 
-module.exports = {
-  readOptionsFromEnv: connection.readOptionsFromEnv,
-  connect,
-  defineMimeTypes: function (mimeTypes) {
-    mime.define(mimeTypes)
-  },
-  getMimeType: function (path) {
-    return mime.getType(path)
-  }
+exports.readOptionsFromEnv = connection.readOptionsFromEnv
+exports.connect = connect
+exports.defineMimeTypes = function (mimeTypes) {
+  mime.define(mimeTypes)
+}
+
+exports.getMimeType = function (path) {
+  return mime.getType(path)
 }
