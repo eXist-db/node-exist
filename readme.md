@@ -25,8 +25,8 @@ npm install @existdb/node-exist
 Creating, reading and removing a collection:
 
 ```js
-const exist = require('@existdb/node-exist')
-const db = exist.connect()
+const {connect} = require('@existdb/node-exist')
+const db = connect()
 
 db.collections.create('/db/apps/test')
   .then(result => db.collections.describe('/db/apps/test'))
@@ -37,8 +37,8 @@ db.collections.create('/db/apps/test')
 Uploading an XML file into the database
 
 ```js
-const exist = require('@existdb/node-exist')
-const db = exist.connect()
+const {connect} = require('@existdb/node-exist')
+const db = connect()
 
 db.documents.upload(Buffer.from('<root/>'))
   .then(fileHandle => db.documents.parseLocal(fileHandle, '/db/apps/test/file.xml', {}))
@@ -50,8 +50,8 @@ db.documents.upload(Buffer.from('<root/>'))
 Since all interactions with the database are promises you can also use async functions
 
 ```js
-const exist = require('@existdb/node-exist')
-const db = exist.connect()
+const {connect} = require('@existdb/node-exist')
+const db = connect()
 
 async function uploadAndParse (filePath, contents) {
   const fileHandle = await db.documents.upload(contents)
