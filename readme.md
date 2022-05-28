@@ -65,6 +65,17 @@ uploadAndParse('/db/apps/test-file.xml', Buffer.from('<root/>'))
   .catch(error => console.error(error))
 ```
 
+You can now also import node-exist into an ES module
+
+```js
+import {connect} from '@existdb/node-exist'
+const db = connect()
+
+// do something with the db connection
+db.collections.describe('/db/apps')
+  .then(result => console.log(result))
+```
+
 You can also have a look at the 
 [examples](spec/examples) for more use-cases.
 
