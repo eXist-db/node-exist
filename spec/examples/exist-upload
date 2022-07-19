@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 const {argv} = require('process'); // eslint-disable-line node/prefer-global/process
 
-const {statSync, readFileSync, existsSync} = require("fs")
+const {statSync, createReadStream, existsSync, readFileSync} = require("fs")
 const {resolve} = require("path")
 
 // read connection options from ENV
-const {connect} = require('../../index')
+const {connect, getRestClient} = require('../../index');
 
 const stringList = {
     type: 'string',
@@ -28,19 +28,27 @@ async function getUserInfo(db) {
  * @param {String} root 
  * @param {String} baseCollection 
  */
-async function uploadResource (db, verbose, path, root, baseCollection) {
+async function uploadResource (db, rc, verbose, path, root, baseCollection) {
+  const localFilePath = resolve(root, path)
+  const remoteFilePath = baseCollection + '/' + path
   try {
-    const localFilePath = resolve(root, path)
-    const remoteFilePath = baseCollection + '/' + path
-    const fileContents = readFileSync(localFilePath);
-    const fileHandle = await db.documents.upload(fileContents)
-    await db.documents.parseLocal(fileHandle, remoteFilePath, {})
+    await rc.put(createReadStream(localFilePath), remoteFilePath)
     if (verbose) {
       console.log(`✔︎ ${path} uploaded`)
     }
   }
-  catch (e) { 
-    handleError(e, path)
+  catch (e) {
+    if (e.response.statusCode === 400 && verbose) {
+      // resend to get validation report
+      // @see https://github.com/eXist-db/exist/issues/4482
+      const fileContents = readFileSync(localFilePath);
+      const fileHandle = await db.documents.upload(fileContents)
+      // await db.documents.parseLocal(fileHandle, remoteFilePath, {})
+      db.documents.parseLocal(fileHandle, remoteFilePath, {})
+        .catch(e => handleError(e, path))
+    } else {
+      handleError(e, path)
+    }
   }
 }
 
@@ -80,12 +88,14 @@ function handleError (e, path) {
 
 /**
  * 
+ * @param {Object} db 
+ * @param {Object} rc
  * @param {String} source 
  * @param {String} target 
  * @param {{pattern: [String], threads: Number, mintime: Number}} options 
  * @returns 
  */
-async function uploadFileOrFolder(db, source, target, options) {
+async function uploadFileOrFolder(db, rc, source, target, options) {
   // read parameters
   const root = resolve(source)
 
@@ -117,7 +127,7 @@ async function uploadFileOrFolder(db, source, target, options) {
     }
     // ensure target collection exists
     await createCollection(db, options.verbose, '', target)
-    await uploadResource(db, options.verbose, name, dir, target)
+    await uploadResource(db, rc, options.verbose, name, dir, target)
     console.log(`uploaded ${source} in ${Date.now() - start}ms`)
     return 0
   }
@@ -183,7 +193,7 @@ async function uploadFileOrFolder(db, source, target, options) {
     minTime: options.mintime // pick a value that makes sense for your use case
   })
   const createCollectionThrottled = limiter.wrap(createCollection.bind(null, db, options.verbose))
-  const uploadResourceThrottled = limiter.wrap(uploadResource.bind(null, db, options.verbose))
+  const uploadResourceThrottled = limiter.wrap(uploadResource.bind(null, db, rc, options.verbose))
 
   // create all collections upfront
   await Promise.all(collections.map(c => createCollectionThrottled(c, target)))
@@ -279,7 +289,9 @@ Usage:
       throw Error(source + ' not found!')
     }
 
-    const db = connect(require('../connection'))
+    const connectionOptions = require('../connection')
+    const db = connect(connectionOptions)
+    const rc = await getRestClient(connectionOptions)
 
     accountInfo = await getUserInfo(db)
     const isAdmin = accountInfo.groups.includes('dba')
@@ -292,7 +304,7 @@ Usage:
       console.log("target exists:", existsAndCanOpenCollection)
     }
 
-    return uploadFileOrFolder(db, source, target, parsed)
+    return uploadFileOrFolder(db, rc, source, target, parsed)
   }
   catch (error) {
     if (error.name !== 'YError') {
