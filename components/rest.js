@@ -1,6 +1,6 @@
 const { promisify } = require('util')
 const stream = require('stream')
-const { isGeneratorFunction } = require('util/types')
+const { isGeneratorFunction } = require('util').types
 const pipeline = promisify(stream.pipeline)
 const { getMimeType } = require('./util')
 
