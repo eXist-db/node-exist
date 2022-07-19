@@ -1,5 +1,5 @@
 const test = require('tape')
-const fs = require('fs')
+const { readFileSync } = require('fs')
 const { connect } = require('../../index')
 const connectionOptions = require('../connection')
 
@@ -20,7 +20,7 @@ test('upload document', function (t) {
 
 test('upload invalid XML', function (t) {
   const db = connect(connectionOptions)
-  const buffer = fs.readFileSync('spec/files/invalid.xml')
+  const buffer = readFileSync('spec/files/invalid.xml')
 
   db.documents.upload(buffer, buffer.length)
     .then(function (result) {
@@ -41,7 +41,7 @@ test('upload valid XML', function (t) {
   const db = connect(connectionOptions)
   const remoteFileName = '/test.xml'
 
-  db.documents.upload(fs.readFileSync('spec/files/test.xml'))
+  db.documents.upload(readFileSync('spec/files/test.xml'))
     .then(function (fh) {
       t.ok(fh >= 0, 'returned filehandle')
       return db.documents.parseLocal(fh, remoteFileName, {})
@@ -62,8 +62,8 @@ test('upload valid XML', function (t) {
 
 test('download test.xml', function (t) {
   const db = connect(connectionOptions)
-  const localContents = fs.readFileSync('spec/files/test.xml').toString()
-  const expectedContents = localContents.substr(0, localContents.length - 1) // for some reason the last newline is removed
+  const localContents = readFileSync('spec/files/test.xml').toString()
+  const expectedContents = localContents.substring(0, localContents.length - 1) // for some reason the last newline is removed
   const options = { 'omit-xml-declaration': 'no' } // xml header is cut off by default
   const remoteFileName = '/test.xml'
 
@@ -76,12 +76,6 @@ test('download test.xml', function (t) {
       t.fail(e, 'errored')
       t.end()
     })
-})
-
-// well formed xml
-test('well-formed-xml', function (t) {
-  t.skip('not implemented yet')
-  t.end()
 })
 
 // xquery file with permission changes
