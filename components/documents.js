@@ -1,4 +1,4 @@
-const mime = require('mime')
+const { getMimeType } = require('./util')
 
 function upload (client, contentBuffer) {
   return client.promisedMethodCall('upload', [contentBuffer, contentBuffer.length])
@@ -6,7 +6,7 @@ function upload (client, contentBuffer) {
 
 function parseLocal (client, handle, filename, options) {
   // set default values
-  const mimeType = options.mimetype || mime.getType(filename)
+  const mimeType = getMimeType(filename, options.mimetype)
   const replace = options.replace || true
 
   return client.promisedMethodCall('parseLocal', [handle, filename, replace, mimeType])
