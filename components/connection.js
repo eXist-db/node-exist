@@ -30,6 +30,17 @@ const defaultRPCoptions = {
   }
 }
 
+const defaultRestOptions = {
+  host: 'localhost',
+  protocol: 'https',
+  port: '8443',
+  path: '/exist/rest',
+  basic_auth: {
+    user: 'guest',
+    pass: 'guest'
+  }
+}
+
 function isLocalDB (host) {
   return (
     host === 'localhost' ||
@@ -45,6 +56,11 @@ function useSecureConnection (options) {
   return true
 }
 
+function basicAuth (name, pass) {
+  const payload = pass ? `${name}:${pass}` : name
+  return 'Basic ' + Buffer.from(payload).toString('base64')
+}
+
 /**
  * Connect to database via XML-RPC
  * @param {NodeExistConnectionOptions} options
@@ -54,6 +70,7 @@ function connect (options) {
   const _options = assign({}, defaultRPCoptions, options)
   delete _options.secure // prevent pollution of XML-RPC options
 
+  let client
   if (useSecureConnection(options)) {
     // allow invalid and self-signed certificates on localhost, if not explicitly
     // enforced by setting options.rejectUnauthorized to true
@@ -61,15 +78,45 @@ function connect (options) {
       ? _options.rejectUnauthorized
       : !isLocalDB(_options.host)
 
-    const secureClient = xmlrpc.createSecureClient(_options)
-    secureClient.promisedMethodCall = promisedMethodCall(secureClient)
-    return secureClient
+    client = xmlrpc.createSecureClient(_options)
+  } else {
+    if (!isLocalDB(_options.host)) {
+      console.warn('Connecting to DB using an unencrypted channel.')
+    }
+    client = xmlrpc.createClient(_options)
   }
-  if (!isLocalDB(_options.host)) {
-    console.warn('Connecting to DB using an unencrypted channel.')
-  }
-  const client = xmlrpc.createClient(_options)
   client.promisedMethodCall = promisedMethodCall(client)
+  return client
+}
+
+async function restConnection (options) {
+  const { got } = await import('got')
+  const _options = assign({}, defaultRestOptions, options)
+  const authorization = basicAuth(_options.basic_auth.user, _options.basic_auth.pass)
+
+  const rejectUnauthorized = ('rejectUnauthorized' in _options)
+    ? _options.rejectUnauthorized
+    : !isLocalDB(_options.host)
+
+  if (!isLocalDB(_options.host) && _options.protocol === 'http') {
+    console.warn('Connecting to remote DB using an unencrypted channel.')
+  }
+
+  const port = _options.port ? ':' + _options.port : ''
+  const path = _options.path.startsWith('/') ? _options.path : '/' + _options.path
+  const prefixUrl = `${_options.protocol}://${_options.host}${port}${path}`
+
+  const client = got.extend(
+    {
+      prefixUrl,
+      headers: {
+        'user-agent': 'node-exist',
+        authorization
+      },
+      https: { rejectUnauthorized }
+    }
+  )
+
   return client
 }
 
@@ -108,5 +155,7 @@ function readOptionsFromEnv () {
 module.exports = {
   connect,
   readOptionsFromEnv,
-  defaultRPCoptions
+  restConnection,
+  defaultRPCoptions,
+  defaultRestOptions
 }

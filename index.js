@@ -26,6 +26,7 @@ const collections = require('./components/collections')
 const indices = require('./components/indices')
 const users = require('./components/users')
 const app = require('./components/app')
+const rest = require('./components/rest')
 
 // exist specific mime types
 mime.define({
@@ -77,6 +78,18 @@ function connect (options) {
   }
 }
 
+async function getRestClient (options) {
+  const restClient = await connection.restConnection(options)
+  const { del, put, get } = applyEachWith(rest, restClient)
+
+  return {
+    restClient,
+    del,
+    put,
+    get
+  }
+}
+
 exports.readOptionsFromEnv = connection.readOptionsFromEnv
 exports.connect = connect
 exports.defineMimeTypes = function (mimeTypes) {
@@ -86,3 +99,4 @@ exports.defineMimeTypes = function (mimeTypes) {
 exports.getMimeType = function (path) {
   return mime.getType(path)
 }
+exports.getRestClient = getRestClient
