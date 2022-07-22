@@ -20,6 +20,8 @@ Attempts to translate terminologies into node world. Uses promises.
 npm install @existdb/node-exist
 ```
 
+__NOTE:__ If you are looking for a command line client have a look at [xst](https://github.com/line-o/xst)
+
 ## Use
 
 Creating, reading and removing a collection:
@@ -485,30 +487,16 @@ Note: There is no way to bring it up again.
 
 ## Command Line Scripts
 
-You can use this library to interact with local or remote existdb instances on the command line.
-You can find a few basic [examples](spec/examples) in this repository.
+You can use this library to build a command line interface that interacts with existdb instances.
+A few basic [examples](spec/examples) how to do this are included in this repository.
 
-To give you a taste all example scripts are exposed as binaries in the __node_modules/.bin__ folder when you install this package.
-
-You can run them using `npx`
+Example:
 
 ```bash
-npx -p @existdb/node-exist exist-ls /db/apps
+spec/examples/exist-ls /db/apps
 ```
 
-If you want you can even install this package globally and then use these scripts like `ls` or `cd`.
-
-```bash
-npm install -g @existdb/node-exist
-```
-
-Now you can type
-
-```bash
-exist-ls /db/apps
-```
-
-anywhere on the system.
+__NOTE:__ Have a look at [xst](https://github.com/line-o/xst) for a CLI client built with node-exist.
 
 ## Test
 
