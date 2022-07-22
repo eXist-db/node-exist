@@ -1,4 +1,6 @@
-# node-exist Command Line Scripts
+# node-exist CLI examples
+
+You need to clone this repository to get access to the command line examples.
 
 - `exist-ls` list the contents of a collection in eXist-db
 - `exist-tree` list the contents of a collection in eXist-db as a tree
@@ -50,19 +52,7 @@ prepend command line script with `dotenv` in the folder you created the .env fil
 
 #### Examples
 
-If you installed node-exist globally (`npm install -g @existdb/node-exist`)
-
-```bash
-dotenv exist-ls /db/apps
-```
-
-If you installed node-exist as a local package (npm dependency)
-
-```bash
-dotenv node_modules/.bin/exist-ls /db/apps
-```
-
-If you cloned this repository
+You need to clone this repository, then
 
 ```bash
 dotenv spec/examples/exist-ls /db/apps
