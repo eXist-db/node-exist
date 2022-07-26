@@ -1,8 +1,8 @@
 const test = require('tape')
 const { connect } = require('../../index')
-const connectionOptions = require('../connection')
+const { envOptions } = require('../connection')
 const testCollection = '/tests'
-const db = connect(connectionOptions)
+const db = connect(envOptions)
 
 function testGetPermissions (t) {
   // setup
@@ -69,7 +69,7 @@ function testSetPermissions (t) {
 }
 
 test('resources:', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
 
   t.test('setup', function (setup) {
     db.collections.create(testCollection)

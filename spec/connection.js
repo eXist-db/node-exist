@@ -20,4 +20,4 @@ if (!envOptions.basic_auth) {
   envOptions.basic_auth = { user: 'admin', pass: '' }
 }
 // console.log(envOptions)
-module.exports = envOptions
+module.exports.envOptions = envOptions

@@ -2,7 +2,7 @@
 
 const test = require('tape')
 const { connect, getMimeType, defineMimeTypes } = require('../../index')
-const connectionOptions = require('../connection')
+const { envOptions } = require('../connection')
 
 test('check for default mime type extensions', function (t) {
   t.equal(getMimeType('test.xq'), 'application/xquery')
@@ -46,7 +46,7 @@ test('create connection using http://', function (t) {
 })
 
 test('get collection permissions', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
   db.resources.getPermissions('/db')
     .then(function (result) {
       t.ok(result)

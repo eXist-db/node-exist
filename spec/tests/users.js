@@ -1,13 +1,13 @@
 const test = require('tape')
 const { connect } = require('../../index')
-const connectionOptions = require('../connection')
+const { envOptions } = require('../connection')
 const asGuest = Object.assign({},
-  connectionOptions,
+  envOptions,
   { basic_auth: { user: 'guest', pass: 'guest' } }
 )
 
 test('list users', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
   db.users.list()
     .then(function (list) {
       t.plan(4)
@@ -45,7 +45,7 @@ test('list users as guest', function (t) {
 })
 
 test('get user info for admin', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
   db.users.getUserInfo('admin')
     .then(function (info) {
       t.ok(info)
@@ -58,7 +58,7 @@ test('get user info for admin', function (t) {
 })
 
 test('get user info for guest', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
   db.users.getUserInfo('guest')
     .then(function (info) {
       t.ok(info)
@@ -71,7 +71,7 @@ test('get user info for guest', function (t) {
 })
 
 test('get user info for non-existent user', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
   db.users.getUserInfo('thisuserschouldnotexist')
     .then(function (info) {
       t.fail()

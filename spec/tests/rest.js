@@ -1,14 +1,14 @@
 const test = require('tape')
 const { readFileSync, createReadStream, createWriteStream, unlinkSync } = require('fs')
 const { getRestClient, connect } = require('../../index')
-const connectionOptions = require('../connection')
+const { envOptions } = require('../connection')
 
 // rest client interactions
 test('with rest client', async function (t) {
   const testCollection = '/db/rest-test'
 
-  const db = connect(connectionOptions)
-  const rc = await getRestClient(connectionOptions)
+  const db = connect(envOptions)
+  const rc = await getRestClient(envOptions)
 
   await db.collections.create(testCollection)
   const testBuffer = Buffer.from('<collection>\n    <item property="value"/>\n</collection>')

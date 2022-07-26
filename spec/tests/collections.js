@@ -1,13 +1,13 @@
 const test = require('tape')
 const { connect } = require('../../index')
-const connectionOptions = require('../connection')
+const { envOptions } = require('../connection')
 const asGuest = Object.assign({},
-  connectionOptions,
+  envOptions,
   { basic_auth: { user: 'guest', pass: 'guest' } }
 )
 
 test('get collection info', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
   db.collections.describe('/db')
     .then(function (info) {
       t.equal(info.owner, 'SYSTEM')
@@ -44,7 +44,7 @@ test('read collection', function (t) {
 })
 
 test('get info for non existent collection', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
   db.collections.describe('/foo')
     .then(function (r) {
       t.fail(r, 'no error')
@@ -62,7 +62,7 @@ test('get info for non existent collection', function (t) {
 })
 
 test('create collection', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
   db.collections.create('new-test-collection')
     .then(function (r) {
       console.log(r, 'create')
@@ -76,7 +76,7 @@ test('create collection', function (t) {
 })
 
 test('remove collection', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
   const testCollection = '/remove-collection'
   db.collections.create(testCollection)
     .then(function () {
@@ -132,7 +132,7 @@ test('collection does not exist (guest)', function (t) {
 })
 
 test('collection exists and admin can open it', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
   db.collections.existsAndCanOpen('/db/system/security')
     .then(function (success) {
       t.true(success)
@@ -145,7 +145,7 @@ test('collection exists and admin can open it', function (t) {
 })
 
 test('collection does not exist (admin)', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
   db.collections.existsAndCanOpen('/db/apps/asdf')
     .then(function (success) {
       t.false(success, '/db/apps/asdf does not exist')
