@@ -6,6 +6,9 @@ const { envOptions } = require('../connection')
 // rest client interactions
 test('with rest client', async function (t) {
   const testCollection = '/db/rest-test'
+  const _query = '<c name="/db/rest-test">{' +
+    'for $r in xmldb:get-child-resources("/db/rest-test") return <r name="{$r}" />' +
+    '}</c>'
 
   const db = connect(envOptions)
   const rc = await getRestClient(envOptions)
@@ -151,7 +154,7 @@ test('with rest client', async function (t) {
     try {
       await rc.put(testBuffer, 'db/rest-test/read-test-stream.xml')
       const writeStream = createWriteStream('stream-test.xml')
-      const res = await rc.get('db/rest-test/read-test-stream.xml', writeStream)
+      const res = await rc.get('db/rest-test/read-test-stream.xml', {}, writeStream)
       st.equal(res.statusCode, 200)
       const written = readFileSync('stream-test.xml')
       st.equal(written.toString(), '<collection>\n    <item property="value"/>\n</collection>')
@@ -166,7 +169,7 @@ test('with rest client', async function (t) {
     const writeStream = createWriteStream('stream-fail-test.xml')
 
     try {
-      const res = await rc.get('db/rest-test/non-existent.file', writeStream)
+      const res = await rc.get('db/rest-test/non-existent.file', {}, writeStream)
       st.fail(res)
       st.end()
     } catch (e) {
@@ -181,8 +184,8 @@ test('with rest client', async function (t) {
     try {
       await rc.put(testBuffer, 'db/rest-test/read-test-stream.xml')
       const writeStream = createWriteStream('stream-test.xml')
-      const res = await rc.get('db/rest-test/read-test-stream.xml', writeStream)
-      st.equal(res.statusCode, 200)
+      const res = await rc.get('db/rest-test/read-test-stream.xml', {}, writeStream)
+      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
       const written = readFileSync('stream-test.xml')
       st.equal(written.toString(), '<collection>\n    <item property="value"/>\n</collection>')
       st.end()
@@ -195,7 +198,7 @@ test('with rest client', async function (t) {
   t.test('getting a collection will return the file listing as xml', async function (st) {
     try {
       const res = await rc.get('db/rest-test')
-      st.equal(res.statusCode, 200)
+      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
 
       const lines = res.body.split('\n')
       st.equal(lines[0], '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist">')
@@ -203,6 +206,165 @@ test('with rest client', async function (t) {
 
       st.end()
     } catch (e) {
+      st.fail(e)
+      st.end()
+    }
+  })
+
+  t.test('collection listing does honor neither _wrap nor _indent', async function (st) {
+    try {
+      const res = await rc.get('db/rest-test', { _wrap: 'no', _indent: 'no' })
+      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+
+      const lines = res.body.split('\n')
+      st.equal(lines[0], '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist">')
+      st.ok(lines[1].startsWith('    <exist:collection name="/db/rest-test"'))
+
+      st.end()
+    } catch (e) {
+      st.fail(e)
+      st.end()
+    }
+  })
+
+  t.test('get in combination with _query allows to get unindented, unwrapped result', async function (st) {
+    try {
+      const res = await rc.get('db/rest-test', { _wrap: 'no', _indent: 'no', _query })
+      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      const lines = res.body.split('\n')
+      st.equal(lines.length, 1)
+      st.ok(lines[0].startsWith('<c name="/db/rest-test"><r name="from-buffer.xml"/><r name='))
+
+      st.end()
+    } catch (e) {
+      st.fail(e)
+      st.end()
+    }
+  })
+
+  t.test('get in combination with _query allows to get indented, wrapped result', async function (st) {
+    try {
+      const res = await rc.get('db/rest-test', { _wrap: 'yes', _indent: 'yes', _query })
+      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      const lines = res.body.split('\n')
+      st.equal(res.hits, 1, 'result returned ' + res.hits + ' hit(s)')
+      st.equal(res.start, 1, 'start is ' + res.start)
+      st.equal(res.count, 1, 'count is ' + res.count)
+
+      st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
+      st.equal(lines[1], '    <c name="/db/rest-test">')
+      st.equal(lines[2], '        <r name="from-buffer.xml"/>')
+
+      st.end()
+    } catch (e) {
+      st.fail(e)
+      st.end()
+    }
+  })
+
+  t.test('post returns wrapped and indented result', async function (st) {
+    try {
+      const res = await rc.post(_query, 'db/rest-test')
+      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      st.equal(res.hits, 1, 'result returned ' + res.hits + ' hit(s)')
+      st.equal(res.start, 1, 'start is ' + res.start)
+      st.equal(res.count, 1, 'count is ' + res.count)
+
+      const lines = res.body.split('\n')
+      st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
+      st.equal(lines[1], '    <c name="/db/rest-test">')
+      st.equal(lines[2], '        <r name="from-buffer.xml"/>')
+
+      st.end()
+    } catch (e) {
+      st.fail(e)
+      st.end()
+    }
+  })
+
+  t.test('post returns wrapped and unindented result', async function (st) {
+    try {
+      const res = await rc.post(_query, 'db/rest-test', { indent: 'no' })
+      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      st.equal(res.hits, 1, 'result returned ' + res.hits + ' hit(s)')
+      st.equal(res.start, 1, 'start is ' + res.start)
+      st.equal(res.count, 1, 'count is ' + res.count)
+      const lines = res.body.split('\n')
+      st.equal(lines.length, 1, 'body consists of a single line')
+      st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
+      st.ok(lines[0].contains('<c name="/db/rest-test">'), 'contains result')
+      st.end()
+    } catch (e) {
+      st.fail(e)
+      st.end()
+    }
+  })
+
+  t.test('post honors start and max', async function (st) {
+    try {
+      const res = await rc.post('xmldb:get-child-resources("/db/rest-test")', 'db/rest-test', { start: 1, max: 1 })
+      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      st.equal(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
+      st.equal(res.start, 1, 'start is ' + res.start)
+      st.equal(res.count, 1, 'count is ' + res.count)
+
+      const lines = res.body.split('\n')
+      st.equal(lines.length, 3, 'body consists of 3 lines')
+      st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
+      st.equal(lines[1], '    <exist:value exist:type="xs:string">from-buffer.xml</exist:value>')
+      st.end()
+    } catch (e) {
+      st.fail(e)
+      st.end()
+    }
+  })
+
+  t.test('post honors just start', async function (st) {
+    try {
+      const res = await rc.post('xmldb:get-child-resources("/db/rest-test")', 'db/rest-test', { start: 2 })
+      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      st.equal(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
+      st.equal(res.start, 2, 'start is ' + res.start)
+      st.equal(res.count, 6, 'count is ' + res.count)
+      const lines = res.body.split('\n')
+      st.equal(lines.length, 8, 'body consists of 8 lines')
+      st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
+      st.equal(lines[1], '    <exist:value exist:type="xs:string">from-string.txt</exist:value>')
+      st.end()
+    } catch (e) {
+      st.fail(e)
+      st.end()
+    }
+  })
+
+  t.test('post honors cache', async function (st) {
+    try {
+      const res = await rc.post('xmldb:get-child-resources("/db/rest-test")', 'db/rest-test', { cache: 'yes', start: 1, max: 1 })
+      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      st.ok(res.session, 'Got session ' + res.session)
+      st.equal(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
+      st.equal(res.start, 1, 'start is ' + res.start)
+      st.equal(res.count, 1, 'count is ' + res.count)
+
+      const lines = res.body.split('\n')
+      st.equal(lines.length, 3, 'body consists of 3 lines')
+      st.equal(lines[1], '    <exist:value exist:type="xs:string">from-buffer.xml</exist:value>')
+
+      const res2 = await rc.post('xmldb:get-child-resources("/db/rest-test")', 'db/rest-test', { session: res.session, start: 2, max: 1 })
+      const lines2 = res2.body.split('\n')
+      st.equal(res.session, res2.session, 'same session was returned: ' + res2.session)
+      st.equal(res2.hits, 7, 'result returned ' + res2.hits + ' hit(s)')
+      st.equal(res2.start, 2, 'start is ' + res2.start)
+      st.equal(res2.count, 1, 'count is ' + res2.count)
+
+      st.equal(lines2.length, 3, 'body consists of 3 lines')
+      st.equal(lines2[1], '    <exist:value exist:type="xs:string">from-string.txt</exist:value>')
+
+      const { statusCode } = await rc.get('db', { _release: res.session })
+      st.equal(statusCode, 200, 'session ' + res.session + ' released')
+      st.end()
+    } catch (e) {
+      console.error(e)
       st.fail(e)
       st.end()
     }
