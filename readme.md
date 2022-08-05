@@ -20,7 +20,7 @@ Attempts to translate terminologies into node world. Uses promises.
 npm install @existdb/node-exist
 ```
 
-__NOTE:__ If you are looking for a command line client have a look at [xst](https://github.com/line-o/xst)
+__NOTE:__ If you are looking for a command line client have a look at [xst](https://github.com/eXist-db/xst)
 
 ## Use
 
@@ -496,7 +496,7 @@ Example:
 spec/examples/exist-ls /db/apps
 ```
 
-__NOTE:__ Have a look at [xst](https://github.com/line-o/xst) for a CLI client built with node-exist.
+__NOTE:__ Have a look at [xst](https://github.com/eXist-db/xst) for a CLI client built with node-exist.
 
 ## Test
 
