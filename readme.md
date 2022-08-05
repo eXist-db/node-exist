@@ -3,7 +3,7 @@
 ![semantic release status](https://github.com/exist-db/node-exist/actions/workflows/semantic-release.yml/badge.svg)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
-Mostly a shallow wrapper for [eXist's XML-RPC API](http://exist-db.org/exist/apps/doc/devguide_xmlrpc.xml).
+Mostly a shallow wrapper for [eXist's XML-RPC API](http://exist-db.org/exist/apps/doc/devguide_xmlrpc.xml) and [eXist's REST API](https://exist-db.org/exist/apps/doc/devguide_rest.xml).
 Attempts to translate terminologies into node world. Uses promises.
 
 - [Install](#install)
@@ -23,6 +23,69 @@ npm install @existdb/node-exist
 __NOTE:__ If you are looking for a command line client have a look at [xst](https://github.com/eXist-db/xst)
 
 ## Use
+
+In addition to eXist-db's XML-RPC API you do now also have the option to
+leverage the potential of its REST-API.
+This allows to choose the best tool for any particular task.
+Both APIs are used in combination in the [upload example](spec/examples/exist-upload).
+
+### REST
+
+Status: unstable
+
+__NOTE:__ eXist-db's REST-API has its on methodology and available options
+may differ between instances. Especially, the ability
+to download the source code of XQuery files is 
+prohibited by default (`_source=yes` is only availabe if enabled in `descriptor.xml`).
+For details of available `options` for each method please see the [REST-API documentation](https://exist-db.org/exist/apps/doc/devguide_rest.xml)
+
+First, we need an instance of the restClient (see also  [Configuration](#configuration) for connection options).
+
+```js
+import { getRestClient } from '@existdb/node-exist'
+const rc = await getRestClient()
+```
+
+The rest client has 4 methods
+
+- `post(query, path[, options])`: execute `query` in the context of `path`.
+  The `query` is expected to be a XQuery main module and will be wrapped in the XML-fragment that exist expects.
+
+  ```js
+  await rc.post('count(//p)', '/db')
+  ```
+
+- `put(data, path)` which allows to create resources in the database.
+  If sub-collections are missing they will be created for you.
+  The server will respond with StatusCode 400, Bad Request, for not-well-
+  formed XML resources.
+
+  ```js
+  await rc.put('<root />', '/db/rest-test/test.xml')
+  ```
+
+- `get(path [, options][, writableStream])` to read data from the database.
+  The response body will contain the contents of the resource or
+  a file listing if the provided path is a collection.
+  If a writableStream is passed in the response body will be streamed into it.
+
+  ```js
+  const { body } = await rc.get('/db/rest-test/test.xml')
+  console.log(body)
+  ```
+
+- `del(path)`: remove resources and collections from an existdb instance
+
+  ```js
+  await rc.del('/db/rest-test/test.xml')
+  ```
+
+Have a look at [the rest-client example](spec/examples/rest.mjs).
+The REST-client uses the [Got](https://github.com/sindresorhus/got#readme) library 
+and works with streams and generators.
+Look at the [rest tests](spec/tests/rest.js) to see examples.
+
+### XML-RPC
 
 Creating, reading and removing a collection:
 
@@ -516,7 +579,7 @@ EXISTDB_SERVER=http://localhost:8888 npm test
 
 ## Roadmap
 
-- [ ] switch to use eXist-db's REST-API.
+- [x] switch to use eXist-db's REST-API (available through [rest-client](#rest-client))
 - [ ] refactor to ES6 modules
 - [ ] better type hints
 
