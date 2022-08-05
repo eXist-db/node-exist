@@ -141,7 +141,7 @@ async function post (restClient, query, path, options) {
   if (options) {
     for (const attributeIndex in postAttributeNames) {
       const attributeName = postAttributeNames[attributeIndex]
-      if (options[attributeName]) {
+      if (attributeName in options) {
         attributes.push(`${attributeName}="${options[attributeName]}"`)
         delete options[attributeName]
       }
