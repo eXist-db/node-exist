@@ -47,7 +47,6 @@ async function put (restClient, body, path, mimetype) {
   }
 
   if (isGeneratorFunction(body)) {
-    console.log('GENERATOR FUNCTION')
     return restClient.put({
       url,
       headers: {
@@ -67,18 +66,109 @@ async function put (restClient, body, path, mimetype) {
   })
 }
 
+const postAttributeNames = [
+  'start',
+  'max',
+  'session',
+  'cache'
+]
+
+const sessionRegex = /exist:session="(\d+)"/
+const hitsRegex = /exist:hits="(\d+)"/
+const startRegex = /exist:start="(\d+)"/
+const countRegex = /exist:count="(\d+)"/
+const compilationTimeRegex = /exist:compilation-time="(\d+)"/
+const executionTimeRegex = /exist:execution-time="(\d+)"/
+
 /**
- * read resource in DB
+ * Extract numerical attribute value with a regular expression from exist:result
+ * Returns -1, if the attribute is not set(the regular expression does not match)
+ *
+ * @param {RegExp} regex regular expression to extract numerical attribute value
+ * @returns {Number} parsed attribute value or -1
+ */
+function getAttributeValueByRegex (existResult, regex) {
+  return regex.test(existResult) ? parseInt(regex.exec(existResult)[1], 10) : -1
+}
+
+/**
+ * create resource in DB
+ * @param {Object} restClient Got-instance
+ * @param {string | Buffer } query XQuery main module
+ * @param {string} path context path
+ * @param {Object} [options] query options
+ * @returns {Object} Response with headers and exist specific values
+ */
+async function post (restClient, query, path, options) {
+  const url = normalizeDBPath(path)
+  const attributes = []
+  const properties = []
+
+  if (options) {
+    for (const attributeIndex in postAttributeNames) {
+      const attributeName = postAttributeNames[attributeIndex]
+      if (options[attributeName]) {
+        attributes.push(`${attributeName}="${options[attributeName]}"`)
+        delete options[attributeName]
+      }
+    }
+
+    for (const option in options) {
+      properties.push(`<property name="${option}" value="${options[option]}"/>`)
+    }
+  }
+
+  const body = `<query xmlns="http://exist.sourceforge.net/NS/exist"
+    ${attributes.join(' ')}>
+  <text><![CDATA[
+    ${query.toString()}
+  ]]></text>
+  <properties>
+    ${properties.join('\n')}
+  </properties>
+</query>`
+
+  const response = await restClient.post({
+    url,
+    headers: {
+      'content-type': 'application/xml',
+      'content-length': body.length
+    },
+    body
+  })
+  const existResult = response.body
+
+  const session = getAttributeValueByRegex(existResult, sessionRegex)
+  const hits = getAttributeValueByRegex(existResult, hitsRegex)
+  const start = getAttributeValueByRegex(existResult, startRegex)
+  const count = getAttributeValueByRegex(existResult, countRegex)
+  const compilationTime = getAttributeValueByRegex(existResult, compilationTimeRegex)
+  const executionTime = getAttributeValueByRegex(existResult, executionTimeRegex)
+
+  return {
+    session,
+    hits,
+    start,
+    count,
+    compilationTime,
+    executionTime,
+    body: existResult,
+    statusCode: response.statusCode
+  }
+}
+
+/**
+ * read resources and collection contents in DB
  * @param {Object} restClient Got-instance
  * @param {string} path which resource to read
+ * @param {Object} [searchParams] query options
  * @param {stream.Writable | undefined} [writableStream] if provided allows to stream onto the file system for instance
  * @returns {Object} Response with body and headers
  */
-async function get (restClient, path, writableStream) {
+async function get (restClient, path, searchParams, writableStream) {
   const url = normalizeDBPath(path)
-
   if (writableStream instanceof stream.Writable) {
-    const readStream = restClient.stream({ url })
+    const readStream = restClient.stream({ url, searchParams })
 
     let _response
     readStream.on('response', response => {
@@ -92,7 +182,7 @@ async function get (restClient, path, writableStream) {
     return _response
   }
 
-  return restClient.get(url)
+  return restClient.get({ url, searchParams })
 }
 
 /**
@@ -110,7 +200,8 @@ function del (restClient, path) {
 }
 
 module.exports = {
-  put,
   get,
+  post,
+  put,
   del
 }

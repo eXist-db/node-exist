@@ -80,13 +80,14 @@ function connect (options) {
 
 async function getRestClient (options) {
   const restClient = await connection.restConnection(options)
-  const { del, put, get } = applyEachWith(rest, restClient)
+  const { get, put, post, del } = applyEachWith(rest, restClient)
 
   return {
     restClient,
-    del,
+    get,
     put,
-    get
+    post,
+    del
   }
 }
 
