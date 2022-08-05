@@ -73,6 +73,17 @@ const postAttributeNames = [
   'cache'
 ]
 
+const existResultRegex = /^<exist:result/
+/**
+ * Tests if body is a wrapped result from exist=db
+ *
+ * @param {String} body server response body
+ * @returns {Boolean}
+ */
+function isExistResult (body) {
+  return existResultRegex.test(body)
+}
+
 const sessionRegex = /exist:session="(\d+)"/
 const hitsRegex = /exist:hits="(\d+)"/
 const startRegex = /exist:start="(\d+)"/
@@ -89,6 +100,29 @@ const executionTimeRegex = /exist:execution-time="(\d+)"/
  */
 function getAttributeValueByRegex (existResult, regex) {
   return regex.test(existResult) ? parseInt(regex.exec(existResult)[1], 10) : -1
+}
+
+function extendIfWrapped (response) {
+  const { body } = response
+  if (!isExistResult(body)) {
+    return response
+  }
+
+  const session = getAttributeValueByRegex(body, sessionRegex)
+  const hits = getAttributeValueByRegex(body, hitsRegex)
+  const start = getAttributeValueByRegex(body, startRegex)
+  const count = getAttributeValueByRegex(body, countRegex)
+  const compilationTime = getAttributeValueByRegex(body, compilationTimeRegex)
+  const executionTime = getAttributeValueByRegex(body, executionTimeRegex)
+
+  return Object.assign(response, {
+    session,
+    hits,
+    start,
+    count,
+    compilationTime,
+    executionTime
+  })
 }
 
 /**
@@ -136,25 +170,8 @@ async function post (restClient, query, path, options) {
     },
     body
   })
-  const existResult = response.body
 
-  const session = getAttributeValueByRegex(existResult, sessionRegex)
-  const hits = getAttributeValueByRegex(existResult, hitsRegex)
-  const start = getAttributeValueByRegex(existResult, startRegex)
-  const count = getAttributeValueByRegex(existResult, countRegex)
-  const compilationTime = getAttributeValueByRegex(existResult, compilationTimeRegex)
-  const executionTime = getAttributeValueByRegex(existResult, executionTimeRegex)
-
-  return {
-    session,
-    hits,
-    start,
-    count,
-    compilationTime,
-    executionTime,
-    body: existResult,
-    statusCode: response.statusCode
-  }
+  return extendIfWrapped(response)
 }
 
 /**
@@ -179,10 +196,11 @@ async function get (restClient, path, searchParams, writableStream) {
       readStream,
       writableStream
     )
-    return _response
+    return extendIfWrapped(_response)
   }
 
-  return restClient.get({ url, searchParams })
+  const response = await restClient.get({ url, searchParams })
+  return extendIfWrapped(response)
 }
 
 /**
