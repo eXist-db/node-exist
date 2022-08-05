@@ -3,7 +3,7 @@
   "description": "promise based interaction with eXist DB's XML-RPC API",
   "main": "index.js",
   "scripts": {
-    "test": "standard && tape spec/tests/*.js",
+    "test": "standard --fix && tape spec/tests/*.js",
     "semantic-release": "semantic-release",
     "travis-deploy-once": "travis-deploy-once"
   },
