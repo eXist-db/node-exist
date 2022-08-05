@@ -358,7 +358,7 @@ return $r
 
       const res2 = await rc.post(xqueryMainModule, 'db/rest-test', { session: res.session, start: 2, max: 1 })
       const lines2 = res2.body.split('\n')
-      st.equal(res.session, res2.session, lines2[0])
+      st.equal(res.session, res2.session, 'same session was returned (' + res.session + ', ' + res2.session + ')')
       st.equal(res2.hits, 7, 'result returned ' + res2.hits + ' hit(s)')
       st.equal(res2.start, 2, 'start is ' + res2.start)
       st.equal(res2.count, 1, 'count is ' + res2.count)
