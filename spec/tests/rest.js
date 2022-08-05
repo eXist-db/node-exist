@@ -246,11 +246,11 @@ test('with rest client', async function (t) {
     try {
       const res = await rc.get('db/rest-test', { _wrap: 'yes', _indent: 'yes', _query })
       st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
-      const lines = res.body.split('\n')
       st.equal(res.hits, 1, 'result returned ' + res.hits + ' hit(s)')
       st.equal(res.start, 1, 'start is ' + res.start)
       st.equal(res.count, 1, 'count is ' + res.count)
 
+      const lines = res.body.split('\n')
       st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
       st.equal(lines[1], '    <c name="/db/rest-test">')
       st.equal(lines[2], '        <r name="from-buffer.xml"/>')
@@ -292,7 +292,7 @@ test('with rest client', async function (t) {
       const lines = res.body.split('\n')
       st.equal(lines.length, 1, 'body consists of a single line')
       st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
-      st.ok(lines[0].contains('<c name="/db/rest-test">'), 'contains result')
+      st.ok(lines[0].includes('<c name="/db/rest-test">'), 'contains result')
       st.end()
     } catch (e) {
       st.fail(e)
@@ -341,7 +341,7 @@ test('with rest client', async function (t) {
     try {
       const res = await rc.post('xmldb:get-child-resources("/db/rest-test")', 'db/rest-test', { cache: 'yes', start: 1, max: 1 })
       st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
-      st.ok(res.session, 'Got session ' + res.session)
+      st.isNot(res.session, -1, 'Got session ' + res.session)
       st.equal(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
       st.equal(res.start, 1, 'start is ' + res.start)
       st.equal(res.count, 1, 'count is ' + res.count)
