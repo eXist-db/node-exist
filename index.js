@@ -43,11 +43,17 @@ function applyWith (func, client) {
 }
 
 function applyEachWith (module, client) {
-  const methods = {}
-  for (const method in module) {
-    methods[method] = applyWith(module[method], client)
+  const applied = {}
+  for (const property in module) {
+    const value = module[property]
+    // leave non-functions untouched
+    if (typeof value !== 'function') {
+      applied[property] = value
+      continue
+    }
+    applied[property] = applyWith(value, client)
   }
-  return methods
+  return applied
 }
 
 /**
