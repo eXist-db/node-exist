@@ -7,8 +7,14 @@ const { envOptions } = require('../connection')
 test('with rest client', async function (t) {
   const testCollection = '/db/rest-test'
   const _query = '<c name="/db/rest-test">{' +
-    'for $r in xmldb:get-child-resources("/db/rest-test") return <r name="{$r}" />' +
+    'for $r in xmldb:get-child-resources("/db/rest-test") order by $r return <r name="{$r}" />' +
     '}</c>'
+
+  const xqueryMainModule = `xquery version "3.1";
+for $r in xmldb:get-child-resources("/db/rest-test")
+order by $r
+return $r
+`
 
   const db = connect(envOptions)
   const rc = await getRestClient(envOptions)
@@ -232,8 +238,8 @@ test('with rest client', async function (t) {
       const res = await rc.get('db/rest-test', { _wrap: 'no', _indent: 'no', _query })
       st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
       const lines = res.body.split('\n')
-      st.equal(lines.length, 1)
-      st.ok(lines[0].startsWith('<c name="/db/rest-test"><r name="from-buffer.xml"/><r name='))
+      st.equal(lines.length, 1, 'body is a single line')
+      st.ok(lines[0].startsWith('<c name="/db/rest-test"><r name="from-async-generator.txt"/><r name='), lines[0])
 
       st.end()
     } catch (e) {
@@ -253,7 +259,7 @@ test('with rest client', async function (t) {
       const lines = res.body.split('\n')
       st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
       st.equal(lines[1], '    <c name="/db/rest-test">')
-      st.equal(lines[2], '        <r name="from-buffer.xml"/>')
+      st.equal(lines[2], '        <r name="from-async-generator.txt"/>')
 
       st.end()
     } catch (e) {
@@ -273,7 +279,7 @@ test('with rest client', async function (t) {
       const lines = res.body.split('\n')
       st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
       st.equal(lines[1], '    <c name="/db/rest-test">')
-      st.equal(lines[2], '        <r name="from-buffer.xml"/>')
+      st.equal(lines[2], '        <r name="from-async-generator.txt"/>')
 
       st.end()
     } catch (e) {
@@ -302,7 +308,7 @@ test('with rest client', async function (t) {
 
   t.test('post honors start and max', async function (st) {
     try {
-      const res = await rc.post('xmldb:get-child-resources("/db/rest-test")', 'db/rest-test', { start: 1, max: 1 })
+      const res = await rc.post(xqueryMainModule, 'db/rest-test', { start: 1, max: 1 })
       st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
       st.equal(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
       st.equal(res.start, 1, 'start is ' + res.start)
@@ -311,7 +317,7 @@ test('with rest client', async function (t) {
       const lines = res.body.split('\n')
       st.equal(lines.length, 3, 'body consists of 3 lines')
       st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
-      st.equal(lines[1], '    <exist:value exist:type="xs:string">from-buffer.xml</exist:value>')
+      st.equal(lines[1], '    <exist:value exist:type="xs:string">from-async-generator.txt</exist:value>')
       st.end()
     } catch (e) {
       st.fail(e)
@@ -321,7 +327,7 @@ test('with rest client', async function (t) {
 
   t.test('post honors just start', async function (st) {
     try {
-      const res = await rc.post('xmldb:get-child-resources("/db/rest-test")', 'db/rest-test', { start: 2 })
+      const res = await rc.post(xqueryMainModule, 'db/rest-test', { start: 2 })
       st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
       st.equal(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
       st.equal(res.start, 2, 'start is ' + res.start)
@@ -329,7 +335,7 @@ test('with rest client', async function (t) {
       const lines = res.body.split('\n')
       st.equal(lines.length, 8, 'body consists of 8 lines')
       st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
-      st.equal(lines[1], '    <exist:value exist:type="xs:string">from-string.txt</exist:value>')
+      st.equal(lines[1], '    <exist:value exist:type="xs:string">from-buffer.xml</exist:value>')
       st.end()
     } catch (e) {
       st.fail(e)
@@ -339,18 +345,18 @@ test('with rest client', async function (t) {
 
   t.test('post honors cache', async function (st) {
     try {
-      const res = await rc.post('xmldb:get-child-resources("/db/rest-test")', 'db/rest-test', { cache: 'yes', start: 1, max: 1 })
+      const res = await rc.post(xqueryMainModule, 'db/rest-test', { cache: 'yes', start: 1, max: 1 })
       st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
-      st.isNot(res.session, -1, 'Got session ' + res.session)
+      st.isNotEqual(res.session, -1, 'Got session ' + res.session)
       st.equal(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
       st.equal(res.start, 1, 'start is ' + res.start)
       st.equal(res.count, 1, 'count is ' + res.count)
 
       const lines = res.body.split('\n')
       st.equal(lines.length, 3, 'body consists of 3 lines')
-      st.equal(lines[1], '    <exist:value exist:type="xs:string">from-buffer.xml</exist:value>')
+      st.equal(lines[1], '    <exist:value exist:type="xs:string">from-async-generator.txt</exist:value>')
 
-      const res2 = await rc.post('xmldb:get-child-resources("/db/rest-test")', 'db/rest-test', { session: res.session, start: 2, max: 1 })
+      const res2 = await rc.post(xqueryMainModule, 'db/rest-test', { session: res.session, start: 2, max: 1 })
       const lines2 = res2.body.split('\n')
       st.equal(res.session, res2.session, 'same session was returned: ' + res2.session)
       st.equal(res2.hits, 7, 'result returned ' + res2.hits + ' hit(s)')
@@ -358,7 +364,7 @@ test('with rest client', async function (t) {
       st.equal(res2.count, 1, 'count is ' + res2.count)
 
       st.equal(lines2.length, 3, 'body consists of 3 lines')
-      st.equal(lines2[1], '    <exist:value exist:type="xs:string">from-string.txt</exist:value>')
+      st.equal(lines2[1], '    <exist:value exist:type="xs:string">from-buffer.xml</exist:value>')
 
       const { statusCode } = await rc.get('db', { _release: res.session })
       st.equal(statusCode, 200, 'session ' + res.session + ' released')
