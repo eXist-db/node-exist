@@ -11,6 +11,30 @@ test('get collection info', function (t) {
   db.collections.describe('/db')
     .then(function (info) {
       t.equal(info.owner, 'SYSTEM')
+      t.ok(Array.isArray(info.collections))
+      t.ok(Array.isArray(info.acl))
+      t.ok(info.created)
+      t.equal(info.permissions, 493)
+      t.equal(info.name, '/db')
+      t.equal(info.group, 'dba')
+      t.end()
+    })
+    .catch(function (e) {
+      t.fail(e)
+      t.end()
+    })
+})
+
+test('read collection', function (t) {
+  const db = connect(connectionOptions)
+  db.collections.read('/db/system/security')
+    .then(function (collection) {
+      t.equal(collection.owner, 'SYSTEM')
+      t.equal(collection.collections[0], 'exist')
+      t.equal(collection.documents[0].name, 'config.xml')
+      t.ok(collection.created)
+      t.equal(collection.permissions, 504)
+      t.equal(collection.name, '/db/system/security')
       t.end()
     })
     .catch(function (e) {
