@@ -26,7 +26,7 @@ test('get collection info', function (t) {
 })
 
 test('read collection', function (t) {
-  const db = connect(connectionOptions)
+  const db = connect(envOptions)
   db.collections.read('/db/system/security')
     .then(function (collection) {
       t.equal(collection.owner, 'SYSTEM')
