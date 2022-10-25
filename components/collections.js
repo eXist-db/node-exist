@@ -18,6 +18,11 @@ function read (client, name) {
   return client.promisedMethodCall('getCollectionDesc', [name])
 }
 
+// collection exists?
+function exists (client, name) {
+  return client.promisedMethodCall('hasCollection', [name])
+}
+
 // convenience function
 // throws an exception if and only if
 // the collection exists but cannot be written by the user
@@ -30,5 +35,6 @@ module.exports = {
   remove,
   describe,
   read,
+  exists,
   existsAndCanOpen
 }

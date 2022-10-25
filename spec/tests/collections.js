@@ -6,6 +6,41 @@ const asGuest = Object.assign({},
   { basic_auth: { user: 'guest', pass: 'guest' } }
 )
 
+test('collections.exists', function (t) {
+  const db = connect(envOptions)
+
+  t.test('true for existing collection', async function (st) {
+    try {
+      const result = await db.collections.exists('/db')
+      st.true(result, '/db exists')
+    } catch (e) {
+      st.fail(e)
+    }
+  })
+
+  test('false for non-existing collection', async function (st) {
+    try {
+      const result = await db.collections.exists('/foo')
+      st.false(result, '/foo does not exist')
+    } catch (e) {
+      t.fail(e)
+    }
+  })
+
+  test('throws with insufficient access', async function (st) {
+    try {
+      const dbAsGuest = connect()
+      const result = await dbAsGuest.collections.exists('/db/system/security')
+      st.false(result, 'Guest should not see /db/system/security')
+    } catch (e) {
+      // Guest should not see /db/system/security
+      // because it throws with a PermissionDeniedException
+      // it is obvious the collection exists
+      t.ok(e)
+    }
+  })
+})
+
 test('get collection info', function (t) {
   const db = connect(envOptions)
   db.collections.describe('/db')
