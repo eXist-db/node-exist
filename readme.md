@@ -575,6 +575,15 @@ Returns an array of user info objects (see [getUserInfo()](#getuserinfo)).
 
 Status: working
 
+#### version
+
+Query the eXist-db version running on the server.
+Returns the SemVer version as a string (e.g. `5.4.1` or `6.1.0-SNAPSHOT`).
+
+```js
+db.server.version()
+```
+
 #### syncToDisk
 
 ```js

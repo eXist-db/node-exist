@@ -6,7 +6,12 @@ function shutdownDb (client) {
   return client.promisedMethodCall('shutdown', [])
 }
 
+function version (client) {
+  return client.promisedMethodCall('getVersion', [])
+}
+
 module.exports = {
   shutdown: shutdownDb,
-  syncToDisk: syncDbToDisk
+  syncToDisk: syncDbToDisk,
+  version
 }
