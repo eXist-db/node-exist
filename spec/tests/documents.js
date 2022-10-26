@@ -1,5 +1,6 @@
 const test = require('tape')
 const { readFileSync } = require('fs')
+const semverGt = require('semver/functions/gt')
 const { connect } = require('../../index')
 const { envOptions } = require('../connection')
 
@@ -49,45 +50,104 @@ test('upload invalid XML', function (t) {
     })
 })
 
-test('upload valid XML', function (t) {
+test('valid XML', function (t) {
   const db = connect(envOptions)
   const remoteFileName = '/test.xml'
+  const contents = readFileSync('spec/files/test.xml')
 
-  db.documents.upload(readFileSync('spec/files/test.xml'))
-    .then(function (fh) {
-      t.ok(fh >= 0, 'returned filehandle')
-      return db.documents.parseLocal(fh, remoteFileName, {})
-    })
-    .then(function (result) {
-      t.ok(result, 'file could be parsed')
-      return db.resources.describe(remoteFileName)
-    })
-    .then(function (result) {
-      t.ok(result, 'file was written to collection')
-      t.end()
-    })
-    .catch(function (e) {
+  t.test('can be uploaded', async function (st) {
+    try {
+      const fh = await db.documents.upload(contents)
+      st.ok(fh >= 0, 'returned filehandle')
+      const result = await db.documents.parseLocal(fh, remoteFileName, {})
+      st.ok(result, 'file could be parsed')
+      const info = await db.resources.describe(remoteFileName)
+      st.ok(info, 'file was written to collection')
+    } catch (e) {
       t.fail(e, 'errored')
-      t.end()
-    })
-})
+    }
+  })
 
-test('download test.xml', function (t) {
-  const db = connect(envOptions)
-  const localContents = readFileSync('spec/files/test.xml').toString()
-  const expectedContents = localContents.substring(0, localContents.length - 1) // for some reason the last newline is removed
-  const options = { 'omit-xml-declaration': 'no' } // xml header is cut off by default
-  const remoteFileName = '/test.xml'
+  t.test('serialized with default options', async function (st) {
+    try {
+      const contentBuffer = await db.documents.read(remoteFileName, {})
+      const lines = contents.toString().split('\n')
+      // default serialization removes first (XML declaration) line
+      lines.shift()
+      // and last line (final newline)
+      lines.pop()
+      const expectedContents = lines.join('\n')
 
-  db.documents.read(remoteFileName, options)
-    .then(function (result) {
-      t.equal(result.toString(), expectedContents, 'expected file contents received')
+      st.equal(contentBuffer.toString(), expectedContents, 'file was read')
+    } catch (e) {
+      st.fail(e, 'errored')
+    }
+  })
+
+  t.test('serialized without XML declaration', async function (st) {
+    try {
+      const options = { 'omit-xml-declaration': 'yes' }
+      const lines = contents.toString().split('\n')
+      // default serialization removes first (XML declaration) line
+      lines.shift()
+      // and last line (final newline)
+      lines.pop()
+      const expectedContents = lines.join('\n')
+
+      const contentBuffer = await db.documents.read(remoteFileName, options)
+      st.equal(contentBuffer.toString(), expectedContents, 'expected file contents received')
+    } catch (e) {
+      st.fail(e, 'errored')
+    }
+  })
+
+  t.test('serialized with XML declaration', async function (st) {
+    try {
+      // this forces an XML-declaration whether it was part of the original document or not
+      const options = { 'omit-xml-declaration': 'no' }
+
+      const lines = contents.toString().split('\n')
+      // eXist-db does not add a final newline by default
+      lines.pop()
+      const expectedContents = lines.join('\n')
+
+      const result = await db.documents.read(remoteFileName, options)
+      st.equal(result.toString(), expectedContents, 'expected file contents received')
+    } catch (e) {
+      st.fail(e, 'errored')
+    }
+  })
+
+  t.test('serialized with XML declaration and final newline', async function (st) {
+    try {
+      // skip this test for older versions as 
+      // insert-final-newline is only available with eXist-db >6.0.1
+      const version = await db.server.version()
+      if (!semverGt(version, '6.0.1')) {
+        return st.skip('insert-final-newline not implemented in ' + version)
+      }
+
+      // options to serialize to local contents with XML-declaration and final newline
+      const options = {
+        'omit-xml-declaration': 'no',
+        'insert-final-newline': 'yes'
+      }
+
+      const result = await db.documents.read(remoteFileName, options)
+      st.deepEqual(contents, result, 'equal')
+    } catch (e) {
+      st.fail(e, 'errored')
+    }
+  })
+
+  t.test('cleanup', async function (st) {
+    try {
+      await db.documents.remove(remoteFileName)
       t.end()
-    })
-    .catch(function (e) {
-      t.fail(e, 'errored')
+    } catch (e) {
       t.end()
-    })
+    }
+  })
 })
 
 // xquery file with permission changes
@@ -111,4 +171,20 @@ test('up-html5-with-retry', function (t) {
 test('non well formed XML will not be uploaded as binary', function (t) {
   t.skip('not implemented yet')
   t.end()
+})
+
+test('upload document with duplicate xml:id', async function (t) {
+  try {
+    const db = connect(envOptions)
+    const buffer = Buffer.from('<root><item xml:id="i1" /><item xml:id="i1" /></root>')
+
+    await db.collections.create('/db/tmp')
+
+    const fh = await db.documents.upload(buffer, buffer.length)
+    t.ok(fh >= 0, 'returned filehandle')
+    const result = await db.documents.parseLocal(fh, '/db/tmp/testfile.xml')
+    t.ok(result, 'duplicate XML-IDs are allowed')
+  } catch (e) {
+    t.fail(e)
+  }
 })
