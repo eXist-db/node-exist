@@ -6,8 +6,8 @@ function upload (client, contentBuffer) {
 
 function parseLocal (client, handle, filename, options) {
   // set default values
-  const mimeType = getMimeType(filename, options.mimetype)
-  const replace = options.replace || true
+  const mimeType = getMimeType(filename, options && options.mimetype ? options.mimetype : null)
+  const replace = options && options.replace ? options.replace : true
 
   return client.promisedMethodCall('parseLocal', [handle, filename, replace, mimeType])
 }
