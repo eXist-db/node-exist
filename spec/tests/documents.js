@@ -3,18 +3,31 @@ const { readFileSync } = require('fs')
 const { connect } = require('../../index')
 const { envOptions } = require('../connection')
 
-test('upload document', function (t) {
+test('binary document', function (t) {
+  const path = '/db/test.txt'
+  const content = Buffer.from('test')
   const db = connect(envOptions)
-  const buffer = Buffer.from('test')
 
-  db.documents.upload(buffer, buffer.length)
-    .then(function (result) {
-      t.ok(result >= 0, 'returned filehandle')
-      t.end()
-    })
-    .catch(function (e) {
+  t.test('should upload', async function (st) {
+    try {
+      const db = connect(envOptions)
+      const fh = await db.documents.upload(content, content.length)
+      st.ok(fh >= 0, 'returned filehandle:' + fh)
+      const r = await db.documents.parseLocal(fh, path)
+      st.ok(r)
+    } catch (e) {
       t.fail(e)
-      t.end()
+    }
+  })
+
+  t.test('can be read', async function (st) {
+    try {
+      const readContent = await db.documents.readBinary(path)
+      console.log(readContent.toString())
+      st.equal(content.toString(), readContent.toString(), 'returned contents equal')
+    } catch (e) {
+      st.fail(e)
+    }
     })
 })
 
