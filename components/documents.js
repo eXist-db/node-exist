@@ -16,6 +16,10 @@ function read (client, documentName, options) {
   return client.promisedMethodCall('getDocument', [documentName, options])
 }
 
+function readBinary (client, documentName) {
+  return client.promisedMethodCall('getBinaryResource', [documentName])
+}
+
 function remove (client, documentName) {
   return client.promisedMethodCall('remove', [documentName])
 }
@@ -24,5 +28,6 @@ module.exports = {
   upload,
   parseLocal,
   read,
+  readBinary,
   remove
 }
