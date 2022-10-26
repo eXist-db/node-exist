@@ -14,7 +14,7 @@ test('binary document', function (t) {
       const fh = await db.documents.upload(content, content.length)
       st.ok(fh >= 0, 'returned filehandle:' + fh)
       const r = await db.documents.parseLocal(fh, path)
-      st.ok(r)
+      st.ok(r, 'was parsed')
     } catch (e) {
       t.fail(e)
     }
@@ -23,12 +23,11 @@ test('binary document', function (t) {
   t.test('can be read', async function (st) {
     try {
       const readContent = await db.documents.readBinary(path)
-      console.log(readContent.toString())
-      st.equal(content.toString(), readContent.toString(), 'returned contents equal')
+      st.deepEqual(content, readContent, 'returned contents equal')
     } catch (e) {
       st.fail(e)
     }
-    })
+  })
 })
 
 test('upload invalid XML', function (t) {
