@@ -296,8 +296,36 @@ db.documents.parseLocal(fileHandle, 'foo/test.txt', {})
 
 #### read
 
+Allows to read XMLResources. You can control how the document is serialized by
+setting 
+[serialization options](https://exist-db.org/exist/apps/doc/xquery.xml?field=all&id=D3.49.19#serialization)
+in the options parameter.
+
+Use default serialization options.
+
 ```js
-db.documents.read('foo.xml')
+db.documents.read('foo.xml', {})
+```
+
+Force XML declaration to be returned.
+
+```js
+db.documents.read('foo.xml', { "omit-xml-declaration": "no" })
+```
+
+Force the file to end in a blank line (available since eXist-db v6.0.1).
+
+```js
+db.documents.read('foo.xml', { "insert-final-newline": "yes" })
+```
+
+#### readBinary
+
+Allows to read XQuery, textfiles, images and other resources existdb treats as
+binary.
+
+```js
+db.documents.readBinary('foo.xml')
 ```
 
 #### remove
