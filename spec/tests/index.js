@@ -15,6 +15,26 @@ test('check for default mime type extensions', function (t) {
   t.end()
 })
 
+test('raw command', async function (t) {
+  try {
+    const db = connect()
+    const res = await db.client.promisedMethodCall('getVersion', [])
+    t.ok(res, res)
+  } catch (e) {
+    t.fail(e)
+  }
+})
+
+test('get version', async function (t) {
+  try {
+    const db = connect()
+    const res = await db.server.version()
+    t.ok(res, res)
+  } catch (e) {
+    t.fail(e)
+  }
+})
+
 test('extend mime type definitions', function (t) {
   const testPath = 'test.bar'
   const testExtension = 'bar'
