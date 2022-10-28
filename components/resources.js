@@ -15,6 +15,9 @@
  * @prop {Date} created date the resource was created
  * @prop {Date} modified date when the resource was last modified
  * @prop {Array} acl Access Control List entries
+ * @prop {Buffer} [digest] only set for BinaryResources
+ * @prop {'BLAKE2B-256'|string} [digest-algorithm] only set for BinaryResources
+ * @prop {Buffer} [blob-id] only set for BinaryResources
  */
 
 /**
