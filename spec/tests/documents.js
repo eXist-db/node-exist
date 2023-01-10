@@ -120,7 +120,7 @@ test('valid XML', function (t) {
 
   t.test('serialized with XML declaration and final newline', async function (st) {
     try {
-      // skip this test for older versions as 
+      // skip this test for older versions as
       // insert-final-newline is only available with eXist-db >6.0.1
       const version = await db.server.version()
       if (!semverGt(version, '6.0.1')) {
