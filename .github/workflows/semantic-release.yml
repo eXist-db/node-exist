@@ -8,17 +8,17 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        node-version: [14, 16, 18]
-        exist-version: [release, 5.4.1, 4.10.0]
+        node-version: [16, 18, 20]
+        exist-version: [4.10.0, 5.4.1, release]
         experimental: [false]
         include:
           - exist-version: latest
+            node-version: 20
             experimental: true
     services:
       # Label used to access the service container
