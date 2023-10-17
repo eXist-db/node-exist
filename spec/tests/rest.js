@@ -382,3 +382,33 @@ return $r
     unlinkSync('stream-test.xml')
   })
 })
+
+test.only('with rest client over http', async function (t) {
+  const modifiedOptions = Object.assign({ protocol: 'http:', port: '8080' }, envOptions)
+  const rc = await getRestClient(modifiedOptions)
+
+  t.test('non-existent file returns 404', async function (st) {
+    try {
+      const res = await rc.get('db/rest-test/non-existent.file')
+      st.fail(res)
+      st.end()
+    } catch (e) {
+      st.equal(e.response.statusCode, 404)
+      st.end()
+    }
+  })
+
+  t.test('getting a collection will return the file listing as xml', async function (st) {
+    try {
+      const res = await rc.get('db')
+      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+
+      const lines = res.body.split('\n')
+      st.equal(lines[0], '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist">')
+      st.end()
+    } catch (e) {
+      st.fail(e)
+      st.end()
+    }
+  })
+})
