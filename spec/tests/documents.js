@@ -50,8 +50,9 @@ test('upload invalid XML', function (t) {
     })
 })
 
-test('valid XML', function (t) {
+test('valid XML', async function (t) {
   const db = connect(envOptions)
+  const version = await db.server.version()
   const remoteFileName = '/test.xml'
   const contents = readFileSync('spec/files/test.xml')
 
@@ -72,8 +73,10 @@ test('valid XML', function (t) {
     try {
       const contentBuffer = await db.documents.read(remoteFileName, {})
       const lines = contents.toString().split('\n')
+
       // default serialization removes first (XML declaration) line
       lines.shift()
+
       // and last line (final newline)
       lines.pop()
       const expectedContents = lines.join('\n')
@@ -88,6 +91,7 @@ test('valid XML', function (t) {
     try {
       const options = { 'omit-xml-declaration': 'yes' }
       const lines = contents.toString().split('\n')
+
       // default serialization removes first (XML declaration) line
       lines.shift()
       // and last line (final newline)
@@ -122,7 +126,6 @@ test('valid XML', function (t) {
     try {
       // skip this test for older versions as
       // insert-final-newline is only available with eXist-db >6.0.1
-      const version = await db.server.version()
       if (!semverGt(version, '6.0.1')) {
         return st.skip('insert-final-newline not implemented in ' + version)
       }
@@ -143,7 +146,6 @@ test('valid XML', function (t) {
   t.test('cleanup', async function (st) {
     try {
       await db.documents.remove(remoteFileName)
-      t.end()
     } catch (e) {
       t.end()
     }

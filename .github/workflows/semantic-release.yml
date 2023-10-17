@@ -9,11 +9,17 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         node-version: [14, 16, 18]
-        exist-version: [latest, release, 5.4.1, 4.10.0]
+        exist-version: [release, 5.4.1, 4.10.0]
+        experimental: [false]
+        include:
+          - exist-version: latest
+            experimental: true
     services:
       # Label used to access the service container
       exist:
