@@ -383,7 +383,7 @@ return $r
   })
 })
 
-test.only('with rest client over http', async function (t) {
+test('with rest client over http', async function (t) {
   const modifiedOptions = Object.assign({ protocol: 'http:', port: '8080' }, envOptions)
   const rc = await getRestClient(modifiedOptions)
 
