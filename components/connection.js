@@ -32,7 +32,7 @@ const defaultRPCoptions = {
 
 const defaultRestOptions = {
   host: 'localhost',
-  protocol: 'https',
+  protocol: 'https:',
   port: '8443',
   path: '/exist/rest',
   basic_auth: {
@@ -104,7 +104,7 @@ async function restConnection (options) {
 
   const port = _options.port ? ':' + _options.port : ''
   const path = _options.path.startsWith('/') ? _options.path : '/' + _options.path
-  const prefixUrl = `${_options.protocol}://${_options.host}${port}${path}`
+  const prefixUrl = `${_options.protocol}//${_options.host}${port}${path}`
 
   const client = got.extend(
     {
