@@ -17,8 +17,8 @@ jobs:
         exist-version: [4.10.0, 5.4.1, release]
         experimental: [false]
         include:
-          - exist-version: latest
-            node-version: 20
+          - node-version: 20
+            exist-version: latest
             experimental: true
     services:
       # Label used to access the service container
