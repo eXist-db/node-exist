@@ -5,20 +5,14 @@ updates:
   schedule:
     interval: daily
     time: "03:00"
+  commit-message:
+    prefix: "chore"
   open-pull-requests-limit: 10
-  ignore:
-  - dependency-name: y18n
-    versions:
-    - 4.0.1
-    - 4.0.2
-  - dependency-name: semantic-release
-    versions:
-    - 17.4.0
-    - 17.4.1
-  - dependency-name: tape
-    versions:
-    - 5.1.1
-    - 5.2.1
-  - dependency-name: mime
-    versions:
-    - 2.5.0
+- package-ecosystem: github-actions
+  directory: "/"
+  schedule:
+    interval: weekly
+    time: "04:00"
+  commit-message:
+    prefix: "chore"
+  open-pull-requests-limit: 10
