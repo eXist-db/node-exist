@@ -147,6 +147,7 @@ function readOptionsFromEnv () {
     environmentOptions.secure = protocol === 'https:'
     environmentOptions.host = hostname
     environmentOptions.port = port
+    environmentOptions.protocol = protocol
   }
 
   return environmentOptions
