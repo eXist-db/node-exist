@@ -12,10 +12,12 @@ test('connection options from environment', function (t) {
     t.equal(optionsFromEnv.port, port)
     t.equal(optionsFromEnv.secure, protocol === 'https:')
     t.equal(optionsFromEnv.host, hostname)
+    t.equal(optionsFromEnv.protocol, protocol)
   } else {
     t.false('port' in optionsFromEnv)
     t.false('secure' in optionsFromEnv)
     t.false('host' in optionsFromEnv)
+    t.false('protocol' in optionsFromEnv)
   }
 
   if (userIsSet) {
