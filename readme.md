@@ -8,6 +8,8 @@ Attempts to translate terminologies into node world. Uses promises.
 
 - [Install](#install)
 - [Use](#use)
+- [Connection Options](#connection-options)
+- [Components](#components)
 - [Command Line Scripts](#command-line-scripts)
 - [Test](#test)
 - [Roadmap](#roadmap)
@@ -39,14 +41,16 @@ to download the source code of XQuery files is
 prohibited by default (`_source=yes` is only availabe if enabled in `descriptor.xml`).
 For details of available `options` for each method please see the [REST-API documentation](https://exist-db.org/exist/apps/doc/devguide_rest.xml)
 
-First, we need an instance of the restClient (see also  [Configuration](#configuration) for connection options).
+First, we need an instance of the restClient.
 
 ```js
 import { getRestClient } from '@existdb/node-exist'
 const rc = await getRestClient()
 ```
 
-The rest client has 4 methods
+For more information see also [Connection Options](#connection-options).
+
+The returned HTTP client has 4 methods
 
 - `post(query, path[, options])`: execute `query` in the context of `path`.
   The `query` is expected to be a XQuery main module and will be wrapped in the XML-fragment that exist expects.
@@ -55,19 +59,20 @@ The rest client has 4 methods
   await rc.post('count(//p)', '/db')
   ```
 
-- `put(data, path)` which allows to create resources in the database.
-  If sub-collections are missing they will be created for you.
+- `put(data, path)`: create resources in the database.
+  If sub-collections in path are missing, they will be created for you.
   The server will respond with StatusCode 400, Bad Request, for not-well-
-  formed XML resources.
+  formed XML resources. In this case, the body contains a detailed 
+  description of the validation error.
 
   ```js
   await rc.put('<root />', '/db/rest-test/test.xml')
   ```
 
-- `get(path [, options][, writableStream])` to read data from the database.
+- `get(path [, options][, writableStream])`: read data from the database.
   The response body will contain the contents of the resource or
-  a file listing if the provided path is a collection.
-  If a writableStream is passed in the response body will be streamed into it.
+  a file listing, if the provided path is a collection.
+  If a writableStream is passed in, the response body will be streamed into it.
 
   ```js
   const { body } = await rc.get('/db/rest-test/test.xml')
@@ -144,34 +149,102 @@ db.collections.describe('/db/apps')
 You can also have a look at the 
 [examples](spec/examples) for more use-cases.
 
-## Configuration
+## Connection Options
 
-Connect as someone else than guest 
+In the previous section you learned that there are two
+APIs you can use to interact with an exist-db instance.
+
+Both client constructor functions do accept an option argument of type
+`NodeExistConnectionOptions`.
+Calling them without arguments, as in the examples above will use
+default options.
 
 ```js
-exist.connect({
+{
   basic_auth: {
-    user: 'me',
-    pass: '1 troubadour artisanal #compost'
-  }
+    user: 'guest',
+    pass: 'guest'
+  },
+  protocol: 'https:',
+  host: 'localhost',
+  port: '8443',
+  path: '/exist/rest'|'/exist/xmlrpc'
+}
+```
+
+**NOTE:** The `path` property, the endpoint to reach an API,
+is different for REST (`'/exist/xmlrpc'`) and XML-RPC (`'/exist/xmlrpc'`).
+You most likely do not need to change it. However, if you need
+to you can override those.
+
+### RESTClient with defaults
+
+```js
+import {getRestClient} from '@existdb/node-exist'
+const rest = await getRestClient({
+  basic_auth: {
+    user: 'guest',
+    pass: 'guest'
+  },
+  protocol: 'https:',
+  host: 'localhost',
+  port: '8443',
+  path: '/exist/rest'
 })
 ```
 
-Connect to a **local development** server using HTTP
+### XMLRPCClient with defaults
 
 ```js
-exist.connect({ secure: false, port: 8080 })
+import {connect} from '@existdb/node-exist'
+const db = connect({
+  basic_auth: {
+    user: 'guest',
+    pass: 'guest'
+  },
+  protocol: 'https:',
+  host: 'localhost',
+  port: '8443',
+  path: '/exist/xmlrpc'
+})
 ```
 
-Connect to a server with an **invalid** or **expired** certificate
+### Examples
 
-```js
-exist.connect({ rejectUnauthorized: false })
-```
+- Connect as someone else than guest 
+  ```js
+  {
+    basic_auth: {
+      user: 'me',
+      pass: '1 troubadour artisanal #compost'
+    }
+  }
+  ```
 
-### Read configuration from environment variables
+- Connect to a **local development** server using HTTP
+  ```js
+  {
+    protocol: 'http:',
+    port: 8080
+  }
+  ```
 
-`readOptionsFromEnv` offers an comfortable way to read the connection options
+- Connect to a server with an **invalid** or **expired** certificate.
+  ```js
+  {
+    host: 'here.be.dragons',
+    rejectUnauthorized: false
+  }
+  ```
+  **NOTE:** For remote hosts this is considered _bad practice_ as it does only
+  offer a false sense of security.
+  For hosts considered local - `localhost`, `127.0.0.1` and `[::1]` -
+  this is set automatically, because it is impossible to have trusted certificates
+  for local hosts.
+
+### Read options from environment
+
+`readOptionsFromEnv` offers a comfortable way to read the connection options
 from a set of environment variables
 
 | variable name | default | description
@@ -180,32 +253,21 @@ from a set of environment variables
 | `EXISTDB_PASS` | _none_ | the password to authenticate the user against the database
 | `EXISTDB_SERVER` | `https://localhost:8443` | the URL of the database instance to connect to (only http and https protocol allowed)
 
+**NOTE:** In order to connect to an instance as a user other than `guest`
+_both_ `EXISTDB_USER` _and_ `EXISTDB_PASS` have to be set!
+
 ```js
-const {connect, readOptionsFromEnv} = require('@existdb/node-exist')
+const {connect, restClient, readOptionsFromEnv} = require('@existdb/node-exist')
 const db = connect(readOptionsFromEnv())
+const rest = await getRestClient(readOptionsFromEnv())
 ```
 
 For more details you can have a look how it is used in the [connection script](spec/connection.js)
-that is used for testing and in all example scripts and the [examples](spec/examples).
-
-### Defaults
-
-```js
-{
-  host: 'localhost',
-  port: '8443',
-  path: '/exist/xmlrpc', // you most likely do not need to change that
-  basic_auth: {
-    user: 'guest',
-    pass: 'guest'
-  },
-  secure: true
-}
-```
+that is used for testing and in all [example scripts](spec/examples).
 
 ## Components
 
-The methods are grouped into components by what they operate on.
+The **XML-RPC** commands are grouped into components by what they operate on.
 Every method returns a promise.
 
 ### Queries
