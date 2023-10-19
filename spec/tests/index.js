@@ -59,7 +59,13 @@ test('create connection with default settings', function (t) {
   t.end()
 })
 
-test('create connection using http://', function (t) {
+test('create connection using http:', function (t) {
+  const db = connect({ protocol: 'http:', port: 8080 })
+  t.equal(db.client.isSecure, false, 'insecure client used')
+  t.end()
+})
+
+test('create insecure client using legacy option', function (t) {
   const db = connect({ secure: false, port: 8080 })
   t.equal(db.client.isSecure, false, 'insecure client used')
   t.end()
