@@ -412,3 +412,33 @@ test('with rest client over http', async function (t) {
     }
   })
 })
+
+test('with rest client connecting to exist-db.org as guest with standard port', async function (t) {
+  const rc = await getRestClient({ host: 'exist-db.org', port: 443 })
+
+  t.test('getting a collection listing is rejected as unauthorized', async function (st) {
+    try {
+      const res = await rc.get('db')
+      st.fail(res)
+    } catch (e) {
+      st.equal(e.response.statusCode, 401)
+    }
+    st.end()
+  })
+})
+
+test('with rest client connecting to exist-db.org from URL', async function (t) {
+  const { protocol, hostname, port } = new URL('https://exist-db.org/')
+  // NOTE: that host is mapped to hostname
+  const rc = await getRestClient({ protocol, host: hostname, port })
+
+  t.test('getting a collection listing is rejected as unauthorized', async function (st) {
+    try {
+      const res = await rc.get('db')
+      st.fail(res)
+    } catch (e) {
+      st.equal(e.response.statusCode, 401)
+    }
+    st.end()
+  })
+})
