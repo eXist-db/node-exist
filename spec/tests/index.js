@@ -71,6 +71,32 @@ test('create insecure client using legacy option', function (t) {
   t.end()
 })
 
+test('create secure client to remote db', function (t) {
+  const host = 'exist-db.org'
+  const protocol = 'https:'
+  const remoteDb = port => connect({ host, protocol, port })
+  const check = async function (db, st) {
+    st.equal(db.client.isSecure, true, 'secure client used')
+
+    try {
+      const result = await db.resources.describe('/db')
+      st.fail(result, result)
+    } catch (e) {
+      st.equal(e.message, 'XML-RPC fault: Wrong password for user [guest] ', e)
+    }
+
+    st.end()
+  }
+
+  t.test('using standard port', async function (st) {
+    await check(remoteDb('443'), st)
+  })
+
+  t.test('using empty port', async function (st) {
+    await check(remoteDb(''), st)
+  })
+})
+
 test('get collection permissions', function (t) {
   const db = connect(envOptions)
   db.resources.getPermissions('/db')

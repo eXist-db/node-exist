@@ -138,7 +138,7 @@ function mergeOptions (path, options) {
     if (!isSecureClient) {
       console.warn('Connecting to remote DB using an unencrypted channel.')
     }
-    if (!mergedOptions.rejectUnauthorized) {
+    if (('rejectUnauthorized' in mergedOptions) && !mergedOptions.rejectUnauthorized) {
       console.warn('Connecting to remote DB allowing invalid certificate.')
     }
   }
