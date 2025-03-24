@@ -60,7 +60,7 @@ test('valid XML', async function (t) {
     try {
       const fh = await db.documents.upload(contents)
       st.ok(fh >= 0, 'returned filehandle')
-      const result = await db.documents.parseLocal(fh, remoteFileName, {})
+      const result = await db.documents.parseLocal(fh, remoteFileName)
       st.ok(result, 'file could be parsed')
       const info = await db.resources.describe(remoteFileName)
       st.ok(info, 'file was written to collection')
@@ -69,9 +69,28 @@ test('valid XML', async function (t) {
     }
   })
 
-  t.test('serialized with default options', async function (st) {
+  t.test('read with empty options uses defaults', async function (st) {
     try {
       const contentBuffer = await db.documents.read(remoteFileName, {})
+      const lines = contents.toString().split('\n')
+
+      // default serialization removes first (XML declaration) line
+      lines.shift()
+
+      // and last line (final newline)
+      lines.pop()
+      const expectedContents = lines.join('\n')
+
+      st.equal(contentBuffer.toString(), expectedContents, 'file was read')
+    } catch (e) {
+      st.fail(e, 'errored')
+    }
+  })
+
+  t.test('read without passing options', async function (st) {
+    try {
+      // calling read with just one argument, effectively passing null for options
+      const contentBuffer = await db.documents.read(remoteFileName)
       const lines = contents.toString().split('\n')
 
       // default serialization removes first (XML declaration) line
