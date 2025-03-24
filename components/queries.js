@@ -9,16 +9,15 @@
  * @param {{limit:number, start:number}} [options] - options.limit and options.start control which
  * @returns {Promise}
  */
-function read (client, query, options) {
+function read (client, query, options = {}) {
   const limit = options.limit || 1
-  const start = options.start || 1 // yes, it seems to be 1-based
-  const queryOptions = options || {}
+  const start = options.start || 1 // yes, start it seems to be 1-based
 
-  // these cause null exceptions in exist XML RPC
-  delete queryOptions.start
-  delete queryOptions.limit
+  // remmove them from options as they cause NPEs in exist-db XML-RPC 
+  delete options.limit
+  delete options.start
 
-  return client.promisedMethodCall('query', [query, limit, start, queryOptions])
+  return client.promisedMethodCall('query', [query, limit, start, options])
 }
 
 /**
