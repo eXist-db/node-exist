@@ -4,7 +4,7 @@ function upload (client, contentBuffer) {
   return client.promisedMethodCall('upload', [contentBuffer, contentBuffer.length])
 }
 
-function parseLocal (client, handle, filename, options) {
+function parseLocal (client, handle, filename, options = {}) {
   // set default values
   const mimeType = getMimeType(filename, options && options.mimetype ? options.mimetype : null)
   const replace = options && options.replace ? options.replace : true
@@ -12,7 +12,7 @@ function parseLocal (client, handle, filename, options) {
   return client.promisedMethodCall('parseLocal', [handle, filename, replace, mimeType])
 }
 
-function read (client, documentName, options) {
+function read (client, documentName, options = {}) {
   return client.promisedMethodCall('getDocument', [documentName, options])
 }
 

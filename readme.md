@@ -111,7 +111,7 @@ const {connect} = require('@existdb/node-exist')
 const db = connect()
 
 db.documents.upload(Buffer.from('<root/>'))
-  .then(fileHandle => db.documents.parseLocal(fileHandle, '/db/apps/test/file.xml', {}))
+  .then(fileHandle => db.documents.parseLocal(fileHandle, '/db/apps/test/file.xml'))
   .then(result => db.documents.read('/db/apps/test/file.xml'))
   .then(result => console.log('test file contents', result))
   .catch(error => console.error('fail', error))
@@ -353,7 +353,7 @@ db.documents.upload(Buffer.from('test'))
 #### parseLocal
 
 ```js
-db.documents.parseLocal(fileHandle, 'foo/test.txt', {})
+db.documents.parseLocal(fileHandle, 'foo/test.txt')
 ```
 
 #### read
@@ -366,7 +366,7 @@ in the options parameter.
 Use default serialization options.
 
 ```js
-db.documents.read('foo.xml', {})
+db.documents.read('foo.xml')
 ```
 
 Force XML declaration to be returned.
