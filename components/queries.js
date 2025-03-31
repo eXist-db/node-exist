@@ -13,7 +13,7 @@ function read (client, query, options = {}) {
   const limit = options.limit || 1
   const start = options.start || 1 // yes, start it seems to be 1-based
 
-  // remmove them from options as they cause NPEs in exist-db XML-RPC 
+  // remmove them from options as they cause NPEs in exist-db XML-RPC
   delete options.limit
   delete options.start
 
@@ -27,7 +27,7 @@ function read (client, query, options = {}) {
  * @param {Object} options
  * @returns {Promise}
  */
-function execute (client, queryStringOrBuffer, options) {
+function execute (client, queryStringOrBuffer, options = {}) {
   return client.promisedMethodCall('executeQuery', [queryStringOrBuffer, options])
 }
 
@@ -51,7 +51,7 @@ function releaseResult (client, handle) {
   return client.promisedMethodCall('releaseQueryResult', [handle])
 }
 
-function readAll (client, queryStringOrBuffer, options) {
+function readAll (client, queryStringOrBuffer, options = {}) {
   let resultHandle = -1
   let resultPages = -1
   let results, error
