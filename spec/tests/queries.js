@@ -70,6 +70,25 @@ test('call queryAll method', function (t) {
     })
 })
 
+test('call queryAll method without options', function (t) {
+  const db = connect(envOptions)
+  const queryString = 'for $i in (1,2) return $i + 10'
+  const expectedResult = '11,12'
+
+  db.queries.readAll(queryString)
+    .then(function (result) {
+      const csv = result.pages.map(function (p) { return p.toString() }).join(',')
+      t.equal(result.pages.length, result.hits, 'all pages retrieved')
+      t.equal(csv, expectedResult, 'got expected result')
+      t.deepEqual(result.options, {}, 'options default to empty object')
+      t.end()
+    })
+    .catch(function (e) {
+      t.fail(e)
+      t.end()
+    })
+})
+
 test('run query, expect XML', function (t) {
   t.skip('not implemented yet')
   t.end()
