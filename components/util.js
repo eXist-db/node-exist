@@ -1,4 +1,17 @@
-const mime = require('mime')
+const Mime = require('mime/lite').Mime
+
+// load standard and other mime types
+const standardTypes = require('mime/types/standard.js').default
+const otherTypes = require('mime/types/other.js').default
+
+// define eXist-db specific mime types
+const customTypes = {
+  'application/xquery': ['xq', 'xqs', 'xquery', 'xql', 'xqm'],
+  'application/xml': ['xconf', 'odd']
+}
+
+// create custom mime instance
+const mime = new Mime(standardTypes, otherTypes, customTypes)
 
 /**
  * determine mimetype from path, allowing override
@@ -11,5 +24,6 @@ function getMimeType (path, mimetype) {
 }
 
 module.exports = {
-  getMimeType
+  getMimeType,
+  mime
 }

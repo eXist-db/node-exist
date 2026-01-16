@@ -14,7 +14,7 @@
  * @prop {{install:function, upload:function, deploy:function, remove:function}} app
  */
 
-const mime = require('mime')
+const mime = require('./components/util').mime
 
 // components
 const connection = require('./components/connection')
@@ -27,12 +27,6 @@ const indices = require('./components/indices')
 const users = require('./components/users')
 const app = require('./components/app')
 const rest = require('./components/rest')
-
-// exist specific mime types
-mime.define({
-  'application/xquery': ['xq', 'xqs', 'xquery', 'xql', 'xqm'],
-  'application/xml': ['xconf', 'odd']
-})
 
 // helper functions
 

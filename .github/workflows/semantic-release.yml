@@ -13,11 +13,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [16, 18, 20]
+        node-version: [20, 22, 24]
         exist-version: [4.10.0, 5.4.1, release]
         experimental: [false]
         include:
-          - node-version: 20
+          - node-version: 24
             exist-version: latest
             experimental: true
     services:
@@ -52,7 +52,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 24
       - name: Install dependencies
         run: npm ci
       - name: Release
