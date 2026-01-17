@@ -1,6 +1,6 @@
 name: Semantic Release
 
-on: [push, pull_request]
+on: [push]
 
 # Tests cannot run on windows due to issues with the windows server 2019 images 
 # the github action runners are using not being able to run linux docker images
@@ -8,7 +8,7 @@ on: [push, pull_request]
 
 permissions:
   id-token: write  # Required for OIDC
-  contents: read
+  contents: write  # To create GitHub releases
 
 jobs:
   build:
@@ -63,4 +63,4 @@ jobs:
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
