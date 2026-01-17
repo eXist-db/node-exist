@@ -6,6 +6,10 @@ on: [push, pull_request]
 # the github action runners are using not being able to run linux docker images
 # https://github.com/actions/virtual-environments/issues/1143
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
