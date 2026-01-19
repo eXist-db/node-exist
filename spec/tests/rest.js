@@ -1,10 +1,11 @@
-import test from 'tape'
+import { describe, it } from 'node:test'
+import assert from 'node:assert'
 import { readFileSync, createReadStream, createWriteStream, unlinkSync } from 'fs'
 import { getRestClient, connect } from '../../index.js'
 import { envOptions } from '../connection.js'
 
 // rest client interactions
-test('with rest client', async function (t) {
+await describe('with rest client', async function () {
   const testCollection = '/db/rest-test'
   const _query = '<c name="/db/rest-test">{' +
     'for $r in xmldb:get-child-resources("/db/rest-test") order by $r return <r name="{$r}" />' +
@@ -22,62 +23,52 @@ return $r
   await db.collections.create(testCollection)
   const testBuffer = Buffer.from('<collection>\n    <item property="value"/>\n</collection>')
 
-  t.test('upload file (buffer) returns Created', async function (st) {
+  await it('upload file (buffer) returns Created', async function () {
     try {
       const res = await rc.put(readFileSync('spec/files/test.xml'), 'db/rest-test/from-buffer.xml')
-      st.equal(res.statusCode, 201)
-      st.end()
+      assert.strictEqual(res.statusCode, 201)
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('create file from string returns Created', async function (st) {
+  await it('create file from string returns Created', async function () {
     try {
       const res = await rc.put('this is a test', 'db/rest-test/from-string.txt')
-      st.equal(res.statusCode, 201)
-      st.end()
+      assert.strictEqual(res.statusCode, 201)
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('upload invalid file (buffer) fails with Bad Request', async function (st) {
+  await it('upload invalid file (buffer) fails with Bad Request', async function () {
     try {
       const res = await rc.put(readFileSync('spec/files/invalid.xml'), 'db/rest-test/from-buffer-invalid.xml')
-      st.fail(res)
-      st.end()
+      assert.fail(res)
     } catch (e) {
-      st.equal(e.response.statusCode, 400)
-      st.end()
+      assert.strictEqual(e.response.statusCode, 400)
     }
   })
 
-  t.test('upload file (stream) returns Created', async function (st) {
+  await it('upload file (stream) returns Created', async function () {
     try {
       const res = await rc.put(createReadStream('spec/files/test.xml'), 'db/rest-test/from-stream.xml')
-      st.equal(res.statusCode, 201)
-      st.end()
+      assert.strictEqual(res.statusCode, 201)
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('upload invalid file (stream) fails with Bad Request', async function (st) {
+  await it('upload invalid file (stream) fails with Bad Request', async function () {
     try {
       const res = await rc.put(createReadStream('spec/files/invalid.xml'), 'db/rest-test/from-stream-invalid.xml')
-      st.fail(res)
-      st.end()
+      assert.fail(res)
     } catch (e) {
-      st.equal(e.response.statusCode, 400)
-      st.end()
+      assert.strictEqual(e.response.statusCode, 400)
     }
   })
 
-  t.test('create file from Generator returns Created', async function (st) {
+  await it('create file from Generator returns Created', async function () {
     try {
       const generator = function * () {
         let index = 0
@@ -87,17 +78,15 @@ return $r
         }
       }
       const res = await rc.put(generator, 'db/rest-test/from-generator.txt')
-      st.equal(res.statusCode, 201)
+      assert.strictEqual(res.statusCode, 201)
       const { body } = await rc.get('db/rest-test/from-generator.txt')
-      st.equal(body, '0\n1\n2\n')
-      st.end()
+      assert.strictEqual(body, '0\n1\n2\n')
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('create file from Async Generator returns Created', async function (st) {
+  await it('create file from Async Generator returns Created', async function () {
     try {
       const generator = async function * () {
         let index = 0
@@ -107,338 +96,298 @@ return $r
         }
       }
       const res = await rc.put(generator, 'db/rest-test/from-async-generator.txt')
-      st.equal(res.statusCode, 201)
+      assert.strictEqual(res.statusCode, 201)
       const { body } = await rc.get('db/rest-test/from-async-generator.txt')
-      st.equal(body, '0\n1\n2\n')
-      st.end()
+      assert.strictEqual(body, '0\n1\n2\n')
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('create file from FormData returns Created', async function (st) {
-    st.skip('FormData is still experimental')
-    // try {
-    //   const data = new FormData()
-    //   data.append('test', 'value')
-    //   data.append('another', 'value')
-    //   const res = await rc.put(data, 'db/rest-test/from-form-data.txt')
-    //   st.equal(res.statusCode, 201)
-    //   const { body } = await rc.get('db/rest-test/from-form-data.txt')
-    //   st.equal(body, '0\n1\n2\n')
-    // } catch (e) {
-    //   st.fail(e)
-    // }
-  })
+  // await t.test('create file from FormData returns Created', async function () {
+  // FormData is still experimental
+  // try {
+  //   const data = new FormData()
+  //   data.append('test', 'value')
+  //   data.append('another', 'value')
+  //   const res = await rc.put(data, 'db/rest-test/from-form-data.txt')
+  //   assert.strictEqual(res.statusCode, 201)
+  //   const { body } = await rc.get('db/rest-test/from-form-data.txt')
+  //   assert.strictEqual(body, '0\n1\n2\n')
+  // } catch (e) {
+  //   assert.fail(e)
+  // }
+  // })
 
-  t.test('read xml file (buffer)', async function (st) {
+  await it('read xml file (buffer)', async function () {
     try {
       await rc.put(testBuffer, 'db/rest-test/read-test-buffer.xml')
       const res = await rc.get('db/rest-test/read-test-buffer.xml')
-      st.equal(res.statusCode, 200)
-      st.equal(res.body, '<collection>\n    <item property="value"/>\n</collection>')
-      st.end()
+      assert.strictEqual(res.statusCode, 200)
+      assert.strictEqual(res.body, '<collection>\n    <item property="value"/>\n</collection>')
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('non-existent file returns 404', async function (st) {
+  await it('non-existent file returns 404', async function () {
     try {
       const res = await rc.get('db/rest-test/non-existent.file')
-      st.fail(res)
-      st.end()
+      assert.fail(res)
     } catch (e) {
-      st.equal(e.response.statusCode, 404)
-      st.end()
+      assert.strictEqual(e.response.statusCode, 404)
     }
   })
 
-  t.test('stream xml file from db', async function (st) {
+  await it('stream xml file from db', async function () {
     try {
       await rc.put(testBuffer, 'db/rest-test/read-test-stream.xml')
       const writeStream = createWriteStream('stream-test.xml')
       const res = await rc.get('db/rest-test/read-test-stream.xml', {}, writeStream)
-      st.equal(res.statusCode, 200)
+      assert.strictEqual(res.statusCode, 200)
       const written = readFileSync('stream-test.xml')
-      st.equal(written.toString(), '<collection>\n    <item property="value"/>\n</collection>')
+      assert.strictEqual(written.toString(), '<collection>\n    <item property="value"/>\n</collection>')
       unlinkSync('stream-test.xml')
-      st.end()
     } catch (e) {
-      st.equal(e.response.statusCode, 400)
-      st.end()
+      assert.strictEqual(e.response.statusCode, 400)
     }
   })
-  t.test('stream non-existent file returns error, does not write file', async function (st) {
+
+  await it('stream non-existent file returns error, does not write file', async function () {
     const writeStream = createWriteStream('stream-fail-test.xml')
 
     try {
       const res = await rc.get('db/rest-test/non-existent.file', {}, writeStream)
-      st.fail(res)
-      st.end()
+      assert.fail(res)
     } catch (e) {
-      st.ok(writeStream.destroyed)
-      st.equal(writeStream.bytesWritten, 0)
-      st.equal(e.response.statusCode, 404)
-      st.end()
+      assert.ok(writeStream.destroyed)
+      assert.strictEqual(writeStream.bytesWritten, 0)
+      assert.strictEqual(e.response.statusCode, 404)
     }
   })
 
-  t.test('stream xml file from db', async function (st) {
+  await it('stream xml file from db', async function () {
     try {
       await rc.put(testBuffer, 'db/rest-test/read-test-stream.xml')
       const writeStream = createWriteStream('stream-test.xml')
       const res = await rc.get('db/rest-test/read-test-stream.xml', {}, writeStream)
-      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
       const written = readFileSync('stream-test.xml')
-      st.equal(written.toString(), '<collection>\n    <item property="value"/>\n</collection>')
-      st.end()
+      assert.strictEqual(written.toString(), '<collection>\n    <item property="value"/>\n</collection>')
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('getting a collection will return the file listing as xml', async function (st) {
+  await it('getting a collection will return the file listing as xml', async function () {
     try {
       const res = await rc.get('db/rest-test')
-      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
 
       const lines = res.body.split('\n')
-      st.equal(lines[0], '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist">')
-      st.ok(lines[1].startsWith('    <exist:collection name="/db/rest-test"'))
-
-      st.end()
+      assert.strictEqual(lines[0], '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist">')
+      assert.ok(lines[1].startsWith('    <exist:collection name="/db/rest-test"'))
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('collection listing does honor neither _wrap nor _indent', async function (st) {
+  await it('collection listing does honor neither _wrap nor _indent', async function () {
     try {
       const res = await rc.get('db/rest-test', { _wrap: 'no', _indent: 'no' })
-      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
 
       const lines = res.body.split('\n')
-      st.equal(lines[0], '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist">')
-      st.ok(lines[1].startsWith('    <exist:collection name="/db/rest-test"'))
-
-      st.end()
+      assert.strictEqual(lines[0], '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist">')
+      assert.ok(lines[1].startsWith('    <exist:collection name="/db/rest-test"'))
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('get in combination with _query allows to get unindented, unwrapped result', async function (st) {
+  await it('get in combination with _query allows to get unindented, unwrapped result', async function () {
     try {
       const res = await rc.get('db/rest-test', { _wrap: 'no', _indent: 'no', _query })
-      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
       const lines = res.body.split('\n')
-      st.equal(lines.length, 1, 'body is a single line')
-      st.ok(lines[0].startsWith('<c name="/db/rest-test"><r name="from-async-generator.txt"/><r name='), lines[0])
-
-      st.end()
+      assert.strictEqual(lines.length, 1, 'body is a single line')
+      assert.ok(lines[0].startsWith('<c name="/db/rest-test"><r name="from-async-generator.txt"/><r name='), lines[0])
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('get in combination with _query allows to get indented, wrapped result', async function (st) {
+  await it('get in combination with _query allows to get indented, wrapped result', async function () {
     try {
       const res = await rc.get('db/rest-test', { _wrap: 'yes', _indent: 'yes', _query })
-      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
-      st.equal(res.hits, 1, 'result returned ' + res.hits + ' hit(s)')
-      st.equal(res.start, 1, 'start is ' + res.start)
-      st.equal(res.count, 1, 'count is ' + res.count)
+      assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      assert.strictEqual(res.hits, 1, 'result returned ' + res.hits + ' hit(s)')
+      assert.strictEqual(res.start, 1, 'start is ' + res.start)
+      assert.strictEqual(res.count, 1, 'count is ' + res.count)
 
       const lines = res.body.split('\n')
-      st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
-      st.equal(lines[1], '    <c name="/db/rest-test">')
-      st.equal(lines[2], '        <r name="from-async-generator.txt"/>')
-
-      st.end()
+      assert.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
+      assert.strictEqual(lines[1], '    <c name="/db/rest-test">')
+      assert.strictEqual(lines[2], '        <r name="from-async-generator.txt"/>')
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('post returns wrapped and indented result', async function (st) {
+  await it('post returns wrapped and indented result', async function () {
     try {
       const res = await rc.post(_query, 'db/rest-test')
-      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
-      st.equal(res.hits, 1, 'result returned ' + res.hits + ' hit(s)')
-      st.equal(res.start, 1, 'start is ' + res.start)
-      st.equal(res.count, 1, 'count is ' + res.count)
+      assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      assert.strictEqual(res.hits, 1, 'result returned ' + res.hits + ' hit(s)')
+      assert.strictEqual(res.start, 1, 'start is ' + res.start)
+      assert.strictEqual(res.count, 1, 'count is ' + res.count)
 
       const lines = res.body.split('\n')
-      st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
-      st.equal(lines[1], '    <c name="/db/rest-test">')
-      st.equal(lines[2], '        <r name="from-async-generator.txt"/>')
-
-      st.end()
+      assert.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
+      assert.strictEqual(lines[1], '    <c name="/db/rest-test">')
+      assert.strictEqual(lines[2], '        <r name="from-async-generator.txt"/>')
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('post returns wrapped and unindented result', async function (st) {
+  await it('post returns wrapped and unindented result', async function () {
     try {
       const res = await rc.post(_query, 'db/rest-test', { indent: 'no' })
-      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
-      st.equal(res.hits, 1, 'result returned ' + res.hits + ' hit(s)')
-      st.equal(res.start, 1, 'start is ' + res.start)
-      st.equal(res.count, 1, 'count is ' + res.count)
+      assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      assert.strictEqual(res.hits, 1, 'result returned ' + res.hits + ' hit(s)')
+      assert.strictEqual(res.start, 1, 'start is ' + res.start)
+      assert.strictEqual(res.count, 1, 'count is ' + res.count)
       const lines = res.body.split('\n')
-      st.equal(lines.length, 1, 'body consists of a single line')
-      st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
-      st.ok(lines[0].includes('<c name="/db/rest-test">'), 'contains result')
-      st.end()
+      assert.strictEqual(lines.length, 1, 'body consists of a single line')
+      assert.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
+      assert.ok(lines[0].includes('<c name="/db/rest-test">'), 'contains result')
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('post honors start and max', async function (st) {
+  await it('post honors start and max', async function () {
     try {
       const res = await rc.post(xqueryMainModule, 'db/rest-test', { start: 1, max: 1 })
-      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
-      st.equal(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
-      st.equal(res.start, 1, 'start is ' + res.start)
-      st.equal(res.count, 1, 'count is ' + res.count)
+      assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      assert.strictEqual(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
+      assert.strictEqual(res.start, 1, 'start is ' + res.start)
+      assert.strictEqual(res.count, 1, 'count is ' + res.count)
 
       const lines = res.body.split('\n')
-      st.equal(lines.length, 3, 'body consists of 3 lines')
-      st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
-      st.equal(lines[1], '    <exist:value exist:type="xs:string">from-async-generator.txt</exist:value>')
-      st.end()
+      assert.strictEqual(lines.length, 3, 'body consists of 3 lines')
+      assert.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
+      assert.strictEqual(lines[1], '    <exist:value exist:type="xs:string">from-async-generator.txt</exist:value>')
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('post honors just start', async function (st) {
+  await it('post honors just start', async function () {
     try {
       const res = await rc.post(xqueryMainModule, 'db/rest-test', { start: 2 })
-      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
-      st.equal(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
-      st.equal(res.start, 2, 'start is ' + res.start)
-      st.equal(res.count, 6, 'count is ' + res.count)
+      assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      assert.strictEqual(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
+      assert.strictEqual(res.start, 2, 'start is ' + res.start)
+      assert.strictEqual(res.count, 6, 'count is ' + res.count)
       const lines = res.body.split('\n')
-      st.equal(lines.length, 8, 'body consists of 8 lines')
-      st.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
-      st.equal(lines[1], '    <exist:value exist:type="xs:string">from-buffer.xml</exist:value>')
-      st.end()
+      assert.strictEqual(lines.length, 8, 'body consists of 8 lines')
+      assert.ok(lines[0].startsWith('<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist"'))
+      assert.strictEqual(lines[1], '    <exist:value exist:type="xs:string">from-buffer.xml</exist:value>')
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.test('post honors cache', async function (st) {
+  await it('post honors cache', async function () {
     try {
       const res = await rc.post(xqueryMainModule, 'db/rest-test', { cache: 'yes', start: 1, max: 1 })
-      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
-      st.isNotEqual(res.session, -1, 'Got session ' + res.session)
-      st.equal(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
-      st.equal(res.start, 1, 'start is ' + res.start)
-      st.equal(res.count, 1, 'count is ' + res.count)
+      assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      assert.notStrictEqual(res.session, -1, 'Got session ' + res.session)
+      assert.strictEqual(res.hits, 7, 'result returned ' + res.hits + ' hit(s)')
+      assert.strictEqual(res.start, 1, 'start is ' + res.start)
+      assert.strictEqual(res.count, 1, 'count is ' + res.count)
 
       const lines = res.body.split('\n')
-      st.equal(lines.length, 3, 'body consists of 3 lines')
-      st.equal(lines[1], '    <exist:value exist:type="xs:string">from-async-generator.txt</exist:value>')
+      assert.strictEqual(lines.length, 3, 'body consists of 3 lines')
+      assert.strictEqual(lines[1], '    <exist:value exist:type="xs:string">from-async-generator.txt</exist:value>')
 
       const res2 = await rc.post(xqueryMainModule, 'db/rest-test', { session: res.session, start: 2, max: 1 })
       const lines2 = res2.body.split('\n')
-      st.equal(res.session, res2.session, 'same session was returned (' + res.session + ', ' + res2.session + ')')
-      st.equal(res2.hits, 7, 'result returned ' + res2.hits + ' hit(s)')
-      st.equal(res2.start, 2, 'start is ' + res2.start)
-      st.equal(res2.count, 1, 'count is ' + res2.count)
+      assert.strictEqual(res.session, res2.session, 'same session was returned (' + res.session + ', ' + res2.session + ')')
+      assert.strictEqual(res2.hits, 7, 'result returned ' + res2.hits + ' hit(s)')
+      assert.strictEqual(res2.start, 2, 'start is ' + res2.start)
+      assert.strictEqual(res2.count, 1, 'count is ' + res2.count)
 
-      st.equal(lines2.length, 3, 'body consists of 3 lines')
-      st.equal(lines2[1], '    <exist:value exist:type="xs:string">from-buffer.xml</exist:value>')
+      assert.strictEqual(lines2.length, 3, 'body consists of 3 lines')
+      assert.strictEqual(lines2[1], '    <exist:value exist:type="xs:string">from-buffer.xml</exist:value>')
 
       const { statusCode } = await rc.get('db', { _release: res.session })
-      st.equal(statusCode, 200, 'session ' + res.session + ' released')
-      st.end()
+      assert.strictEqual(statusCode, 200, 'session ' + res.session + ' released')
     } catch (e) {
       console.error(e)
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 
-  t.teardown(async _ => {
+  await it('teardown', async _ => {
     await db.collections.remove(testCollection)
     unlinkSync('stream-fail-test.xml')
     unlinkSync('stream-test.xml')
   })
 })
 
-test('with rest client over http', async function (t) {
+await describe('with rest client over http', async function () {
   const modifiedOptions = Object.assign({ protocol: 'http:', port: '8080' }, envOptions)
   const rc = await getRestClient(modifiedOptions)
 
-  t.test('non-existent file returns 404', async function (st) {
+  await it('non-existent file returns 404', async function () {
     try {
       const res = await rc.get('db/rest-test/non-existent.file')
-      st.fail(res)
-      st.end()
+      assert.fail(res)
     } catch (e) {
-      st.equal(e.response.statusCode, 404)
-      st.end()
+      assert.strictEqual(e.response.statusCode, 404)
     }
   })
 
-  t.test('getting a collection will return the file listing as xml', async function (st) {
+  await it('getting a collection will return the file listing as xml', async function () {
     try {
       const res = await rc.get('db')
-      st.equal(res.statusCode, 200, 'server responded with status ' + res.statusCode)
+      assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
 
       const lines = res.body.split('\n')
-      st.equal(lines[0], '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist">')
-      st.end()
+      assert.strictEqual(lines[0], '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist">')
     } catch (e) {
-      st.fail(e)
-      st.end()
+      assert.fail(e)
     }
   })
 })
 
-test('with rest client connecting to exist-db.org as guest with standard port', async function (t) {
+await describe('with rest client connecting to exist-db.org as guest with standard port', async function () {
   const rc = await getRestClient({ host: 'exist-db.org', port: 443 })
 
-  t.test('getting a collection listing is rejected as unauthorized', async function (st) {
+  await it('getting a collection listing is rejected as unauthorized', async function () {
     try {
       const res = await rc.get('db')
-      st.fail(res)
+      assert.fail(res)
     } catch (e) {
-      st.equal(e.response.statusCode, 401)
+      assert.strictEqual(e.response.statusCode, 401)
     }
-    st.end()
   })
 })
 
-test('with rest client connecting to exist-db.org from URL', async function (t) {
+await describe('with rest client connecting to exist-db.org from URL', async function () {
   const { protocol, hostname, port } = new URL('https://exist-db.org/')
   // NOTE: that host is mapped to hostname
   const rc = await getRestClient({ protocol, host: hostname, port })
 
-  t.test('getting a collection listing is rejected as unauthorized', async function (st) {
+  await it('getting a collection listing is rejected as unauthorized', async function () {
     try {
       const res = await rc.get('db')
-      st.fail(res)
+      assert.fail(res)
     } catch (e) {
-      st.equal(e.response.statusCode, 401)
+      assert.strictEqual(e.response.statusCode, 401)
     }
-    st.end()
   })
 })

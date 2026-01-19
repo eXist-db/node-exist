@@ -1,4 +1,5 @@
-import test from 'tape'
+import { test, describe, it } from 'node:test'
+import assert from 'node:assert'
 import { connect } from '../../index.js'
 import { envOptions } from '../connection.js'
 const asGuest = Object.assign({},
@@ -6,188 +7,113 @@ const asGuest = Object.assign({},
   { basic_auth: { user: 'guest', pass: 'guest' } }
 )
 
-test('collections.exists', function (t) {
+await describe('collections.exists', async () => {
   const db = connect(envOptions)
 
-  t.test('true for existing collection', async function (st) {
-    try {
-      const result = await db.collections.exists('/db')
-      st.true(result, '/db exists')
-    } catch (e) {
-      st.fail(e)
-    }
+  await it('true for existing collection', async () => {
+    const result = await db.collections.exists('/db')
+    assert.ok(result, '/db exists')
   })
 
-  test('false for non-existing collection', async function (st) {
-    try {
-      const result = await db.collections.exists('/foo')
-      st.false(result, '/foo does not exist')
-    } catch (e) {
-      t.fail(e)
-    }
+  await it('false for non-existing collection', async () => {
+    const result = await db.collections.exists('/foo')
+    assert.ok(!result, '/foo does not exist')
   })
 
-  test('throws with insufficient access', async function (st) {
+  await it('throws with insufficient access', async () => {
     try {
       const dbAsGuest = connect()
       const result = await dbAsGuest.collections.exists('/db/system/security')
-      st.false(result, 'Guest should not see /db/system/security')
+      assert.ok(!result, 'Guest should not see /db/system/security')
     } catch (e) {
       // Guest should not see /db/system/security
       // because it throws with a PermissionDeniedException
       // it is obvious the collection exists
-      t.ok(e)
+      assert.ok(e)
     }
   })
 })
 
-test('get collection info', function (t) {
+await test('get collection info', async () => {
   const db = connect(envOptions)
-  db.collections.describe('/db')
-    .then(function (info) {
-      t.equal(info.owner, 'SYSTEM')
-      t.ok(Array.isArray(info.collections))
-      t.ok(Array.isArray(info.acl))
-      t.ok(info.created)
-      t.equal(info.permissions, 493)
-      t.equal(info.name, '/db')
-      t.equal(info.group, 'dba')
-      t.end()
-    })
-    .catch(function (e) {
-      t.fail(e)
-      t.end()
-    })
+  const info = await db.collections.describe('/db')
+  assert.strictEqual(info.owner, 'SYSTEM')
+  assert.ok(Array.isArray(info.collections))
+  assert.ok(Array.isArray(info.acl))
+  assert.ok(info.created)
+  assert.strictEqual(info.permissions, 493)
+  assert.strictEqual(info.name, '/db')
+  assert.strictEqual(info.group, 'dba')
 })
 
-test('read collection', function (t) {
+await test('read collection', async () => {
   const db = connect(envOptions)
-  db.collections.read('/db/system/security')
-    .then(function (collection) {
-      t.equal(collection.owner, 'SYSTEM')
-      t.equal(collection.collections[0], 'exist')
-      t.equal(collection.documents[0].name, 'config.xml')
-      t.ok(collection.created)
-      t.equal(collection.permissions, 504)
-      t.equal(collection.name, '/db/system/security')
-      t.end()
-    })
-    .catch(function (e) {
-      t.fail(e)
-      t.end()
-    })
+  const collection = await db.collections.read('/db/system/security')
+  assert.strictEqual(collection.owner, 'SYSTEM')
+  assert.strictEqual(collection.collections[0], 'exist')
+  assert.strictEqual(collection.documents[0].name, 'config.xml')
+  assert.ok(collection.created)
+  assert.strictEqual(collection.permissions, 504)
+  assert.strictEqual(collection.name, '/db/system/security')
 })
 
-test('get info for non existent collection', function (t) {
+await test('get info for non existent collection', async () => {
   const db = connect(envOptions)
-  db.collections.describe('/foo')
-    .then(function (r) {
-      t.fail(r, 'no error')
-      t.end()
-    })
-    .catch(function (e) {
-      if (!e.faultString) {
-        t.fail(e, 'no faultString, something else must have gone wrong')
-        t.end()
-        return
-      }
-      t.ok(e.faultString.match(/\/foo not found!$/), 'not found error')
-      t.end()
-    })
+  try {
+    await db.collections.describe('/foo')
+    assert.fail('no error')
+  } catch (e) {
+    if (!e.faultString) {
+      assert.fail('no faultString, something else must have gone wrong')
+    }
+    assert.ok(e.faultString.match(/\/foo not found!$/), 'not found error')
+  }
 })
 
-test('create collection', function (t) {
+await test('create collection', async () => {
   const db = connect(envOptions)
-  db.collections.create('new-test-collection')
-    .then(function (r) {
-      console.log(r, 'create')
-      t.ok(r, 'created')
-      t.end()
-    })
-    .catch(function (e) {
-      t.fail(e, 'creation error')
-      t.end()
-    })
+  const r = await db.collections.create('new-test-collection')
+  assert.ok(r, 'created')
 })
 
-test('remove collection', function (t) {
+await test('remove collection', async () => {
   const db = connect(envOptions)
   const testCollection = '/remove-collection'
-  db.collections.create(testCollection)
-    .then(function () {
-      return db.collections.remove(testCollection)
-    })
-    .then(function (success) {
-      t.ok(success, 'removed')
-      t.end()
-    })
-    .catch(function (e) {
-      t.fail(e, 'remove failed')
-      t.end()
-    })
+  await db.collections.create(testCollection)
+  const success = await db.collections.remove(testCollection)
+  assert.ok(success, 'removed')
 })
 
-test('collection exists and guest cannot open it', function (t) {
+await test('collection exists and guest cannot open it', async () => {
   const db = connect(asGuest)
-  db.collections.existsAndCanOpen('/db/system/security')
-    .then(function () {
-      t.fail()
-      t.end()
-    })
-    .catch(function (e) {
-      t.ok(e, '/db/system/security exists and user guest cannot access it')
-      t.end()
-    })
+  try {
+    await db.collections.existsAndCanOpen('/db/system/security')
+    assert.fail()
+  } catch (e) {
+    assert.ok(e, '/db/system/security exists and user guest cannot access it')
+  }
 })
 
-test('collection exists and guest can open it', function (t) {
+await test('collection exists and guest can open it', async () => {
   const db = connect(asGuest)
-  db.collections.existsAndCanOpen('/db/apps')
-    .then(function (success) {
-      t.true(success, '/db/apps exists and user guest can access it')
-      t.end()
-    })
-    .catch(function (e) {
-      t.fail(e)
-      t.end()
-    })
+  const success = await db.collections.existsAndCanOpen('/db/apps')
+  assert.ok(success, '/db/apps exists and user guest can access it')
 })
 
-test('collection does not exist (guest)', function (t) {
+await test('collection does not exist (guest)', async () => {
   const db = connect(asGuest)
-  db.collections.existsAndCanOpen('/db/apps/asdf')
-    .then(function (success) {
-      t.false(success, '/db/apps/asdf does not exist')
-      t.end()
-    })
-    .catch(function (e) {
-      t.fail(e)
-      t.end()
-    })
+  const success = await db.collections.existsAndCanOpen('/db/apps/asdf')
+  assert.ok(!success, '/db/apps/asdf does not exist')
 })
 
-test('collection exists and admin can open it', function (t) {
+await test('collection exists and admin can open it', async () => {
   const db = connect(envOptions)
-  db.collections.existsAndCanOpen('/db/system/security')
-    .then(function (success) {
-      t.true(success)
-      t.end()
-    })
-    .catch(function (e) {
-      t.fail(e)
-      t.end()
-    })
+  const success = await db.collections.existsAndCanOpen('/db/system/security')
+  assert.ok(success)
 })
 
-test('collection does not exist (admin)', function (t) {
+await test('collection does not exist (admin)', async () => {
   const db = connect(envOptions)
-  db.collections.existsAndCanOpen('/db/apps/asdf')
-    .then(function (success) {
-      t.false(success, '/db/apps/asdf does not exist')
-      t.end()
-    })
-    .catch(function (e) {
-      t.fail(e)
-      t.end()
-    })
+  const success = await db.collections.existsAndCanOpen('/db/apps/asdf')
+  assert.ok(!success, '/db/apps/asdf does not exist')
 })

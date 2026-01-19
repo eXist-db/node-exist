@@ -1,25 +1,23 @@
 import fs from 'fs'
-import test from 'tape'
+import { test, describe, it } from 'node:test'
+import assert from 'node:assert'
 import * as app from '../../components/app.js'
 import { connect } from '../../index.js'
 import { envOptions } from '../connection.js'
 
-test('app component exports install method', function (t) {
-  t.equal(typeof app.install, 'function')
-  t.end()
+test('app component exports install method', () => {
+  assert.strictEqual(typeof app.install, 'function')
 })
 
-test('app component exports remove method', function (t) {
-  t.equal(typeof app.remove, 'function')
-  t.end()
+test('app component exports remove method', () => {
+  assert.strictEqual(typeof app.remove, 'function')
 })
 
-test('app component exports upload method', function (t) {
-  t.equal(typeof app.upload, 'function')
-  t.end()
+test('app component exports upload method', () => {
+  assert.strictEqual(typeof app.upload, 'function')
 })
 
-test('upload and install application XAR', function (t) {
+await describe('upload and install application XAR', async () => {
   const db = connect(envOptions)
 
   const xarBuffer = fs.readFileSync('spec/files/test-app.xar')
@@ -27,86 +25,54 @@ test('upload and install application XAR', function (t) {
   const packageUri = 'http://exist-db.org/apps/test-app'
   const packageTarget = '/db/apps/test-app'
 
-  t.test('upload app', function (st) {
-    st.plan(1)
-    db.app.upload(xarBuffer, xarName)
-      .then(result => st.equal(result.success, true))
-      .catch(e => {
-        st.fail(e)
-        st.end()
-      })
+  await it('upload app', async () => {
+    const result = await db.app.upload(xarBuffer, xarName)
+    assert.strictEqual(result.success, true)
   })
 
-  t.test('install app', function (st) {
-    db.app.install(xarName)
-      .then(response => {
-        if (!response.success) { return Promise.reject(response.error) }
-        st.plan(3)
-        st.equal(response.success, true, 'the application should have been installed')
-        st.equal(response.result.update, false, 'there should be no previous installation')
-        st.equal(response.result.target, packageTarget, 'the correct target should be returned')
-      })
-      .catch(e => {
-        st.fail(e)
-        st.end()
-      })
+  await it('install app', async () => {
+    const response = await db.app.install(xarName)
+    if (!response.success) { throw response.error }
+    assert.strictEqual(response.success, true, 'the application should have been installed')
+    assert.strictEqual(response.result.update, false, 'there should be no previous installation')
+    assert.strictEqual(response.result.target, packageTarget, 'the correct target should be returned')
   })
 
-  t.test('re-install app', function (st) {
-    db.app.install(xarName)
-      .then(response => {
-        if (!response.success) { return Promise.reject(response.error) }
-        st.plan(3)
-        st.equal(response.success, true)
-        st.equal(response.result.update, true)
-        st.equal(response.result.target, packageTarget, 'the correct target should be returned')
-      })
-      .catch(e => {
-        st.fail(e)
-        st.end()
-      })
+  await it('re-install app', async () => {
+    const response = await db.app.install(xarName)
+    if (!response.success) { throw response.error }
+    assert.strictEqual(response.success, true)
+    assert.strictEqual(response.result.update, true)
+    assert.strictEqual(response.result.target, packageTarget, 'the correct target should be returned')
   })
 
-  t.test('remove installed app', function (st) {
-    st.plan(2)
-    db.app.remove(packageUri)
-      .then(response => st.equal(response.success, true, 'uninstalled'))
-      .then(_ => db.documents.remove(`${app.packageCollection}/test-app.xar`))
-      .then(response => st.equal(response, true, 'removed'))
-      .catch(e => st.fail(e))
+  await it('remove installed app', async () => {
+    const response = await db.app.remove(packageUri)
+    assert.strictEqual(response.success, true, 'uninstalled')
+    const removed = await db.documents.remove(`${app.packageCollection}/test-app.xar`)
+    assert.strictEqual(removed, true, 'removed')
   })
 })
 
-test('empty application XAR', function (t) {
+await describe('empty application XAR', async () => {
   const db = connect(envOptions)
 
   const xarBuffer = Buffer.from('')
   const xarName = 'test-empty-app.xar'
 
-  t.test('upload app', function (st) {
-    st.plan(1)
-    db.app.upload(xarBuffer, xarName)
-      .then(response => st.equal(response.success, true))
-      .catch(e => st.fail(e))
+  await it('upload app', async () => {
+    const response = await db.app.upload(xarBuffer, xarName)
+    assert.strictEqual(response.success, true)
   })
 
-  t.test('install app', function (st) {
-    db.app.install(xarName)
-      .then(response => {
-        st.plan(2)
-        st.equal(response.success, false)
-        st.equal(response.error.message, `experr:EXPATH00 Missing descriptor from package: ${app.packageCollection}/test-empty-app.xar`)
-      })
-      .catch(e => {
-        st.fail(e)
-        st.end()
-      })
+  await it('install app', async () => {
+    const response = await db.app.install(xarName)
+    assert.strictEqual(response.success, false)
+    assert.strictEqual(response.error.message, `experr:EXPATH00 Missing descriptor from package: ${app.packageCollection}/test-empty-app.xar`)
   })
 
-  t.test('cleanup', function (st) {
-    st.plan(1)
-    db.documents.remove(`${app.packageCollection}/test-empty-app.xar`)
-      .then(response => st.equal(response, true))
-      .catch(e => st.fail(e))
+  await it('cleanup', async () => {
+    const response = await db.documents.remove(`${app.packageCollection}/test-empty-app.xar`)
+    assert.strictEqual(response, true)
   })
 })

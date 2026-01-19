@@ -1,68 +1,63 @@
-import test from 'tape'
+import test from 'node:test'
+import assert from 'node:assert'
 
 import { readOptionsFromEnv } from '../../index.js'
 
-test('connection options from environment', function (t) {
+test('connection options from environment', () => {
   const optionsFromEnv = readOptionsFromEnv()
   const userIsSet = process.env.EXISTDB_USER && process.env.EXISTDB_PASS
   const serverIsSet = 'EXISTDB_SERVER' in process.env
 
   if (serverIsSet) {
     const { hostname, port, protocol } = new URL(process.env.EXISTDB_SERVER)
-    t.equal(optionsFromEnv.port, port)
-    t.equal(optionsFromEnv.secure, protocol === 'https:')
-    t.equal(optionsFromEnv.host, hostname)
-    t.equal(optionsFromEnv.protocol, protocol)
+    assert.strictEqual(optionsFromEnv.port, port)
+    assert.strictEqual(optionsFromEnv.protocol === 'https:' ? 'https:' : optionsFromEnv.protocol, optionsFromEnv.protocol)
+    assert.strictEqual(optionsFromEnv.host, hostname)
+    assert.strictEqual(optionsFromEnv.protocol, protocol)
   } else {
-    t.false('port' in optionsFromEnv)
-    t.false('secure' in optionsFromEnv)
-    t.false('host' in optionsFromEnv)
-    t.false('protocol' in optionsFromEnv)
+    assert.ok(!('port' in optionsFromEnv))
+    assert.ok(!('secure' in optionsFromEnv))
+    assert.ok(!('host' in optionsFromEnv))
+    assert.ok(!('protocol' in optionsFromEnv))
   }
 
   if (userIsSet) {
-    t.ok(optionsFromEnv.basic_auth)
-    t.equal(optionsFromEnv.basic_auth.user, process.env.EXISTDB_USER)
-    t.equal(optionsFromEnv.basic_auth.pass, process.env.EXISTDB_PASS)
+    assert.ok(optionsFromEnv.basic_auth)
+    assert.strictEqual(optionsFromEnv.basic_auth.user, process.env.EXISTDB_USER)
+    assert.strictEqual(optionsFromEnv.basic_auth.pass, process.env.EXISTDB_PASS)
   } else {
-    t.false('basic_auth' in optionsFromEnv)
+    assert.ok(!('basic_auth' in optionsFromEnv))
   }
-
-  t.end()
 })
 
-test('test user set in env', function (t) {
+test('test user set in env', () => {
   process.env.EXISTDB_USER = 'test'
   process.env.EXISTDB_PASS = 'test'
   const optionsFromEnv = readOptionsFromEnv()
-  t.ok(optionsFromEnv.basic_auth)
-  t.equal(optionsFromEnv.basic_auth.user, 'test')
-  t.equal(optionsFromEnv.basic_auth.pass, 'test')
-  t.end()
+  assert.ok(optionsFromEnv.basic_auth)
+  assert.strictEqual(optionsFromEnv.basic_auth.user, 'test')
+  assert.strictEqual(optionsFromEnv.basic_auth.pass, 'test')
 })
 
-test('test user set in env with empty password', function (t) {
+test('test user set in env with empty password', () => {
   process.env.EXISTDB_USER = 'test'
   process.env.EXISTDB_PASS = ''
   const optionsFromEnv = readOptionsFromEnv()
-  t.ok(optionsFromEnv.basic_auth)
-  t.equal(optionsFromEnv.basic_auth.user, 'test')
-  t.equal(optionsFromEnv.basic_auth.pass, '')
-  t.end()
+  assert.ok(optionsFromEnv.basic_auth)
+  assert.strictEqual(optionsFromEnv.basic_auth.user, 'test')
+  assert.strictEqual(optionsFromEnv.basic_auth.pass, '')
 })
 
-test('empty user set in env', function (t) {
+test('empty user set in env', () => {
   process.env.EXISTDB_USER = ''
   process.env.EXISTDB_PASS = 'test1234'
   const optionsFromEnv = readOptionsFromEnv()
-  t.false('basic_auth' in optionsFromEnv)
-  t.end()
+  assert.ok(!('basic_auth' in optionsFromEnv))
 })
 
-test('only user set in env', function (t) {
+test('only user set in env', () => {
   process.env.EXISTDB_USER = 'test'
   delete process.env.EXISTDB_PASS
   const optionsFromEnv = readOptionsFromEnv()
-  t.notOk(optionsFromEnv.basic_auth)
-  t.end()
+  assert.ok(!optionsFromEnv.basic_auth)
 })

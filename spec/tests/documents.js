@@ -1,75 +1,71 @@
-import test from 'tape'
+import { test, describe, it } from 'node:test'
+import assert from 'node:assert'
 import { readFileSync } from 'fs'
 import semverGt from 'semver/functions/gt.js'
 import { connect } from '../../index.js'
 import { envOptions } from '../connection.js'
 
-test('binary document', function (t) {
+await describe('binary document', async function () {
   const path = '/db/test.txt'
   const content = Buffer.from('test')
   const db = connect(envOptions)
 
-  t.test('should upload', async function (st) {
+  await it('should upload', async function () {
     try {
       const db = connect(envOptions)
       const fh = await db.documents.upload(content, content.length)
-      st.ok(fh >= 0, 'returned filehandle:' + fh)
+      assert.ok(fh >= 0, 'returned filehandle:' + fh)
       const r = await db.documents.parseLocal(fh, path)
-      st.ok(r, 'was parsed')
+      assert.ok(r, 'was parsed')
     } catch (e) {
-      t.fail(e)
+      assert.fail(e)
     }
   })
 
-  t.test('can be read', async function (st) {
+  await it('can be read', async function () {
     try {
       const readContent = await db.documents.readBinary(path)
-      st.deepEqual(content, readContent, 'returned contents equal')
+      assert.deepStrictEqual(content, readContent, 'returned contents equal')
     } catch (e) {
-      st.fail(e)
+      assert.fail(e)
     }
   })
 })
 
-test('upload invalid XML', function (t) {
+await test('upload invalid XML', async function () {
   const db = connect(envOptions)
   const buffer = readFileSync('spec/files/invalid.xml')
 
-  db.documents.upload(buffer, buffer.length)
-    .then(function (result) {
-      t.ok(result >= 0, 'returned filehandle')
-      return db.documents.parseLocal(result, '/tmp/testfile.xml')
-    })
-    .then(function (result) {
-      t.fail(result, 'was not rejected')
-      t.end()
-    })
-    .catch(function (e) {
-      t.ok(e, 'was rejected')
-      t.end()
-    })
+  try {
+    const result = await db.documents.upload(buffer, buffer.length)
+    assert.ok(result >= 0, 'returned filehandle')
+    const parseResult = await db.documents.parseLocal(result, '/tmp/testfile.xml')
+    assert.fail(parseResult)
+  } catch (e) {
+    assert.ok(e, 'was rejected')
+  }
 })
 
-test('valid XML', async function (t) {
+await describe('valid XML', async function () {
   const db = connect(envOptions)
   const version = await db.server.version()
   const remoteFileName = '/test.xml'
   const contents = readFileSync('spec/files/test.xml')
 
-  t.test('can be uploaded', async function (st) {
+  await it('can be uploaded', async function () {
     try {
       const fh = await db.documents.upload(contents)
-      st.ok(fh >= 0, 'returned filehandle')
+      assert.ok(fh >= 0, 'returned filehandle')
       const result = await db.documents.parseLocal(fh, remoteFileName)
-      st.ok(result, 'file could be parsed')
+      assert.ok(result, 'file could be parsed')
       const info = await db.resources.describe(remoteFileName)
-      st.ok(info, 'file was written to collection')
+      assert.ok(info, 'file was written to collection')
     } catch (e) {
-      t.fail(e, 'errored')
+      assert.fail(e, 'errored')
     }
   })
 
-  t.test('read with empty options uses defaults', async function (st) {
+  await it('read with empty options uses defaults', async function () {
     try {
       const contentBuffer = await db.documents.read(remoteFileName, {})
       const lines = contents.toString().split('\n')
@@ -81,13 +77,13 @@ test('valid XML', async function (t) {
       lines.pop()
       const expectedContents = lines.join('\n')
 
-      st.equal(contentBuffer.toString(), expectedContents, 'file was read')
+      assert.strictEqual(contentBuffer.toString(), expectedContents, 'file was read')
     } catch (e) {
-      st.fail(e, 'errored')
+      assert.fail(e)
     }
   })
 
-  t.test('read without passing options', async function (st) {
+  await it('read without passing options', async function () {
     try {
       // calling read with just one argument, effectively passing null for options
       const contentBuffer = await db.documents.read(remoteFileName)
@@ -100,13 +96,13 @@ test('valid XML', async function (t) {
       lines.pop()
       const expectedContents = lines.join('\n')
 
-      st.equal(contentBuffer.toString(), expectedContents, 'file was read')
+      assert.strictEqual(contentBuffer.toString(), expectedContents, 'file was read')
     } catch (e) {
-      st.fail(e, 'errored')
+      assert.fail(e)
     }
   })
 
-  t.test('serialized without XML declaration', async function (st) {
+  await it('serialized without XML declaration', async function () {
     try {
       const options = { 'omit-xml-declaration': 'yes' }
       const lines = contents.toString().split('\n')
@@ -118,13 +114,13 @@ test('valid XML', async function (t) {
       const expectedContents = lines.join('\n')
 
       const contentBuffer = await db.documents.read(remoteFileName, options)
-      st.equal(contentBuffer.toString(), expectedContents, 'expected file contents received')
+      assert.strictEqual(contentBuffer.toString(), expectedContents, 'expected file contents received')
     } catch (e) {
-      st.fail(e, 'errored')
+      assert.fail(e)
     }
   })
 
-  t.test('serialized with XML declaration', async function (st) {
+  await it('serialized with XML declaration', async function () {
     try {
       // this forces an XML-declaration whether it was part of the original document or not
       const options = { 'omit-xml-declaration': 'no' }
@@ -135,18 +131,18 @@ test('valid XML', async function (t) {
       const expectedContents = lines.join('\n')
 
       const result = await db.documents.read(remoteFileName, options)
-      st.equal(result.toString(), expectedContents, 'expected file contents received')
+      assert.strictEqual(result.toString(), expectedContents, 'expected file contents received')
     } catch (e) {
-      st.fail(e, 'errored')
+      assert.fail(e)
     }
   })
 
-  t.test('serialized with XML declaration and final newline', async function (st) {
+  await it('serialized with XML declaration and final newline', async function () {
     try {
       // skip this test for older versions as
       // insert-final-newline is only available with eXist-db >6.0.1
       if (!semverGt(version, '6.0.1')) {
-        return st.skip('insert-final-newline not implemented in ' + version)
+        return // skip this test
       }
 
       // options to serialize to local contents with XML-declaration and final newline
@@ -156,45 +152,41 @@ test('valid XML', async function (t) {
       }
 
       const result = await db.documents.read(remoteFileName, options)
-      st.deepEqual(contents, result, 'equal')
+      assert.deepStrictEqual(contents, result, 'equal')
     } catch (e) {
-      st.fail(e, 'errored')
+      assert.fail(e)
     }
   })
 
-  t.test('cleanup', async function (st) {
+  await it('cleanup', async function () {
     try {
       await db.documents.remove(remoteFileName)
     } catch (e) {
-      t.end()
+      // ignore errors
     }
   })
 })
 
 // xquery file with permission changes
-test('xql-change-perms', function (t) {
-  t.skip('not implemented yet')
-  t.end()
+await test('xql-change-perms', async function () {
+  // not implemented yet
 })
 
 // upload HTML5 file without retry
-test('up-html5-no-retry', function (t) {
-  t.skip('not implemented yet')
-  t.end()
+await test('up-html5-no-retry', async function () {
+  // not implemented yet
 })
 
 // upload HTML5 file with retry
-test('up-html5-with-retry', function (t) {
-  t.skip('not implemented yet')
-  t.end()
+await test('up-html5-with-retry', async function () {
+  // not implemented yet
 })
 
-test('non well formed XML will not be uploaded as binary', function (t) {
-  t.skip('not implemented yet')
-  t.end()
+await test('non well formed XML will not be uploaded as binary', async function () {
+  // not implemented yet
 })
 
-test('upload document with duplicate xml:id', async function (t) {
+await test('upload document with duplicate xml:id', async function () {
   try {
     const db = connect(envOptions)
     const buffer = Buffer.from('<root><item xml:id="i1" /><item xml:id="i1" /></root>')
@@ -202,10 +194,10 @@ test('upload document with duplicate xml:id', async function (t) {
     await db.collections.create('/db/tmp')
 
     const fh = await db.documents.upload(buffer, buffer.length)
-    t.ok(fh >= 0, 'returned filehandle')
+    assert.ok(fh >= 0, 'returned filehandle')
     const result = await db.documents.parseLocal(fh, '/db/tmp/testfile.xml')
-    t.ok(result, 'duplicate XML-IDs are allowed')
+    assert.ok(result, 'duplicate XML-IDs are allowed')
   } catch (e) {
-    t.fail(e)
+    assert.fail(e)
   }
 })

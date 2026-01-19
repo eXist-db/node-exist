@@ -1,26 +1,24 @@
-import test from 'tape'
+import { describe, it } from 'node:test'
+import assert from 'node:assert'
 import { connect } from '../../index.js'
 import { envOptions } from '../connection.js'
 const testCollection = '/tests'
 const db = connect(envOptions)
 
-function testGetPermissions (t) {
+async function testGetPermissions () {
   // setup
-  db.resources.getPermissions(testCollection)
-    .then(function (result) {
-      t.equal(result.owner, 'admin', 'expected owner')
-      t.equal(result.permissions, 493, 'expected permissions')
-      t.deepEqual(result.acl, [], 'expected acl')
-      t.equal(result.group, 'dba', 'expected group')
-      t.end()
-    })
-    .catch(function (e) {
-      t.fail(e)
-      t.end()
-    })
+  try {
+    const result = await db.resources.getPermissions(testCollection)
+    assert.strictEqual(result.owner, 'admin', 'expected owner')
+    assert.strictEqual(result.permissions, 493, 'expected permissions')
+    assert.deepStrictEqual(result.acl, [], 'expected acl')
+    assert.strictEqual(result.group, 'dba', 'expected group')
+  } catch (e) {
+    assert.fail(e)
+  }
 }
 
-function testDescribeResource (t) {
+async function testDescribeResource () {
   const expectedInfo = {
     owner: 'admin',
     'content-length': 1,
@@ -35,73 +33,55 @@ function testDescribeResource (t) {
     group: 'dba'
   }
 
-  db.resources.describe(testCollection + '/test.xql')
-    .then(function (info) {
-      t.equal(info.name, expectedInfo.name, 'returns expected path')
-      t.equal(info.owner, expectedInfo.owner, 'returns expected owner')
-      t.equal(info.permissions, expectedInfo.permissions, 'returns expected owner')
-      t.equal(info['content-length'], expectedInfo['content-length'], 'returns expected length')
-      t.end()
-    })
-    .catch(function (e) {
-      t.fail(e)
-      t.end()
-    })
+  try {
+    const info = await db.resources.describe(testCollection + '/test.xql')
+    assert.strictEqual(info.name, expectedInfo.name, 'returns expected path')
+    assert.strictEqual(info.owner, expectedInfo.owner, 'returns expected owner')
+    assert.strictEqual(info.permissions, expectedInfo.permissions, 'returns expected owner')
+    assert.strictEqual(info['content-length'], expectedInfo['content-length'], 'returns expected length')
+  } catch (e) {
+    assert.fail(e)
+  }
 }
 
-function testSetPermissions (t) {
+async function testSetPermissions () {
   const resourcePath = testCollection + '/test.xql'
   const permissions = 666
 
-  db.resources.setPermissions(resourcePath, permissions)
-    .then(function (result) {
-      t.ok(result, 'permissions set successfully')
-      return db.resources.getPermissions(resourcePath)
-    })
-    .then(function (result) {
-      t.equal(result.permissions, permissions, 'expected permissions')
-      t.end()
-    })
-    .catch(function (e) {
-      t.fail(e)
-      t.end()
-    })
+  try {
+    const result = await db.resources.setPermissions(resourcePath, permissions)
+    assert.ok(result, 'permissions set successfully')
+    const permResult = await db.resources.getPermissions(resourcePath)
+    assert.strictEqual(permResult.permissions, permissions, 'expected permissions')
+  } catch (e) {
+    assert.fail(e)
+  }
 }
 
-test('resources:', function (t) {
+await describe('resources:', async function () {
   const db = connect(envOptions)
 
-  t.test('setup', function (setup) {
-    db.collections.create(testCollection)
-      .then(function () {
-        return db.documents.upload(Buffer.from('1'))
-      })
-      .then(function (fh) {
-        return db.documents.parseLocal(fh, testCollection + '/test.xql')
-      })
-      .then(function (r) {
-        setup.ok(r, 'setup ended')
-        setup.end()
-      })
-      .catch(function (e) {
-        t.fail('setup failed')
-        t.end()
-      })
+  await it('setup', async function () {
+    try {
+      await db.collections.create(testCollection)
+      const fh = await db.documents.upload(Buffer.from('1'))
+      const r = await db.documents.parseLocal(fh, testCollection + '/test.xql')
+      assert.ok(r, 'setup ended')
+    } catch (e) {
+      assert.fail('setup failed')
+    }
   })
 
-  t.test('describe resource', testDescribeResource)
-  t.test('get resource permissions', testGetPermissions)
-  t.test('set resource permissions', testSetPermissions)
+  await it('describe resource', testDescribeResource)
+  await it('get resource permissions', testGetPermissions)
+  await it('set resource permissions', testSetPermissions)
 
-  t.test('tearDown', function tearDown (td) {
-    db.collections.remove(testCollection)
-      .then(function (r) {
-        td.ok(r, 'tearDown ended')
-        td.end()
-      })
-      .catch(function (e) {
-        td.fail(e)
-        td.end()
-      })
+  await it('tearDown', async function () {
+    try {
+      const r = await db.collections.remove(testCollection)
+      assert.ok(r, 'tearDown ended')
+    } catch (e) {
+      assert.fail(e)
+    }
   })
 })

@@ -1,111 +1,90 @@
 // tests
 
-import test from 'tape'
+import { test, describe, it } from 'node:test'
+import assert from 'node:assert'
 import { connect, getMimeType, defineMimeTypes } from '../../index.js'
 import { envOptions } from '../connection.js'
 
-test('check for default mime type extensions', function (t) {
-  t.equal(getMimeType('test.xq'), 'application/xquery')
-  t.equal(getMimeType('test.xqs'), 'application/xquery')
-  t.equal(getMimeType('test.xquery'), 'application/xquery')
-  t.equal(getMimeType('test.xql'), 'application/xquery')
-  t.equal(getMimeType('test.xqm'), 'application/xquery')
-  t.equal(getMimeType('test.xconf'), 'application/xml')
-  t.equal(getMimeType('test.odd'), 'application/xml')
-  t.end()
+test('check for default mime type extensions', () => {
+  assert.strictEqual(getMimeType('test.xq'), 'application/xquery')
+  assert.strictEqual(getMimeType('test.xqs'), 'application/xquery')
+  assert.strictEqual(getMimeType('test.xquery'), 'application/xquery')
+  assert.strictEqual(getMimeType('test.xql'), 'application/xquery')
+  assert.strictEqual(getMimeType('test.xqm'), 'application/xquery')
+  assert.strictEqual(getMimeType('test.xconf'), 'application/xml')
+  assert.strictEqual(getMimeType('test.odd'), 'application/xml')
 })
 
-test('raw command', async function (t) {
-  try {
-    const db = connect()
-    const res = await db.client.promisedMethodCall('getVersion', [])
-    t.ok(res, res)
-  } catch (e) {
-    t.fail(e)
-  }
+test('raw command', async () => {
+  const db = connect()
+  const res = await db.client.promisedMethodCall('getVersion', [])
+  assert.ok(res, res)
 })
 
-test('get version', async function (t) {
-  try {
-    const db = connect()
-    const res = await db.server.version()
-    t.ok(res, res)
-  } catch (e) {
-    t.fail(e)
-  }
+test('get version', async () => {
+  const db = connect()
+  const res = await db.server.version()
+  assert.ok(res, res)
 })
 
-test('extend mime type definitions', function (t) {
+test('extend mime type definitions', () => {
   const testPath = 'test.bar'
   const testExtension = 'bar'
   const testMimeType = 'text/x-test'
   const testTypeMap = {}
   testTypeMap[testMimeType] = [testExtension]
 
-  t.notEqual(getMimeType(testPath), testMimeType, 'previously undefined extension for ' + testExtension)
+  assert.notStrictEqual(getMimeType(testPath), testMimeType, 'previously undefined extension for ' + testExtension)
   defineMimeTypes(testTypeMap)
-  t.equal(getMimeType(testPath), testMimeType, 'added new extension for ' + testExtension)
-  t.end()
+  assert.strictEqual(getMimeType(testPath), testMimeType, 'added new extension for ' + testExtension)
 })
 
-test('create connection with default settings', function (t) {
+test('create connection with default settings', () => {
   const db = connect()
   const components = ['collections', 'queries', 'documents', 'users', 'indices']
 
   components.forEach(function (component) {
-    t.ok(component in db, 'component ' + component + ' found')
+    assert.ok(component in db, 'component ' + component + ' found')
   })
-  t.ok(db.client.isSecure, 'secure client used')
-  t.end()
+  assert.ok(db.client.isSecure, 'secure client used')
 })
 
-test('create connection using http:', function (t) {
+test('create connection using http:', () => {
   const db = connect({ protocol: 'http:', port: 8080 })
-  t.equal(db.client.isSecure, false, 'insecure client used')
-  t.end()
+  assert.strictEqual(db.client.isSecure, false, 'insecure client used')
 })
 
-test('create insecure client using legacy option', function (t) {
+test('create insecure client using legacy option', () => {
   const db = connect({ secure: false, port: 8080 })
-  t.equal(db.client.isSecure, false, 'insecure client used')
-  t.end()
+  assert.strictEqual(db.client.isSecure, false, 'insecure client used')
 })
 
-test('create secure client to remote db', function (t) {
+await describe('create secure client to remote db', async () => {
   const host = 'exist-db.org'
   const protocol = 'https:'
   const remoteDb = port => connect({ host, protocol, port })
-  const check = async function (db, st) {
-    st.equal(db.client.isSecure, true, 'secure client used')
+  const check = async function (db) {
+    assert.strictEqual(db.client.isSecure, true, 'secure client used')
 
     try {
-      const result = await db.resources.describe('/db')
-      st.fail(result, result)
+      await db.resources.describe('/db')
+      assert.fail('should have thrown')
     } catch (e) {
-      st.equal(e.message, 'XML-RPC fault: Wrong password for user [guest] ', e)
+      assert.strictEqual(e.message, 'XML-RPC fault: Wrong password for user [guest] ', e)
     }
-
-    st.end()
   }
 
-  t.test('using standard port', async function (st) {
-    await check(remoteDb('443'), st)
+  await it('using standard port', async () => {
+    await check(remoteDb('443'))
   })
 
-  t.test('using empty port', async function (st) {
-    await check(remoteDb(''), st)
+  await it('using empty port', async () => {
+    await check(remoteDb(''))
   })
 })
 
-test('get collection permissions', function (t) {
+test('get collection permissions', async () => {
   const db = connect(envOptions)
-  db.resources.getPermissions('/db')
-    .then(function (result) {
-      t.ok(result)
-      t.end()
-    })
-    .catch(function (e) {
-      t.fail(e)
-      t.end()
-    })
+  const result = await db.resources.getPermissions('/db')
+  assert.ok(result)
 })
