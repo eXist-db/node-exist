@@ -1,9 +1,15 @@
-import xmlrpc from 'xmlrpc'
+import { createClient, createSecureClient } from './xmlrpc-client.js'
 import assign from 'lodash.assign'
 import promisedMethodCall from './promisedMethodCall.js'
 
 /**
- * @typedef { import("xmlrpc").Client } XMLRPCClient
+ * @typedef {Object} XMLRPCClient
+ * @prop {string} host
+ * @prop {string} port
+ * @prop {string} path
+ * @prop {boolean} secure
+ * @prop {Function} methodCall
+ * @prop {Function} promisedMethodCall
  */
 
 /**
@@ -105,9 +111,9 @@ function connect (options) {
  */
 function getXMLRPCClient (options) {
   if (useSecureConnection(options.protocol)) {
-    return xmlrpc.createSecureClient(options)
+    return createSecureClient(options)
   }
-  return xmlrpc.createClient(options)
+  return createClient(options)
 }
 
 /**
