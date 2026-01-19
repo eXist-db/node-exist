@@ -91,7 +91,7 @@ function readAll (client, queryStringOrBuffer, options = {}) {
     })
 }
 
-module.exports = {
+export {
   read,
   readAll,
   execute,

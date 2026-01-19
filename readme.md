@@ -31,6 +31,8 @@ leverage the potential of its REST-API.
 This allows to choose the best tool for any particular task.
 Both APIs are used in combination in the [upload example](spec/examples/exist-upload).
 
+__NOTE:__ This package is now ESM only.
+
 ### REST
 
 Status: unstable
@@ -95,7 +97,7 @@ Look at the [rest tests](spec/tests/rest.js) to see examples.
 Creating, reading and removing a collection:
 
 ```js
-const {connect} = require('@existdb/node-exist')
+import { connect } from '@existdb/node-exist'
 const db = connect()
 
 db.collections.create('/db/apps/test')
@@ -107,7 +109,7 @@ db.collections.create('/db/apps/test')
 Uploading an XML file into the database
 
 ```js
-const {connect} = require('@existdb/node-exist')
+import { connect } from '@existdb/node-exist'
 const db = connect()
 
 db.documents.upload(Buffer.from('<root/>'))
@@ -120,7 +122,7 @@ db.documents.upload(Buffer.from('<root/>'))
 Since all interactions with the database are promises you can also use async functions
 
 ```js
-const {connect} = require('@existdb/node-exist')
+import { connect } from '@existdb/node-exist'
 const db = connect()
 
 async function uploadAndParse (filePath, contents) {
@@ -129,21 +131,12 @@ async function uploadAndParse (filePath, contents) {
   return filePath
 }
 
-// top-level await is not available everywhere, yet
-uploadAndParse('/db/apps/test-file.xml', Buffer.from('<root/>'))
-  .then(filePath => console.log("uploaded", filePath))
-  .catch(error => console.error(error))
-```
-
-You can now also import node-exist into an ES module
-
-```js
-import {connect} from '@existdb/node-exist'
-const db = connect()
-
-// do something with the db connection
-db.collections.describe('/db/apps')
-  .then(result => console.log(result))
+try {
+  const filePath = await uploadAndParse('/db/apps/test-file.xml', Buffer.from('<root/>'))
+  console.log("uploaded", filePath)
+} catch (error) {
+  console.error(error)
+}
 ```
 
 You can also have a look at the 
@@ -173,7 +166,7 @@ default options.
 ```
 
 **NOTE:** The `path` property, the endpoint to reach an API,
-is different for REST (`'/exist/xmlrpc'`) and XML-RPC (`'/exist/xmlrpc'`).
+is different for REST (`'/exist/rest'`) and XML-RPC (`'/exist/xmlrpc'`).
 You most likely do not need to change it. However, if you need
 to you can override those.
 
@@ -257,7 +250,7 @@ from a set of environment variables
 _both_ `EXISTDB_USER` _and_ `EXISTDB_PASS` have to be set!
 
 ```js
-const {connect, restClient, readOptionsFromEnv} = require('@existdb/node-exist')
+import {connect, getRestClient, readOptionsFromEnv} from '@existdb/node-exist'
 const db = connect(readOptionsFromEnv())
 const rest = await getRestClient(readOptionsFromEnv())
 ```

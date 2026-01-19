@@ -1,78 +1,83 @@
 #!/usr/bin/env node
-const { connect } = require("../../index")
-const { argv } = require("process") // eslint-disable-line node/prefer-global/process
+import { connect } from '../../index.js'
+import { argv } from 'process'
 
 // read connection options from ENV
-const connectionOptions = require("../connection")
-const { readFileSync } = require("fs")
-const { resolve, join } = require("path")
+import { envOptions as connectionOptions } from '../connection.js'
+import { readFileSync } from 'fs'
+import { resolve, join } from 'path'
+import { fileURLToPath } from 'url'
 
+import yargs from 'yargs'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = resolve(__filename, '..')
 const xqueryPath = resolve(__dirname, '../../xquery/')
-const query = readFileSync(join(xqueryPath, "list-resources.xq"))
+const query = readFileSync(join(xqueryPath, 'list-resources.xq'))
 
 const consoleColors = new Map([
-  ["Reset", "\x1b[0m"],
-  ["Bright", "\x1b[1m"],
-  ["Dim", "\x1b[2m"],
-  ["Underscore", "\x1b[4m"],
-  ["Blink", "\x1b[5m"],
-  ["Reverse", "\x1b[7m"],
-  ["Hidden", "\x1b[8m"],
+  ['Reset', '\x1b[0m'],
+  ['Bright', '\x1b[1m'],
+  ['Dim', '\x1b[2m'],
+  ['Underscore', '\x1b[4m'],
+  ['Blink', '\x1b[5m'],
+  ['Reverse', '\x1b[7m'],
+  ['Hidden', '\x1b[8m'],
 
-  ["FgBlack", "\x1b[30m"],
-  ["FgRed", "\x1b[31m"],
-  ["FgGreen", "\x1b[32m"],
-  ["FgYellow", "\x1b[33m"],
-  ["FgBlue", "\x1b[34m"],
-  ["FgMagenta", "\x1b[35m"],
-  ["FgCyan", "\x1b[36m"],
-  ["FgWhite", "\x1b[37m"],
+  ['FgBlack', '\x1b[30m'],
+  ['FgRed', '\x1b[31m'],
+  ['FgGreen', '\x1b[32m'],
+  ['FgYellow', '\x1b[33m'],
+  ['FgBlue', '\x1b[34m'],
+  ['FgMagenta', '\x1b[35m'],
+  ['FgCyan', '\x1b[36m'],
+  ['FgWhite', '\x1b[37m'],
 
-  ["BgBlack", "\x1b[40m"],
-  ["BgRed", "\x1b[41m"],
-  ["BgGreen", "\x1b[42m"],
-  ["BgYellow", "\x1b[43m"],
-  ["BgBlue", "\x1b[44m"],
-  ["BgMagenta", "\x1b[45m"],
-  ["BgCyan", "\x1b[46m"],
-  ["BgWhite", "\x1b[47m"],
-]);
+  ['BgBlack', '\x1b[40m'],
+  ['BgRed', '\x1b[41m'],
+  ['BgGreen', '\x1b[42m'],
+  ['BgYellow', '\x1b[43m'],
+  ['BgBlue', '\x1b[44m'],
+  ['BgMagenta', '\x1b[45m'],
+  ['BgCyan', '\x1b[46m'],
+  ['BgWhite', '\x1b[47m']
+])
 
-const cc = (name) => consoleColors.get(name);
+const cc = (name) => consoleColors.get(name)
 
 const initialPaddings = new Map([
-  ["padOwner", 0],
-  ["padGroup", 0],
-  ["padSize", 4],
+  ['padOwner', 0],
+  ['padGroup', 0],
+  ['padSize', 4]
 ])
 
 const padReducer = (res, next) => {
-  if (res.get("padGroup") < next.group.length) {
-    res.set("padGroup", next.group.length);
+  if (res.get('padGroup') < next.group.length) {
+    res.set('padGroup', next.group.length)
   }
-  if (res.get("padOwner") < next.owner.length) {
-    res.set("padOwner", next.owner.length);
+  if (res.get('padOwner') < next.owner.length) {
+    res.set('padOwner', next.owner.length)
   }
-  if (res.get("padSize") < next.size.toFixed().length) {
-    res.set("padSize", next.size.toFixed().length);
+  if (res.get('padSize') < next.size.toFixed().length) {
+    res.set('padSize', next.size.toFixed().length)
   }
-  return res;
-};
+  return res
+}
 
-const getPaddings = (list) => list.reduce(padReducer, initialPaddings);
+const getPaddings = (list) => list.reduce(padReducer, initialPaddings)
 
 const timeFormat = {
-  hour12:false,
+  hour12: false,
   hour: '2-digit',
   minute: '2-digit'
 }
 const dateFormat = {
-  month: "short"
-};
+  month: 'short'
+}
 
 const currentYear = (new Date()).getFullYear()
 
-function formatDateTime(xsDateTime) {
+function formatDateTime (xsDateTime) {
   const date = new Date(xsDateTime)
   const year = date.getFullYear()
   const month = date.toLocaleDateString('iso', dateFormat)
@@ -84,120 +89,120 @@ function formatDateTime(xsDateTime) {
   return month + day + time
 }
 
-function formatName(item, color) {
+function formatName (item, color) {
   if (!color) {
-    return item.name;
+    return item.name
   }
-  if (item.type === "resource") {
-    return item.name;
+  if (item.type === 'resource') {
+    return item.name
   }
-  return cc("Bright") + cc("FgCyan") + item.name + cc("Reset");
+  return cc('Bright') + cc('FgCyan') + item.name + cc('Reset')
 }
 
-function renderList(list, color) {
-  for (let item of list) {
-    console.log(formatName(item, color));
+function renderList (list, color) {
+  for (const item of list) {
+    console.log(formatName(item, color))
   }
 }
 
-function renderExtendedListItem(item, paddings, color) {
+function renderExtendedListItem (item, paddings, color) {
   console.log(
     item.mode,
-    item.owner.padStart(paddings.get("padOwner")),
-    item.group.padStart(paddings.get("padGroup")),
-    item.size.toFixed().padStart(paddings.get("padSize")),
+    item.owner.padStart(paddings.get('padOwner')),
+    item.group.padStart(paddings.get('padGroup')),
+    item.size.toFixed().padStart(paddings.get('padSize')),
     formatDateTime(item.modified),
     formatName(item, color)
-  );
+  )
 }
 
-function renderExtendedList(list, noColor) {
-  const paddings = getPaddings(list);
-  for (let item of list) {
-    renderExtendedListItem(item, paddings, noColor);
+function renderExtendedList (list, noColor) {
+  const paddings = getPaddings(list)
+  for (const item of list) {
+    renderExtendedListItem(item, paddings, noColor)
   }
 }
 
-async function ls(collection, options) {
+async function ls (collection, options) {
   try {
-    const db = connect(connectionOptions);
-    const {glob, color, extended} = options 
+    const db = connect(connectionOptions)
+    const { glob, color, extended } = options
     const result = await db.queries.readAll(query, {
-      variables: { collection, glob, extended },
-    });
-    const json = JSON.parse(result.pages.toString());
+      variables: { collection, glob, extended }
+    })
+    const json = JSON.parse(result.pages.toString())
     if (json.error) {
-      throw Error(json.error);
+      throw Error(json.error)
     }
     if (extended) {
-      renderExtendedList(json, color);
-      return;
+      renderExtendedList(json, color)
+      return
     }
-    renderList(json, color);
+    renderList(json, color)
   } catch (e) {
-    let message = e.faultString ? e.faultString : e.message;
-    console.error(message);
-    process.exit(1);
+    const message = e.faultString ? e.faultString : e.message
+    console.error(message)
+    process.exit(1)
   }
 }
 
-async function run() {
-  const cli = require("yargs")
-    .command("$0", "List connection contents", (yargs) => {
+async function run () {
+  const cli = yargs()
+    .command('$0', 'List connection contents', (yargs) => {
       yargs.demandCommand(1, 1).usage(`
   Usage:
-    exist-ls [options] collection`);
+    exist-ls [options] collection`)
     })
-    .option("G", {
-      alias: "color",
-      describe: "Color the output",
+    .option('G', {
+      alias: 'color',
+      describe: 'Color the output',
       default: false,
-      type: "boolean",
+      type: 'boolean'
     })
-    .option("l", {
-      alias: "extended",
-      describe: "Display more information for each item",
+    .option('l', {
+      alias: 'extended',
+      describe: 'Display more information for each item',
       default: false,
-      type: "boolean",
+      type: 'boolean'
     })
-    .option("g", {
-      alias: "glob",
+    .option('g', {
+      alias: 'glob',
       describe:
-        "Include only collection names and resources whose name match the pattern.",
+        'Include only collection names and resources whose name match the pattern.',
       type: String,
-      default: "*",
+      default: '*'
     })
-    .option("h", { alias: "help"})
+    .option('h', { alias: 'help' })
     .strict(false)
-    .exitProcess(false);
+    .exitProcess(false)
 
   try {
-    const parsed = cli.parse(argv.slice(2));
-    if (Boolean(parsed.help)) {
-      return 0;
+    const parsed = cli.parse(argv.slice(2))
+    if (parsed.help) {
+      return 0
     }
 
-    const { glob, color, extended } = parsed;
-    if (typeof glob !== "string") {
-      console.error('Invalid value for option "glob"; must be a string.');
-      return 1;
+    const { glob, color, extended } = parsed
+    if (typeof glob !== 'string') {
+      console.error('Invalid value for option "glob"; must be a string.')
+      return 1
     }
 
-    const collection = parsed._;
-    return ls(collection, { glob, color, extended });
+    const collection = parsed._
+    return ls(collection, { glob, color, extended })
   } catch (error) {
-    if (error.name !== "YError") {
-      console.error(error);
+    if (error.name !== 'YError') {
+      console.error(error)
     }
-    return 1;
+    return 1
   }
 }
 
 run()
   .then((exitCode) => {
-    process.exitCode = exitCode;
+    process.exitCode = exitCode
   })
   .catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  });
+    console.error(error)
+    process.exitCode = 1
+  })

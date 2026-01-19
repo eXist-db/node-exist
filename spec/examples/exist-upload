@@ -1,32 +1,32 @@
 #!/usr/bin/env node
-const {argv} = require('process'); // eslint-disable-line node/prefer-global/process
+import { argv } from 'process'
+import yargs from 'yargs'
 
-const {statSync, createReadStream, existsSync, readFileSync} = require("fs")
-const {resolve} = require("path")
+import { statSync, createReadStream, existsSync, readFileSync } from 'fs'
+import { resolve } from 'path'
 
 // read connection options from ENV
-const {connect, getRestClient} = require('../../index');
+import { connect, getRestClient } from '../../index.js'
 
 const stringList = {
-    type: 'string',
-    array: true,
-    coerce: (values) =>
-      values.length === 1 && values[0].trim() === 'false'
-        ? ['**']
-        : values.reduce((values, value) => values.concat(value.split(',').map((value) => value.trim())), []),
+  type: 'string',
+  array: true,
+  coerce: (values) =>
+    values.length === 1 && values[0].trim() === 'false'
+      ? ['**']
+      : values.reduce((values, value) => values.concat(value.split(',').map((value) => value.trim())), [])
 }
 
-async function getUserInfo(db) {
-  const {user} = db.client.options.basic_auth
+async function getUserInfo (db) {
+  const { user } = db.client.options.basic_auth
   return await db.users.getUserInfo(user)
 }
 
-
 /**
  * Upload a single resource into an existdb instance
- * @param {String} path 
- * @param {String} root 
- * @param {String} baseCollection 
+ * @param {String} path
+ * @param {String} root
+ * @param {String} baseCollection
  */
 async function uploadResource (db, rc, verbose, path, root, baseCollection) {
   const localFilePath = resolve(root, path)
@@ -36,12 +36,11 @@ async function uploadResource (db, rc, verbose, path, root, baseCollection) {
     if (verbose) {
       console.log(`✔︎ ${path} uploaded`)
     }
-  }
-  catch (e) {
+  } catch (e) {
     if (e.response.statusCode === 400 && verbose) {
       // resend to get validation report
       // @see https://github.com/eXist-db/exist/issues/4482
-      const fileContents = readFileSync(localFilePath);
+      const fileContents = readFileSync(localFilePath)
       const fileHandle = await db.documents.upload(fileContents)
       // await db.documents.parseLocal(fileHandle, remoteFilePath, {})
       db.documents.parseLocal(fileHandle, remoteFilePath, {})
@@ -54,8 +53,8 @@ async function uploadResource (db, rc, verbose, path, root, baseCollection) {
 
 /**
  * Create a collection in an existdb instance
- * @param {String} collection 
- * @param {String} baseCollection 
+ * @param {String} collection
+ * @param {String} baseCollection
  */
 async function createCollection (db, verbose, collection, baseCollection) {
   const absCollection = baseCollection +
@@ -63,12 +62,11 @@ async function createCollection (db, verbose, collection, baseCollection) {
     collection
 
   try {
-    const result = await db.collections.create(absCollection)
+    await db.collections.create(absCollection)
     if (verbose) {
       console.log(`✔︎ ${absCollection} created`)
     }
-  }
-  catch (e) {
+  } catch (e) {
     handleError(e, absCollection)
   }
 }
@@ -76,10 +74,10 @@ async function createCollection (db, verbose, collection, baseCollection) {
 /**
  * Handle errors uploading a resource or creating a collection
  * @param {Error} e
- * @param {String} path 
+ * @param {String} path
  */
 function handleError (e, path) {
-  let message = e.faultString ? e.faultString : e.message
+  const message = e.faultString ? e.faultString : e.message
   console.error(`✘ ${path} could not be created! Reason: ${message}`)
   if (e.code === 'ECONNRESET' || e.code === 'ECONNREFUSED') {
     throw e
@@ -87,39 +85,37 @@ function handleError (e, path) {
 }
 
 /**
- * 
- * @param {Object} db 
+ *
+ * @param {Object} db
  * @param {Object} rc
- * @param {String} source 
- * @param {String} target 
- * @param {{pattern: [String], threads: Number, mintime: Number}} options 
- * @returns 
+ * @param {String} source
+ * @param {String} target
+ * @param {{pattern: [String], threads: Number, mintime: Number}} options
+ * @returns
  */
-async function uploadFileOrFolder(db, rc, source, target, options) {
+async function uploadFileOrFolder (db, rc, source, target, options) {
   // read parameters
   const root = resolve(source)
 
   const start = Date.now()
   const rootStat = statSync(source)
-  let time
 
   if (options.verbose) {
-    console.log("Uploading:", source, "to", target)
-    console.log("Sever:", (db.client.isSecure? "https" : "http") + '://' + db.client.options.host + ":" + db.client.options.port)
-    console.log("User:", db.client.options.basic_auth.user)
-    if (options.include.length > 1 || options.include[0] != '**')
-    console.log("Include:\n", ...options.include, "\n")
+    console.log('Uploading:', source, 'to', target)
+    console.log('Sever:', (db.client.isSecure ? 'https' : 'http') + '://' + db.client.options.host + ':' + db.client.options.port)
+    console.log('User:', db.client.options.basic_auth.user)
+    if (options.include.length > 1 || options.include[0] !== '**') { console.log('Include:\n', ...options.include, '\n') }
     if (options.exclude.length) {
-      console.log("Exclude:\n", ...options.exclude, "\n")
+      console.log('Exclude:\n', ...options.exclude, '\n')
     }
   }
 
   if (rootStat.isFile()) {
-    const parts = source.split("/")
+    const parts = source.split('/')
     const name = parts.pop()
-    const dir = parts.join("/")
+    const dir = parts.join('/')
     if (options.verbose) {
-      console.log("Uploading single file")
+      console.log('Uploading single file')
     }
     if (options.dryRun) {
       console.log(name)
@@ -132,23 +128,23 @@ async function uploadFileOrFolder(db, rc, source, target, options) {
     return 0
   }
 
-  const fg = require('fast-glob');
+  const fg = (await import('fast-glob')).default
 
   const globbingOptions = { ignore: options.exclude, unique: true, cwd: source }
-  const collectionGlob = Object.assign({onlyDirectories: true}, globbingOptions) 
-  const resourceGlob = Object.assign({onlyFile: true}, globbingOptions) 
+  const collectionGlob = Object.assign({ onlyDirectories: true }, globbingOptions)
+  const resourceGlob = Object.assign({ onlyFile: true }, globbingOptions)
 
   // console.log(options.include)
   const collections = await fg(options.include, collectionGlob)
   const resources = await fg(options.include, resourceGlob)
-  
+
   if (resources.length === 0 && collections.length === 0) {
-    console.error("nothing matched")
+    console.error('nothing matched')
     return 9
   }
 
   if (options.verbose) {
-    console.log("Uploading directory tree")
+    console.log('Uploading directory tree')
   }
 
   const confCols = new Map()
@@ -157,7 +153,7 @@ async function uploadFileOrFolder(db, rc, source, target, options) {
     // are there collection.xconf files in the resources?
     // copy them over to the appropriate place
     xConf = resources.filter(r => /\.xconf$/.test(r))
-    const parts = xConf.map(r => (target + "/" + r).split("/").slice(1,-1))
+    const parts = xConf.map(r => (target + '/' + r).split('/').slice(1, -1))
 
     for (const pathParts of parts) {
       let tmpPath = ''
@@ -171,22 +167,22 @@ async function uploadFileOrFolder(db, rc, source, target, options) {
 
   if (options.dryRun) {
     if (options.applyXconf && xConf.length) {
-      console.log("\nIndex configurations:\n")
-      console.log(xConf.join("\n"))
+      console.log('\nIndex configurations:\n')
+      console.log(xConf.join('\n'))
     }
     if (collections.length) {
-      console.log("\nCollections:\n")
-      console.log(collections.join("\n"))
+      console.log('\nCollections:\n')
+      console.log(collections.join('\n'))
     }
-    console.log("\nResources:\n")
-    console.log(resources.join("\n"))
+    console.log('\nResources:\n')
+    console.log(resources.join('\n'))
     return 0
   }
 
   // ensure target collection exists
   collections.unshift('')
 
-  const Bottleneck = require("bottleneck/es5");
+  const Bottleneck = (await import('bottleneck/es5')).default
   const limiter = new Bottleneck({
     // also use maxConcurrent and/or minTime for safety
     maxConcurrent: options.threads,
@@ -203,79 +199,78 @@ async function uploadFileOrFolder(db, rc, source, target, options) {
   if (options.applyXconf) {
     const promises = []
     for (const cpath of confCols.keys()) {
-      createCollectionThrottled(cpath, "/db/system/config")
+      createCollectionThrottled(cpath, '/db/system/config')
     }
     await Promise.all(promises)
-    await Promise.all(xConf.map(conf => uploadResourceThrottled(conf, root, "/db/system/config" + target)))
+    await Promise.all(xConf.map(conf => uploadResourceThrottled(conf, root, '/db/system/config' + target)))
   }
 
   await Promise.all(resources.map(r => uploadResourceThrottled(r, root, target)))
-
-  time = Date.now() - start
+  const time = Date.now() - start
   console.log(`created ${collections.length} collections and uploaded ${resources.length} resources in ${time}`)
 
   return 0
 }
 
-async function run() {
-  const cli = require('yargs')
-  .command('$0', 'Upload files and directories to a target collection in exist-db', (yargs) => {
-    yargs.demandCommand(2, 2).usage(`
+async function run () {
+  const cli = yargs()
+    .command('$0', 'Upload files and directories to a target collection in exist-db', (yargs) => {
+      yargs.demandCommand(2, 2).usage(`
 Usage:
-  exist-up [options] source target`);
-  })
-  .option('i', {
-    alias: 'include', 
-    describe: 'Include only files matching one or more of include patterns (comma separated)',
-    default: "**",
-    ...stringList
-  })
-  .option('e', {
-    alias: 'exclude', 
-    describe: 'Exclude any file matching one or more of exclude patterns (comma separated)',
-    default: [],
-    ...stringList
-  })
-  .option('v', {
-    alias: 'verbose',
-    describe: 'Log every file and resource that was created',
-    type: 'boolean',
-    default: false
-  })
-  .option('d', {
-    alias: 'dry-run',
-    describe: 'Show what would be uploaded',
-    type: 'boolean'
-  })
-  .option('t', {
-    alias: 'threads',
-    describe: 'The maximum number of concurrent threads that will be used to upload data',
-    type: 'number',
-    default: 4
-  })
-  .option('m', {
-    alias: 'mintime',
-    describe: 'The minimum time each upload will take',
-    type: 'number',
-    default: 0
-  })
-  .option('a', {
-    alias: 'apply-xconf',
-    describe: 'If set, will upload and apply index configurations that are in the fileset first before all other data is uploaded. The user must be a member of the dba group.',
-    default: false,
-    type: 'boolean'
-  })
-  .option('h', {alias: 'help'})
-  .nargs({'i': 1, 'e': 1})
-  .strict(false)
-  .exitProcess(false);
+  exist-up [options] source target`)
+    })
+    .option('i', {
+      alias: 'include',
+      describe: 'Include only files matching one or more of include patterns (comma separated)',
+      default: '**',
+      ...stringList
+    })
+    .option('e', {
+      alias: 'exclude',
+      describe: 'Exclude any file matching one or more of exclude patterns (comma separated)',
+      default: [],
+      ...stringList
+    })
+    .option('v', {
+      alias: 'verbose',
+      describe: 'Log every file and resource that was created',
+      type: 'boolean',
+      default: false
+    })
+    .option('d', {
+      alias: 'dry-run',
+      describe: 'Show what would be uploaded',
+      type: 'boolean'
+    })
+    .option('t', {
+      alias: 'threads',
+      describe: 'The maximum number of concurrent threads that will be used to upload data',
+      type: 'number',
+      default: 4
+    })
+    .option('m', {
+      alias: 'mintime',
+      describe: 'The minimum time each upload will take',
+      type: 'number',
+      default: 0
+    })
+    .option('a', {
+      alias: 'apply-xconf',
+      describe: 'If set, will upload and apply index configurations that are in the fileset first before all other data is uploaded. The user must be a member of the dba group.',
+      default: false,
+      type: 'boolean'
+    })
+    .option('h', { alias: 'help' })
+    .nargs({ i: 1, e: 1 })
+    .strict(false)
+    .exitProcess(false)
 
   try {
     const parsed = cli.parse(argv.slice(2))
-    if (Boolean(parsed.help)) {
+    if (parsed.help) {
       return 0
     }
-    const {threads, mintime} = parsed
+    const { threads, mintime } = parsed
     if (typeof mintime !== 'number' || mintime < 0) {
       throw Error('Invalid value for option "mintime"; must be an integer equal or greater than zero.')
     }
@@ -284,29 +279,28 @@ Usage:
     }
 
     const [source, target] = parsed._
-    
+
     if (!existsSync(source)) {
       throw Error(source + ' not found!')
     }
 
-    const connectionOptions = require('../connection')
+    const { envOptions: connectionOptions } = await import('../connection.js')
     const db = connect(connectionOptions)
     const rc = await getRestClient(connectionOptions)
 
-    accountInfo = await getUserInfo(db)
+    const accountInfo = await getUserInfo(db)
     const isAdmin = accountInfo.groups.includes('dba')
     if (parsed.applyXconf && !isAdmin) {
-      throw Error("To apply collection configurations you must be member of the dba group.")
+      throw Error('To apply collection configurations you must be member of the dba group.')
     }
 
     const existsAndCanOpenCollection = await db.collections.existsAndCanOpen(target)
     if (parsed.verbose) {
-      console.log("target exists:", existsAndCanOpenCollection)
+      console.log('target exists:', existsAndCanOpenCollection)
     }
 
     return uploadFileOrFolder(db, rc, source, target, parsed)
-  }
-  catch (error) {
+  } catch (error) {
     if (error.name !== 'YError') {
       const msg = error.message ? error.message : error.faultString ? error.faultString : error
       console.error(msg)

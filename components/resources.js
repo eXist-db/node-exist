@@ -55,7 +55,7 @@ function getPermissions (client, resourceIdentifier) {
   return client.promisedMethodCall('getPermissions', [resourceIdentifier])
 }
 
-module.exports = {
+export {
   describe,
   setPermissions,
   getPermissions

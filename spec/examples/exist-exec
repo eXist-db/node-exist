@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-const {argv} = require('process'); // eslint-disable-line node/prefer-global/process
-const {connect} = require('../../index')
-const {readFileSync} = require("fs")
+import { argv } from 'process'
+import { connect } from '../../index.js'
+import { readFileSync } from 'fs'
+import yargs from 'yargs'
 
 // read connection options from ENV
-const connectionOptions = require('../connection');
-const NodeExist = require('../../index');
+import { envOptions as connectionOptions } from '../connection.js'
 
 /**
  * parse bindings
@@ -15,127 +15,126 @@ const NodeExist = require('../../index');
  * @returns {object} parsed variable bindings
  */
 function parseVars (raw) {
-    let stringified = raw
-    if (raw === '-') {
-        stringified = readFileSync(process.stdin.fd)
-    }
-    if (stringified) {
-        return JSON.parse(stringified)
-    }
-    return {}
+  let stringified = raw
+  if (raw === '-') {
+    stringified = readFileSync(process.stdin.fd)
+  }
+  if (stringified) {
+    return JSON.parse(stringified)
+  }
+  return {}
 }
 
 /**
  * get query from file or passed string
- * 
+ *
  * @param {string} file path to query file
  * @param {string} query query string
  * @returns {string|Buffer}
  */
 function getQuery (file, query) {
-    const hasQueryFile = file && file !== ''
-    const hasQueryString = query && query !== ''
-    
-    if (!hasQueryFile && !hasQueryString) {
-        throw Error('No query given, nothing to do!')
-    }
+  const hasQueryFile = file && file !== ''
+  const hasQueryString = query && query !== ''
 
-    if (hasQueryFile && hasQueryString) {
-        throw Error('Cannot use both query string and query file')
-    }
+  if (!hasQueryFile && !hasQueryString) {
+    throw Error('No query given, nothing to do!')
+  }
 
-    // read query from standard input
-    if (query === '-') {
-        return readFileSync(process.stdin.fd, 'utf-8')
-    }
+  if (hasQueryFile && hasQueryString) {
+    throw Error('Cannot use both query string and query file')
+  }
 
-    if (hasQueryString) {
-        return query
-    }
+  // read query from standard input
+  if (query === '-') {
+    return readFileSync(process.stdin.fd, 'utf-8')
+  }
 
-    // read query file content
-    let path = file
+  if (hasQueryString) {
+    return query
+  }
 
-    // from standard input
-    if (file === '-') {
-        path = readFileSync(process.stdin.fd, 'utf-8').trim()
-    }
+  // read query file content
+  let path = file
 
-    return readFileSync(path, 'utf-8')
+  // from standard input
+  if (file === '-') {
+    path = readFileSync(process.stdin.fd, 'utf-8').trim()
+  }
+
+  return readFileSync(path, 'utf-8')
 }
 
 /**
  * query db, output to standard out
- * 
+ *
  * @param {NodeExist.BoundModules} db bound NodeExist modules
  * @param {string|Buffer} query the query to execute
  * @param {object} variables the bound variables
  * @returns {Number}
  */
-async function execute(db, query, variables) {
-    const result = await db.queries.readAll(query, { variables })
-    console.log(result.pages.toString())
-    return 0
+async function execute (db, query, variables) {
+  const result = await db.queries.readAll(query, { variables })
+  console.log(result.pages.toString())
+  return 0
 }
 
-async function run() {
-    const cli = require('yargs')
+async function run () {
+  const cli = yargs()
     .command('$0', 'Execute queries in an exist-db', (yargs) => {
       yargs.demandCommand(0, 1).usage(`
 Usage:
-    exist-exec [options] [query]`);
+    exist-exec [options] [query]`)
     })
     .option('f', {
-        alias: 'file',
-        type: 'string',
-        describe: 'Read query File (pass - to read from standard input)'
+      alias: 'file',
+      type: 'string',
+      describe: 'Read query File (pass - to read from standard input)'
     })
     .option('b', {
-        alias: 'bind',
-        type: 'string',
-        describe: 'Bind variables (either as JSON string or - to read from standard input)', 
-        coerce: parseVars, 
-        default: () => {}
+      alias: 'bind',
+      type: 'string',
+      describe: 'Bind variables (either as JSON string or - to read from standard input)',
+      coerce: parseVars,
+      default: () => {}
     })
-    .option('h', {alias: 'help', type: 'boolean'})
-    .nargs({'f': 1,'b': 1})
+    .option('h', { alias: 'help', type: 'boolean' })
+    .nargs({ f: 1, b: 1 })
     .strict(false)
-    .exitProcess(false);
-  
-    try {
-      const parsed = cli.parse(argv.slice(2))
-      if (Boolean(parsed.help)) {
-        return 0
-      }
-      const {file, bind} = parsed
+    .exitProcess(false)
 
-      const query = getQuery(file, parsed._[0])
-      const db = connect(connectionOptions)
-
-      return await execute(db, query, bind)
+  try {
+    const parsed = cli.parse(argv.slice(2))
+    if (parsed.help) {
+      return 0
     }
-    catch (error) {
-        if (
-            error.code === 'EPROTO' ||
+    const { file, bind } = parsed
+
+    const query = getQuery(file, parsed._[0])
+    const db = connect(connectionOptions)
+
+    return await execute(db, query, bind)
+  } catch (error) {
+    if (
+      error.code === 'EPROTO' ||
             error.code === 'ECONNREFUSED' ||
             error.code === 'ECONNRESET'
-        ) {
-            console.error(`Could not connect to DB at ${serverName(db)} - Reason: ${error.code}`)
-            return 1
-        }
-        if (error.name !== 'YError') {
-            const msg = error.message ? error.message : error.faultString ? error.faultString : error
-            console.error(msg)
-        }
-        return 1
+    ) {
+      console.error(`Could not connect to DB - Reason: ${error.code}`)
+      return 1
     }
+    if (error.name !== 'YError') {
+      const msg = error.message ? error.message : error.faultString ? error.faultString : error
+      console.error(msg)
+    }
+    return 1
   }
-  
+}
+
 run()
-    .then((exitCode) => {
-        process.exitCode = exitCode
-    })
-    .catch((error) => {
-        console.error(error)
-        process.exitCode = 1
-    })
+  .then((exitCode) => {
+    process.exitCode = exitCode
+  })
+  .catch((error) => {
+    console.error(error)
+    process.exitCode = 1
+  })

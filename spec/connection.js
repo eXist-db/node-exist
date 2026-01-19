@@ -13,11 +13,11 @@
 /**
  * @type {import('../components/connection').NodeExistConnectionOptions}
  */
-const { readOptionsFromEnv } = require('../index')
+import { readOptionsFromEnv } from '../index.js'
 const envOptions = readOptionsFromEnv()
 // test with admin user by default
 if (!envOptions.basic_auth) {
   envOptions.basic_auth = { user: 'admin', pass: '' }
 }
 // console.log(envOptions)
-module.exports.envOptions = envOptions
+export { envOptions }

@@ -1,5 +1,6 @@
 {
   "name": "@existdb/node-exist",
+  "type": "module",
   "description": "promise based interaction with eXist DB's XML-RPC API",
   "main": "index.js",
   "engines": {
@@ -13,7 +14,7 @@
   },
   "standard": {
     "ignore": [
-      "exist-*"
+      "*.md"
     ]
   },
   "keywords": [

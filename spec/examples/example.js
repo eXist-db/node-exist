@@ -1,5 +1,5 @@
-const { connect } = require('../../index')
-const connectionOptions = require('../connection')
+import { connect } from '../../index.js'
+import { envOptions as connectionOptions } from '../connection.js'
 const db = connect(connectionOptions)
 
 const collection = 'foO0o'

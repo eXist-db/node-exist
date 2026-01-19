@@ -1,8 +1,8 @@
-const test = require('tape')
-const { readFileSync } = require('fs')
-const semverGt = require('semver/functions/gt')
-const { connect } = require('../../index')
-const { envOptions } = require('../connection')
+import test from 'tape'
+import { readFileSync } from 'fs'
+import semverGt from 'semver/functions/gt.js'
+import { connect } from '../../index.js'
+import { envOptions } from '../connection.js'
 
 test('binary document', function (t) {
   const path = '/db/test.txt'

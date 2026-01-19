@@ -1,6 +1,6 @@
-const test = require('tape')
-const { connect } = require('../../index')
-const { envOptions } = require('../connection')
+import test from 'tape'
+import { connect } from '../../index.js'
+import { envOptions } from '../connection.js'
 const testCollection = '/tests'
 const db = connect(envOptions)
 

@@ -30,7 +30,7 @@ function existsAndCanOpen (client, name) {
   return client.promisedMethodCall('existsAndCanOpenCollection', [name])
 }
 
-module.exports = {
+export {
   create,
   remove,
   describe,

@@ -1,6 +1,6 @@
-const test = require('tape')
+import test from 'tape'
 
-const { readOptionsFromEnv } = require('../../index')
+import { readOptionsFromEnv } from '../../index.js'
 
 test('connection options from environment', function (t) {
   const optionsFromEnv = readOptionsFromEnv()

@@ -1,8 +1,8 @@
-const fs = require('fs')
-const test = require('tape')
-const app = require('../../components/app')
-const { connect } = require('../../index')
-const { envOptions } = require('../connection')
+import fs from 'fs'
+import test from 'tape'
+import * as app from '../../components/app.js'
+import { connect } from '../../index.js'
+import { envOptions } from '../connection.js'
 
 test('app component exports install method', function (t) {
   t.equal(typeof app.install, 'function')

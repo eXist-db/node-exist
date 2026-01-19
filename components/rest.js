@@ -1,8 +1,9 @@
-const { promisify } = require('util')
-const stream = require('stream')
-const { isGeneratorFunction } = require('util').types
+import { promisify, types } from 'node:util'
+import stream from 'node:stream'
+import { getMimeType } from './util.js'
+
+const isGeneratorFunction = types.isGeneratorFunction
 const pipeline = promisify(stream.pipeline)
-const { getMimeType } = require('./util')
 
 /**
  * remove leading slash from path
@@ -217,7 +218,7 @@ function del (restClient, path) {
   })
 }
 
-module.exports = {
+export {
   get,
   post,
   put,
