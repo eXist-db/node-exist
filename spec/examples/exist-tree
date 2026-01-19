@@ -1,14 +1,15 @@
 #!/usr/bin/env node
-const {argv} = require('process'); // eslint-disable-line node/prefer-global/process
+import { argv } from 'process'
+import yargs from 'yargs'
 
-const {connect} = require('../../index')
+import { connect } from '../../index.js'
 
 // read connection options from ENV
-const connectionOptions = require('../connection')
+import { envOptions as connectionOptions } from '../connection.js'
 
 // the more complex a query gets that is executed
 // the more sense it makes to read it from a file
-// see db.app.install and how it uses xquery/install-package.xq 
+// see db.app.install and how it uses xquery/install-package.xq
 const query = `xquery version "3.1";
 
 declare variable $collection external;
@@ -55,110 +56,107 @@ declare function local:tree ($base) {
 serialize(local:tree($collection), map{"method": "json"})
 `
 
-const FILL  = '│  ';
-const ITEM  = '├─ ';
-const LAST  = '└─ ';
-const EMPTY = '   ';
+const FILL = '│  '
+const ITEM = '├─ '
+const LAST = '└─ '
+const EMPTY = '   '
 
 function renderItem (name, indent, last, root) {
-    if (root) {
-        return name
-    }
-    if (last) {
-        return indent + LAST + name
-    }
-    return indent + ITEM + name
+  if (root) {
+    return name
+  }
+  if (last) {
+    return indent + LAST + name
+  }
+  return indent + ITEM + name
 }
 
 function getNextIndent (indent, last, root) {
-    if (root) {
-        return indent
-    }
-    if (last) {
-        return indent + EMPTY
-    }
-    return indent + FILL
+  if (root) {
+    return indent
+  }
+  if (last) {
+    return indent + EMPTY
+  }
+  return indent + FILL
 }
 
-function renderTree(json, level=0, indent='', last=false) {
-    const item = renderItem(json.name, indent, last, level === 0)
-    console.log(item)
+function renderTree (json, level = 0, indent = '', last = false) {
+  const item = renderItem(json.name, indent, last, level === 0)
+  console.log(item)
 
-    if (!json.children || json.type === "resource") {
-        return
-    }
+  if (!json.children || json.type === 'resource') {
+    return
+  }
 
-    const nextLevel = level + 1
-    const nextIndent = getNextIndent(indent, last, level === 0)
-    const length = json.children.length -1
-    for (const i in json.children) {
-        const nextItem = json.children[i]
-        const isLast = Boolean(length == i)
-        renderTree(nextItem, nextLevel, nextIndent, isLast)
-    }
+  const nextLevel = level + 1
+  const nextIndent = getNextIndent(indent, last, level === 0)
+  const length = json.children.length - 1
+  for (const i in json.children) {
+    const nextItem = json.children[i]
+    const isLast = Boolean(length === i)
+    renderTree(nextItem, nextLevel, nextIndent, isLast)
+  }
 }
 
 async function tree (collection, level) {
-    try {
-        const db = connect(connectionOptions)
-        const result = await db.queries.readAll(query, { variables: {collection, level} })
-        const json = JSON.parse(result.pages.toString())
-        renderTree(json)
-        return 0
-    }
-    catch (e) {
-        let message = e.faultString ? e.faultString : e.message
-        console.error("Could not run query! Reason:", message)
-        return 1
-    }
+  try {
+    const db = connect(connectionOptions)
+    const result = await db.queries.readAll(query, { variables: { collection, level } })
+    const json = JSON.parse(result.pages.toString())
+    renderTree(json)
+    return 0
+  } catch (e) {
+    const message = e.faultString ? e.faultString : e.message
+    console.error('Could not run query! Reason:', message)
+    return 1
+  }
 }
 
-async function run() {
-    const cli = require('yargs')
+async function run () {
+  const cli = yargs()
     .command('$0', 'List a collection and its contents as a tree', (yargs) => {
       yargs.demandCommand(1, 1).usage(`  
 Usage:
-    exist-tree [options] collection`);
+    exist-tree [options] collection`)
     })
     .option('l', {
-        alias: 'level',
-        describe: 'The maximum depth of the tree. Setting this to zero will output the complete tree.', 
-        type: Number,
-        default: 0
+      alias: 'level',
+      describe: 'The maximum depth of the tree. Setting this to zero will output the complete tree.',
+      type: Number,
+      default: 0
     })
-    .option('h', {alias: 'help'})
+    .option('h', { alias: 'help' })
     .strict(false)
-    .exitProcess(false);
-  
-    try {
-      const parsed = cli.parse(argv.slice(2))
-      if (Boolean(parsed.help)) {
-        return 0
-      }
-      const {level} = parsed
+    .exitProcess(false)
 
-      if (typeof level !== 'number' || level < 0) {
-        console.error('Invalid value for option "level"; must be an integer greater than zero.')
-        return 1
-      }
-  
-      const collection = parsed._
-      return tree(collection, level)
+  try {
+    const parsed = cli.parse(argv.slice(2))
+    if (parsed.help) {
+      return 0
     }
-    catch (error) {
-      if (error.name !== 'YError') {
-        console.error(error)
-      }
+    const { level } = parsed
+
+    if (typeof level !== 'number' || level < 0) {
+      console.error('Invalid value for option "level"; must be an integer greater than zero.')
       return 1
     }
+
+    const collection = parsed._
+    return tree(collection, level)
+  } catch (error) {
+    if (error.name !== 'YError') {
+      console.error(error)
+    }
+    return 1
   }
-  
+}
+
 run()
-    .then((exitCode) => {
-        process.exitCode = exitCode
-    })
-    .catch((error) => {
-        console.error(error)
-        process.exitCode = 1
-    })
-  
+  .then((exitCode) => {
+    process.exitCode = exitCode
+  })
+  .catch((error) => {
+    console.error(error)
+    process.exitCode = 1
+  })

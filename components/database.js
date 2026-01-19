@@ -10,8 +10,8 @@ function version (client) {
   return client.promisedMethodCall('getVersion', [])
 }
 
-module.exports = {
-  shutdown: shutdownDb,
-  syncToDisk: syncDbToDisk,
+export {
+  shutdownDb as shutdown,
+  syncDbToDisk as syncToDisk,
   version
 }

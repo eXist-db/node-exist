@@ -6,7 +6,7 @@ function list (client) {
   return client.promisedMethodCall('getAccounts', [])
 }
 
-module.exports = {
+export {
   getUserInfo,
   list
 }

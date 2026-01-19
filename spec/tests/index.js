@@ -1,8 +1,8 @@
 // tests
 
-const test = require('tape')
-const { connect, getMimeType, defineMimeTypes } = require('../../index')
-const { envOptions } = require('../connection')
+import test from 'tape'
+import { connect, getMimeType, defineMimeTypes } from '../../index.js'
+import { envOptions } from '../connection.js'
 
 test('check for default mime type extensions', function (t) {
   t.equal(getMimeType('test.xq'), 'application/xquery')

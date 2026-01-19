@@ -1,8 +1,6 @@
-const Mime = require('mime/lite').Mime
-
-// load standard and other mime types
-const standardTypes = require('mime/types/standard.js').default
-const otherTypes = require('mime/types/other.js').default
+import { Mime } from 'mime/lite'
+import standardTypes from 'mime/types/standard.js'
+import otherTypes from 'mime/types/other.js'
 
 // define eXist-db specific mime types
 const customTypes = {
@@ -19,11 +17,10 @@ const mime = new Mime(standardTypes, otherTypes, customTypes)
  * @param {string | undefined} [mimetype] mimetype to enforce
  * @returns {string} mimetype, defaults to 'application/octet-stream'
  */
-function getMimeType (path, mimetype) {
+export function getMimeType (path, mimetype) {
   return mimetype || mime.getType(path) || 'application/octet-stream'
 }
 
-module.exports = {
-  getMimeType,
+export {
   mime
 }

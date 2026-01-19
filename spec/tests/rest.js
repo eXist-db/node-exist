@@ -1,7 +1,7 @@
-const test = require('tape')
-const { readFileSync, createReadStream, createWriteStream, unlinkSync } = require('fs')
-const { getRestClient, connect } = require('../../index')
-const { envOptions } = require('../connection')
+import test from 'tape'
+import { readFileSync, createReadStream, createWriteStream, unlinkSync } from 'fs'
+import { getRestClient, connect } from '../../index.js'
+import { envOptions } from '../connection.js'
 
 // rest client interactions
 test('with rest client', async function (t) {

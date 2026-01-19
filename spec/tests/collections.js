@@ -1,6 +1,6 @@
-const test = require('tape')
-const { connect } = require('../../index')
-const { envOptions } = require('../connection')
+import test from 'tape'
+import { connect } from '../../index.js'
+import { envOptions } from '../connection.js'
 const asGuest = Object.assign({},
   envOptions,
   { basic_auth: { user: 'guest', pass: 'guest' } }

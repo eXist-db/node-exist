@@ -16,4 +16,4 @@ function promisify (client) {
   }
 }
 
-module.exports = promisify
+export default promisify

@@ -9,11 +9,16 @@
  * @prop {Error | {code:string, value:string}} [error] detailed information, if the operation failed
  */
 
-const fs = require('fs')
-const path = require('path')
-const queries = require('./queries')
-const documents = require('./documents')
-const collections = require('./collections')
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import * as queries from './queries.js'
+import * as documents from './documents.js'
+import * as collections from './collections.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 const xqueryPath = path.resolve(__dirname, '../xquery/')
 const installQueryString = fs.readFileSync(path.join(xqueryPath, 'install-package.xq'))
 const removeQueryString = fs.readFileSync(path.join(xqueryPath, 'remove-package.xq'))
@@ -101,7 +106,7 @@ function remove (client, packageUri) {
     .catch(error => { return { success: false, error } })
 }
 
-module.exports = {
+export {
   install,
   upload,
   remove,

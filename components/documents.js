@@ -1,4 +1,4 @@
-const { getMimeType } = require('./util')
+import { getMimeType } from './util.js'
 
 function upload (client, contentBuffer) {
   return client.promisedMethodCall('upload', [contentBuffer, contentBuffer.length])
@@ -24,7 +24,7 @@ function remove (client, documentName) {
   return client.promisedMethodCall('remove', [documentName])
 }
 
-module.exports = {
+export {
   upload,
   parseLocal,
   read,

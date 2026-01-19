@@ -1,23 +1,24 @@
 #!/usr/bin/env node
-const { connect } = require("../../index")
-const { argv } = require("process") // eslint-disable-line node/prefer-global/process
+import { connect } from '../../index.js'
+import { argv } from 'process'
+import yargs from 'yargs'
 
-const {readFileSync} = require("fs")
-const {basename} = require("path")
+import { readFileSync } from 'fs'
+import { basename } from 'path'
 
 // read connection options from ENV
-const connectionOptions = require('../connection')
+import { envOptions as connectionOptions } from '../connection.js'
 const db = connect(connectionOptions)
 
-async function getUserInfo(db) {
-  const {user} = db.client.options.basic_auth
+async function getUserInfo (db) {
+  const { user } = db.client.options.basic_auth
   return await db.users.getUserInfo(user)
 }
 
-function serverName(db) {
-  const {isSecure, options} = db.client
+function serverName (db) {
+  const { isSecure, options } = db.client
 
-  const protocol = `http${isSecure ? 's' : ''}:` 
+  const protocol = `http${isSecure ? 's' : ''}:`
   const isStdPort =
       (isSecure && options.port === 443) ||
       (!isSecure && options.port === 80)
@@ -35,7 +36,7 @@ async function install (db, localFilePath) {
 
     process.stdout.write(`Install ${xarName} on ${serverName(db)}\n`)
 
-    process.stdout.write("uploading...")
+    process.stdout.write('uploading...')
     const uploadResult = await db.app.upload(contents, xarName)
     if (!uploadResult.success) {
       throw new Error(uploadResult.error)
@@ -43,9 +44,9 @@ async function install (db, localFilePath) {
 
     process.stdout.clearLine()
     process.stdout.cursorTo(0)
-    process.stdout.write("✔︎ uploaded\n");
+    process.stdout.write('✔︎ uploaded\n')
 
-    process.stdout.write("installing...")
+    process.stdout.write('installing...')
     const installResult = await db.app.install(xarName)
 
     if (!installResult.success) {
@@ -54,40 +55,39 @@ async function install (db, localFilePath) {
 
     process.stdout.clearLine()
     process.stdout.cursorTo(0)
-    const installationMessage = installResult.result.update ? "updated" : "installed"
-    process.stdout.write(`✔︎ ${installationMessage}\n`);
+    const installationMessage = installResult.result.update ? 'updated' : 'installed'
+    process.stdout.write(`✔︎ ${installationMessage}\n`)
 
     return 0
-  }
-  catch (e) { 
-    let message = e.faultString ? e.faultString : e.message
+  } catch (e) {
+    const message = e.faultString ? e.faultString : e.message
     console.error(message)
     return 1
   }
 }
 
-async function run() {
-  const cli = require("yargs")
-    .command("$0", "Install XAR package", (yargs) => {
+async function run () {
+  const cli = yargs()
+    .command('$0', 'Install XAR package', (yargs) => {
       yargs.demandCommand(1, 1).usage(`
 Usage:
-    exist-install package`);
+    exist-install package`)
     })
-    .option("h", { alias: "help"})
+    .option('h', { alias: 'help' })
     .strict(false)
-    .exitProcess(false);
+    .exitProcess(false)
 
   try {
-    const parsed = cli.parse(argv.slice(2));
-    if (Boolean(parsed.help)) {
-      return 0;
+    const parsed = cli.parse(argv.slice(2))
+    if (parsed.help) {
+      return 0
     }
 
     // main
     const xarPath = parsed._[0]
 
     if (!xarPath.match(/\.xar$/i)) {
-      throw Error("Package must have the file extension .xar!")
+      throw Error('Package must have the file extension .xar!')
     }
 
     // check permissions (and therefore implicitly the connection)
@@ -123,4 +123,3 @@ run()
     console.error(error)
     process.exitCode = 1
   })
-  

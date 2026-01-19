@@ -1,3 +1,17 @@
+import { mime } from './components/util.js'
+
+// components
+import * as connection from './components/connection.js'
+import * as database from './components/database.js'
+import * as queries from './components/queries.js'
+import * as resources from './components/resources.js'
+import * as documents from './components/documents.js'
+import * as collections from './components/collections.js'
+import * as indices from './components/indices.js'
+import * as users from './components/users.js'
+import * as app from './components/app.js'
+import * as rest from './components/rest.js'
+
 /**
  * @typedef { import("./components/connection").NodeExistConnectionOptions } NodeExistConnectionOptions
  */
@@ -13,20 +27,6 @@
  * @prop {{getUserInfo:function, list:function}} users
  * @prop {{install:function, upload:function, deploy:function, remove:function}} app
  */
-
-const mime = require('./components/util').mime
-
-// components
-const connection = require('./components/connection')
-const database = require('./components/database')
-const queries = require('./components/queries')
-const resources = require('./components/resources')
-const documents = require('./components/documents')
-const collections = require('./components/collections')
-const indices = require('./components/indices')
-const users = require('./components/users')
-const app = require('./components/app')
-const rest = require('./components/rest')
 
 // helper functions
 
@@ -56,7 +56,7 @@ function applyEachWith (module, client) {
   * @param {NodeExistConnectionOptions} options set who connects to which server and how
   * @returns {NodeExist} bound components to interact with an exist-db instance
   */
-function connect (options) {
+export function connect (options) {
   const client = connection.connect(options)
 
   return {
@@ -72,7 +72,7 @@ function connect (options) {
   }
 }
 
-async function getRestClient (options) {
+export async function getRestClient (options) {
   const restClient = await connection.restConnection(options)
   const { get, put, post, del } = applyEachWith(rest, restClient)
 
@@ -85,13 +85,11 @@ async function getRestClient (options) {
   }
 }
 
-exports.readOptionsFromEnv = connection.readOptionsFromEnv
-exports.connect = connect
-exports.defineMimeTypes = function (mimeTypes) {
+export const readOptionsFromEnv = connection.readOptionsFromEnv
+export function defineMimeTypes (mimeTypes) {
   mime.define(mimeTypes)
 }
 
-exports.getMimeType = function (path) {
+export function getMimeType (path) {
   return mime.getType(path)
 }
-exports.getRestClient = getRestClient

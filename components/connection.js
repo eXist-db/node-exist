@@ -1,6 +1,6 @@
-const xmlrpc = require('xmlrpc')
-const assign = require('lodash.assign')
-const promisedMethodCall = require('./promisedMethodCall')
+import xmlrpc from 'xmlrpc'
+import assign from 'lodash.assign'
+import promisedMethodCall from './promisedMethodCall.js'
 
 /**
  * @typedef { import("xmlrpc").Client } XMLRPCClient
@@ -199,7 +199,7 @@ function readOptionsFromEnv () {
   return environmentOptions
 }
 
-module.exports = {
+export {
   connect,
   readOptionsFromEnv,
   restConnection,
