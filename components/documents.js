@@ -1,7 +1,7 @@
 import { getMimeType } from './util.js'
 
 function upload (client, contentBuffer) {
-  return client.promisedMethodCall('upload', [contentBuffer, contentBuffer.length])
+  return client.methodCall('upload', [contentBuffer, contentBuffer.length])
 }
 
 function parseLocal (client, handle, filename, options = {}) {
@@ -9,19 +9,19 @@ function parseLocal (client, handle, filename, options = {}) {
   const mimeType = getMimeType(filename, options && options.mimetype ? options.mimetype : null)
   const replace = options && options.replace ? options.replace : true
 
-  return client.promisedMethodCall('parseLocal', [handle, filename, replace, mimeType])
+  return client.methodCall('parseLocal', [handle, filename, replace, mimeType])
 }
 
 function read (client, documentName, options = {}) {
-  return client.promisedMethodCall('getDocument', [documentName, options])
+  return client.methodCall('getDocument', [documentName, options])
 }
 
 function readBinary (client, documentName) {
-  return client.promisedMethodCall('getBinaryResource', [documentName])
+  return client.methodCall('getBinaryResource', [documentName])
 }
 
 function remove (client, documentName) {
-  return client.promisedMethodCall('remove', [documentName])
+  return client.methodCall('remove', [documentName])
 }
 
 export {

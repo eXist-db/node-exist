@@ -1,13 +1,13 @@
 function syncDbToDisk (client) {
-  return client.promisedMethodCall('sync', [])
+  return client.methodCall('sync', [])
 }
 
 function shutdownDb (client) {
-  return client.promisedMethodCall('shutdown', [])
+  return client.methodCall('shutdown', [])
 }
 
 function version (client) {
-  return client.promisedMethodCall('getVersion', [])
+  return client.methodCall('getVersion', [])
 }
 
 export {

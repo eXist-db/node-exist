@@ -17,7 +17,7 @@ test('check for default mime type extensions', () => {
 
 test('raw command', async () => {
   const db = connect()
-  const res = await db.client.promisedMethodCall('getVersion', [])
+  const res = await db.client.methodCall('getVersion', [])
   assert.ok(res, res)
 })
 
@@ -70,7 +70,7 @@ await describe('create secure client to remote db', async () => {
       await db.resources.describe('/db')
       assert.fail('should have thrown')
     } catch (e) {
-      assert.strictEqual(e.message, 'XML-RPC fault: Wrong password for user [guest] ', e)
+      assert.strictEqual(e.message, 'XML-RPC fault: Wrong password for user [guest]', e)
     }
   }
 
