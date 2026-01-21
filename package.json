@@ -53,8 +53,8 @@
   },
   "dependencies": {
     "got": "^14.6.6",
-    "lodash.assign": "^4.2.0",
-    "mime": "^4.1.0"
+    "mime": "^4.1.0",
+    "undici": "^7.18.2"
   },
   "version": "0.0.0-development"
 }

@@ -29,7 +29,7 @@
  * @returns {Promise<ResourceInfo>} Resource information
  */
 function describe (client, resourceIdentifier) {
-  return client.promisedMethodCall('describeResource', [resourceIdentifier])
+  return client.methodCall('describeResource', [resourceIdentifier])
 }
 
 /**
@@ -41,7 +41,7 @@ function describe (client, resourceIdentifier) {
  * @returns {Promise<boolean>} true if the action was succesful
  */
 function setPermissions (client, resourceIdentifier, permission) {
-  return client.promisedMethodCall('setPermissions', [resourceIdentifier, permission])
+  return client.methodCall('setPermissions', [resourceIdentifier, permission])
 }
 
 /**
@@ -52,7 +52,7 @@ function setPermissions (client, resourceIdentifier, permission) {
  * @returns {Promise<number>} permissions as octet number
  */
 function getPermissions (client, resourceIdentifier) {
-  return client.promisedMethodCall('getPermissions', [resourceIdentifier])
+  return client.methodCall('getPermissions', [resourceIdentifier])
 }
 
 export {

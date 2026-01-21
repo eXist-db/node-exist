@@ -1,63 +1,110 @@
-import http from 'node:http'
-import https from 'node:https'
+import { Agent } from 'undici'
+
+// Map to escape XML special characters
+const ESCAPE_MAP = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&apos;'
+}
+const matchEscapeChars = /[&<>"']/g
 
 /**
- * Escape XML special characters
+ * Escape XML special characters using character map
  */
 function escapeXml (str) {
-  if (typeof str !== 'string') return str
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
+  return str.replace(matchEscapeChars, char => ESCAPE_MAP[char])
 }
 
+// Reverse map for unescaping
+const UNESCAPE_MAP = {
+  '&apos;': "'",
+  '&quot;': '"',
+  '&gt;': '>',
+  '&lt;': '<',
+  '&amp;': '&'
+}
+const matchEntities = /&apos;|&quot;|&gt;|&lt;|&amp;/g
+
 /**
- * Unescape XML special characters
+ * Unescape XML special characters using entity map
  */
 function unescapeXml (str) {
-  if (typeof str !== 'string') return str
-  return str
-    .replace(/&apos;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&gt;/g, '>')
-    .replace(/&lt;/g, '<')
-    .replace(/&amp;/g, '&')
+  if (!str.includes('&')) {
+    return str
+  }
+  return str.replace(matchEntities, entity => UNESCAPE_MAP[entity])
+}
+
+function buildNumberXml (num) {
+  return Number.isInteger(num) ? `<int>${num}</int>` : `<double>${num}</double>`
+}
+
+function buildArrayValueXml (result, value) {
+  return result + `<value>${valueToXml(value)}</value>`
+}
+function buildArrayXml (arr = []) {
+  return `<array><data>${arr.reduce(buildArrayValueXml, '')}</data></array>`
+}
+
+function buildMemberXml (result, [key, value]) {
+  return result + `<member><name>${escapeXml(key)}</name><value>${valueToXml(value)}</value></member>`
+}
+function buildStructXml (obj) {
+  return `<struct>${Object.entries(obj).reduce(buildMemberXml, '')}</struct>`
 }
 
 /**
  * Convert a value to XML-RPC format
  */
 function valueToXml (value) {
-  if (typeof value === 'string') {
-    return `<string>${escapeXml(value)}</string>`
-  } else if (typeof value === 'number') {
-    if (Number.isInteger(value)) {
-      return `<int>${value}</int>`
-    } else {
-      return `<double>${value}</double>`
-    }
-  } else if (typeof value === 'boolean') {
-    return `<boolean>${value ? '1' : '0'}</boolean>`
-  } else if (value instanceof Date) {
-    return `<dateTime.iso8601>${value.toISOString()}</dateTime.iso8601>`
-  } else if (Buffer.isBuffer(value)) {
-    return `<base64>${value.toString('base64')}</base64>`
-  } else if (Array.isArray(value)) {
-    const items = value.map(v => `<value>${valueToXml(v)}</value>`).join('')
-    return `<array><data>${items}</data></array>`
-  } else if (value === null || value === undefined) {
-    return '<nil/>'
-  } else if (typeof value === 'object') {
-    const members = Object.entries(value)
-      .map(([key, val]) => `<member><name>${escapeXml(key)}</name><value>${valueToXml(val)}</value></member>`)
-      .join('')
-    return `<struct>${members}</struct>`
+  const type = typeof value
+  switch (type) {
+    case 'string':
+      return `<string>${escapeXml(value)}</string>`
+    case 'number':
+      return buildNumberXml(value)
+    case 'boolean':
+      return `<boolean>${value ? '1' : '0'}</boolean>`
+    case 'object':
+      if (value === null) {
+        return '<nil/>'
+      }
+      if (Array.isArray(value)) {
+        return buildArrayXml(value)
+      }
+      if (value instanceof Date) {
+        return `<dateTime.iso8601>${value.toISOString()}</dateTime.iso8601>`
+      }
+      if (Buffer.isBuffer(value)) {
+        return `<base64>${value.toString('base64')}</base64>`
+      }
+      return buildStructXml(value)
+    default:
+      return `<string>${escapeXml(String(value))}</string>`
   }
-  return `<string>${escapeXml(String(value))}</string>`
 }
+
+function renderParams (params = []) {
+  return params
+    .map(param => `<param><value>${valueToXml(param)}</value></param>`)
+    .join('')
+}
+
+/**
+ * Build XML-RPC method call
+ * @param {string} methodName method name
+ * @param {Array} params method parameters
+ * @returns {string} XML-RPC request body
+ */
+function buildXmlRpcCall (methodName, params = []) {
+  return `<?xml version="1.0"?><methodCall><methodName>${escapeXml(methodName)}</methodName><params>${renderParams(params)}</params></methodCall>`
+}
+
+// Pre-compiled regex patterns for reuse
+const matchNCNameCharacter = /[a-zA-Z0-9._:-]/
+const matchWhiteSpaceCharacters = /\s/
 
 /**
  * Simple but proper XML tokenizer and parser
@@ -95,13 +142,13 @@ class XmlParser {
     }
 
     // Parse tag name
-    const tagName = this.parseTagName()
+    const name = this.parseNCName()
     const attributes = this.parseAttributes()
 
     // Check for self-closing tag
     if (this.xml.substring(this.pos, this.pos + 2) === '/>') {
       this.pos += 2
-      return { tag: tagName, attributes, text: '', children: [] }
+      return { name, attributes, text: '', children: [] }
     }
 
     if (this.xml[this.pos] !== '>') {
@@ -110,14 +157,14 @@ class XmlParser {
     this.pos++ // skip '>'
 
     // Parse content
-    const content = this.parseContent(tagName)
+    const { text, children } = this.parseContent(name)
 
-    return { tag: tagName, attributes, text: content.text, children: content.children }
+    return { name, attributes, text, children }
   }
 
-  parseTagName () {
+  parseNCName () {
     const start = this.pos
-    while (this.pos < this.xml.length && /[a-zA-Z0-9._:-]/.test(this.xml[this.pos])) {
+    while (this.pos < this.xml.length && matchNCNameCharacter.test(this.xml[this.pos])) {
       this.pos++
     }
     return this.xml.substring(start, this.pos)
@@ -130,7 +177,7 @@ class XmlParser {
       if (this.xml[this.pos] === '>' || this.xml.substring(this.pos, this.pos + 2) === '/>') {
         break
       }
-      const name = this.parseTagName()
+      const name = this.parseNCName()
       this.skipWhitespace()
       if (this.xml[this.pos] !== '=') {
         throw new Error(`Expected '=' at position ${this.pos}`)
@@ -174,11 +221,11 @@ class XmlParser {
           const tag = this.xml.substring(tagStart, tagEnd).trim()
           if (tag === closingTag) {
             this.pos = tagEnd + 1
-            return { text: text.trim(), children }
+            return { text: unescapeXml(text.trim()), children }
           }
         }
         if (text.trim()) {
-          children.push({ type: 'text', value: text.trim() })
+          children.push({ type: 'text', value: unescapeXml(text.trim()) })
         }
         text = ''
         children.push(this.parseElement())
@@ -192,7 +239,7 @@ class XmlParser {
   }
 
   skipWhitespace () {
-    while (this.pos < this.xml.length && /\s/.test(this.xml[this.pos])) {
+    while (this.pos < this.xml.length && matchWhiteSpaceCharacters.test(this.xml[this.pos])) {
       this.pos++
     }
   }
@@ -212,17 +259,38 @@ class XmlParser {
   }
 }
 
+function filterByTagName (tagName) {
+  return element => element.name === tagName
+}
+
+function reduceStruct (result, member) {
+  const nameElement = member.children.find(filterByTagName('name'))
+  const valueElement = member.children.find(filterByTagName('value'))
+  if (!(nameElement || valueElement)) {
+    return result
+  }
+  const key = nameElement.text
+  const value = parseValueElement(valueElement)
+  result[key] = value
+  return result
+}
+
 /**
  * Convert parsed XML element to JavaScript value based on XML-RPC type
+ * @param {{tag:string, text:string|null, children:Array|null}} [element] parsed XML element
+ * @returns {any} converted JavaScript value
  */
-function xmlElementToValue (element) {
-  if (!element || typeof element !== 'object') return element
+function parseValueElement (element) {
+  if (!element || typeof element !== 'object' || element.name !== 'value') {
+    throw new Error('Invalid XML element')
+  }
 
-  const tag = element.tag
-  const text = element.text || ''
-  const children = element.children || []
+  if (!element.children.length) {
+    return element.text || '' // Untyped string
+  }
 
-  switch (tag) {
+  const { name, text, children } = element.children[0]
+  switch (name) {
     case 'int':
     case 'i4':
       return parseInt(text, 10)
@@ -246,40 +314,60 @@ function xmlElementToValue (element) {
       return null
 
     case 'array': {
-      const dataElement = children.find(c => c.tag === 'data')
-      if (!dataElement) return []
+      const dataElement = children.find(filterByTagName('data'))
+      if (!dataElement) throw new Error('Invalid array structure')
       return dataElement.children
-        .filter(c => c.tag === 'value')
-        .map(valueElement => xmlElementToValue(valueElement.children[0] || { tag: 'string', text: valueElement.text }))
+        .filter(filterByTagName('value'))
+        .map(valueElement => parseValueElement(valueElement))
     }
 
     case 'struct': {
-      const result = {}
-      children.forEach(member => {
-        if (member.tag === 'member') {
-          const nameElement = member.children.find(c => c.tag === 'name')
-          const valueElement = member.children.find(c => c.tag === 'value')
-          if (nameElement && valueElement) {
-            const key = nameElement.text
-            const value = valueElement.children[0]
-              ? xmlElementToValue(valueElement.children[0])
-              : valueElement.text
-            result[key] = value
-          }
-        }
-      })
-      return result
+      return children
+        .filter(filterByTagName('member'))
+        .reduce(reduceStruct, {})
     }
 
-    case 'value':
-      // Value with no explicit type - check if it has child elements
-      if (children.length === 0) {
-        return text // Untyped string
-      }
-      return xmlElementToValue(children[0])
-
     default:
-      return text
+      throw new Error(`Unsupported XML-RPC value type: ${name}`)
+  }
+}
+
+/**
+ * Parse XML-RPC response using proper XML parser
+ */
+function parseXmlRpcResponse (xmlResponse) {
+  try {
+    const parser = new XmlParser(xmlResponse)
+    const root = parser.parse()
+    if (root.name !== 'methodResponse') {
+      throw new Error('Not a methodResponse')
+    }
+    const params = root.children.find(filterByTagName('params'))
+    const fault = root.children.find(filterByTagName('fault'))
+
+    if (!(params || fault)) {
+      throw new Error('No params or fault in methodResponse')
+    }
+
+    // Handle fault responses
+    if (fault) {
+      const value = fault.children.find(filterByTagName('value'))
+      if (value) {
+        const faultValue = parseValueElement(value)
+        return { fault: faultValue }
+      }
+    }
+
+    // Handle normal responses
+    const param = params.children.find(filterByTagName('param'))
+    if (param) {
+      const value = param.children.find(filterByTagName('value'))
+      if (value) {
+        return parseValueElement(value)
+      }
+    }
+  } catch (e) {
+    throw new Error(`Failed to parse XML-RPC response: ${e.message}`)
   }
 }
 
@@ -287,65 +375,52 @@ function xmlElementToValue (element) {
  * Create a native XML-RPC client
  */
 export function createClient (options) {
+  /* eslint camelcase: "off" */
+  const { basic_auth, protocol, host, port, path, rejectUnauthorized } = options
+  const auth = basic_auth ? `${basic_auth.user}:${basic_auth.pass}` : null
+  const authorizationHeaderValue = auth ? 'Basic ' + Buffer.from(auth).toString('base64') : null
+
   const client = {
-    host: options.host,
-    port: options.port,
-    path: options.path,
-    secure: options.protocol === 'https:',
-    auth: options.basic_auth ? `${options.basic_auth.user}:${options.basic_auth.pass}` : null,
-    rejectUnauthorized: options.rejectUnauthorized !== false,
-    isSecure: options.protocol === 'https:',
+    isSecure: protocol === 'https:',
+    agent: new Agent({
+      connect: {
+        rejectUnauthorized
+      }
+    }),
+    async methodCall (methodName, params = []) {
+      const body = buildXmlRpcCall(methodName, params)
+      // TRACE - debug XML-RPC request
+      // console.log('XML-RPC Request Body:', body)
 
-    methodCall (methodName, args, callback) {
-      const requestBody = buildXmlRpcCall(methodName, args)
-
+      const headers = {
+        Accept: 'text/xml, application/xml',
+        'Content-Type': 'text/xml',
+        'Content-Length': Buffer.byteLength(body)
+      }
+      if (authorizationHeaderValue) {
+        headers.Authorization = authorizationHeaderValue
+      }
       const requestOptions = {
-        hostname: this.host,
-        port: this.port,
-        path: this.path,
+        dispatcher: this.agent,
         method: 'POST',
-        headers: {
-          'Content-Type': 'text/xml',
-          'Content-Length': Buffer.byteLength(requestBody)
-        }
+        headers,
+        body
       }
+      const requestUrl = `${protocol}//${host}:${port}${path}`
+      const response = await fetch(requestUrl, requestOptions)
+      const rpcResponse = await response.text()
 
-      if (this.auth) {
-        requestOptions.headers.Authorization = 'Basic ' + Buffer.from(this.auth).toString('base64')
+      // TRACE - debug XML-RPC request
+      // console.log('XML-RPC response:', rpcResponse)
+
+      const parsedResult = parseXmlRpcResponse(rpcResponse)
+      if (parsedResult.fault) {
+        const error = new Error('XML-RPC fault: ' + parsedResult.fault.faultString)
+        error.faultString = parsedResult.fault.faultString
+        throw error
+      } else {
+        return parsedResult
       }
-
-      if (this.secure) {
-        requestOptions.rejectUnauthorized = this.rejectUnauthorized
-      }
-
-      const transport = this.secure ? https : http
-
-      const req = transport.request(requestOptions, (res) => {
-        let body = ''
-        res.on('data', chunk => { body += chunk })
-        res.on('end', () => {
-          try {
-            const result = parseXmlRpcResponse(body)
-            if (result.fault) {
-              const error = new Error(result.fault.faultString)
-              error.faultString = result.fault.faultString
-              error.code = result.fault.faultCode
-              callback(error)
-            } else {
-              callback(null, result)
-            }
-          } catch (e) {
-            callback(e)
-          }
-        })
-      })
-
-      req.on('error', (err) => {
-        callback(err)
-      })
-
-      req.write(requestBody)
-      req.end()
     }
   }
 
@@ -357,56 +432,4 @@ export function createClient (options) {
  */
 export function createSecureClient (options) {
   return createClient({ ...options, protocol: 'https:', rejectUnauthorized: options.rejectUnauthorized !== false })
-}
-
-/**
- * Build XML-RPC method call
- */
-function buildXmlRpcCall (methodName, args) {
-  const params = args.map(arg => `<param><value>${valueToXml(arg)}</value></param>`).join('')
-  return `<?xml version="1.0"?>
-<methodCall>
-<methodName>${escapeXml(methodName)}</methodName>
-<params>${params}</params>
-</methodCall>`
-}
-
-/**
- * Parse XML-RPC response using proper XML parser
- */
-function parseXmlRpcResponse (xmlResponse) {
-  try {
-    const parser = new XmlParser(xmlResponse)
-    const root = parser.parse()
-
-    if (root.tag === 'methodResponse') {
-      // Handle fault responses
-      const fault = root.children.find(c => c.tag === 'fault')
-      if (fault) {
-        const value = fault.children.find(c => c.tag === 'value')
-        if (value) {
-          const faultValue = xmlElementToValue(value)
-          return { fault: faultValue }
-        }
-      }
-
-      // Handle normal responses
-      const params = root.children.find(c => c.tag === 'params')
-      if (params) {
-        const param = params.children.find(c => c.tag === 'param')
-        if (param) {
-          const value = param.children.find(c => c.tag === 'value')
-          if (value) {
-            return xmlElementToValue(value)
-          }
-        }
-      }
-
-      throw new Error('No params or fault in methodResponse')
-    }
-
-    throw new Error('Not a methodResponse')
-  } catch (e) {
-    throw new Error(`Failed to parse XML-RPC response: ${e.message}`)
-  }
 }

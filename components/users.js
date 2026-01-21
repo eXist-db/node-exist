@@ -1,9 +1,9 @@
 function getUserInfo (client, userName) {
-  return client.promisedMethodCall('getAccount', [userName])
+  return client.methodCall('getAccount', [userName])
 }
 
 function list (client) {
-  return client.promisedMethodCall('getAccounts', [])
+  return client.methodCall('getAccounts', [])
 }
 
 export {

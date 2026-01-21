@@ -1,6 +1,4 @@
 import { createClient, createSecureClient } from './xmlrpc-client.js'
-import assign from 'lodash.assign'
-import promisedMethodCall from './promisedMethodCall.js'
 
 /**
  * @typedef {Object} XMLRPCClient
@@ -9,7 +7,7 @@ import promisedMethodCall from './promisedMethodCall.js'
  * @prop {string} path
  * @prop {boolean} secure
  * @prop {Function} methodCall
- * @prop {Function} promisedMethodCall
+ * @prop {Function} methodCall
  */
 
 /**
@@ -100,7 +98,6 @@ function basicAuth (auth) {
 function connect (options) {
   const mergedOptions = mergeOptions(defaultXmlrpcEndpoint, options)
   const client = getXMLRPCClient(mergedOptions)
-  client.promisedMethodCall = promisedMethodCall(client)
   return client
 }
 
@@ -126,7 +123,7 @@ function getXMLRPCClient (options) {
  * @returns {MergedOptions} merged options
  */
 function mergeOptions (path, options) {
-  const mergedOptions = assign({ path }, defaultConnectionOptions, options)
+  const mergedOptions = Object.assign({ path }, defaultConnectionOptions, options)
 
   // compatibility for older setups
   if ('secure' in mergedOptions) {
