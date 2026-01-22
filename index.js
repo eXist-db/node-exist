@@ -16,8 +16,11 @@ import * as rest from './components/rest.js'
  * @typedef { import("./components/connection").NodeExistConnectionOptions } NodeExistConnectionOptions
  */
 /**
+ * @typedef { import("./compontents/xmlrpc-client.js").XmlRpcClient } XmlRpcClient
+ */
+/**
  * @typedef {Object} NodeExist
- * @prop { import("xmlrpc").Client } client
+ * @prop {XmlRpcClient} client
  * @prop {{shutdown:function, syncToDisk:function}} server
  * @prop {{read:function, readAll:function, execute:function, count:function, retrieve:function, retrieveAll:function, releaseResult:function}} queries
  * @prop {{describe:function, setPermissions:function, getPermissions:function}} resources
@@ -26,6 +29,19 @@ import * as rest from './components/rest.js'
  * @prop {Object} indices
  * @prop {{getUserInfo:function, list:function}} users
  * @prop {{install:function, upload:function, deploy:function, remove:function}} app
+ */
+
+/**
+/**
+ * @typedef { import("got").Got } Got
+ */
+/**
+ * @typedef {Object} RestClient
+ * @prop {Got} restClient the REST client to interact with the database
+ * @prop {function} get retrieve resources via HTTP GET
+ * @prop {function} put store resources via HTTP PUT
+ * @prop {function} post send resources via HTTP POST
+ * @prop {function} del remove resources via HTTP DELETE
  */
 
 // helper functions
@@ -72,6 +88,11 @@ export function connect (options) {
   }
 }
 
+/**
+ * Get a REST client to interact with an exist-db instance
+ * @param {NodeExistConnectionOptions} options the connection options
+ * @returns {RestClient} the REST client
+ */
 export async function getRestClient (options) {
   const restClient = await connection.restConnection(options)
   const { get, put, post, del } = applyEachWith(rest, restClient)
