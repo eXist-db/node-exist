@@ -31,6 +31,8 @@ jobs:
         ports:
           - 8443:8443
           - 8080:8080
+        # emptying the autodeploy folder will lead to /db/apps having a different owner
+        # which consistently leads to a permission issue during test runs
         # volumes:
         #   - ${{ github.workspace }}/xquery:/exist/autodeploy
         options: >-
