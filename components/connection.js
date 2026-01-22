@@ -5,6 +5,10 @@ import { createXmlRpcClient } from './xmlrpc-client.js'
  */
 
 /**
+ * @typedef { import("got").Got } Got
+ */
+
+/**
  * @typedef {Object} NodeExistConnectionOptions
  * @prop {{user:string, pass:string}} [basic_auth] database user credentials, default: {"user":"guest","pass":"guest"}
  * @prop {"http:"|"https:"} [protocol] "http:" or "https:", default: "https:"
@@ -51,7 +55,7 @@ const defaultConnectionOptions = {
 /**
  * get REST client
  * @param {NodeExistConnectionOptions} [options] connection options
- * @returns {got} Extended HTTP client instance
+ * @returns {Got<never>} Extended HTTP client instance
  */
 async function restConnection (options) {
   const { got } = await import('got')

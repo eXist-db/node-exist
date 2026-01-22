@@ -30,14 +30,33 @@ function parseLocal (client, handle, filename, options = {}) {
   return client.methodCall('parseLocal', [handle, filename, replace, mimeType])
 }
 
+/**
+ * read a document from the database
+ * @param {XmlRpcClient} client XML-RPC client instance
+ * @param {string} documentName the name/path of the document
+ * @param {Object} options additional options
+ * @returns {Promise<string>} document contents as a string
+ */
 function read (client, documentName, options = {}) {
   return client.methodCall('getDocument', [documentName, options])
 }
 
+/**
+ * read a binary document from the database
+ * @param {XmlRpcClient} client XML-RPC client instance
+ * @param {string} documentName the name/path of the document
+ * @returns {Promise<Buffer>} document contents as a Buffer
+ */
 function readBinary (client, documentName) {
   return client.methodCall('getBinaryResource', [documentName])
 }
 
+/**
+ * remove a document from the database
+ * @param {XmlRpcClient} client XML-RPC client instance
+ * @param {string} documentName the name/path of the document
+ * @returns {Promise<boolean>} true when the document was removed
+ */
 function remove (client, documentName) {
   return client.methodCall('remove', [documentName])
 }
