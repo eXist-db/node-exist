@@ -1,5 +1,15 @@
 import { Agent } from 'undici'
 
+/**
+ * @typedef {Object} XmlRpcClient
+ * @prop {boolean} isSecure indicates if connection is using an encrypted channel (https)
+ * @prop {(methodName: string, params: Array) => Promise} methodCall makes an XML-RPC method call to the connected server
+ */
+
+/**
+ * @typedef {import('..').NodeExistConnectionOptions} NodeExistConnectionOptions
+ */
+
 // Map to escape XML special characters
 const ESCAPE_MAP = {
   '&': '&amp;',
@@ -99,7 +109,12 @@ function renderParams (params = []) {
  * @returns {string} XML-RPC request body
  */
 function buildXmlRpcCall (methodName, params = []) {
-  return `<?xml version="1.0"?><methodCall><methodName>${escapeXml(methodName)}</methodName><params>${renderParams(params)}</params></methodCall>`
+  return `<?xml version="1.0"?>
+<methodCall>
+  <methodName>${escapeXml(methodName)}</methodName>
+  <params>${renderParams(params)}</params>
+</methodCall>
+`
 }
 
 // Pre-compiled regex patterns for reuse
@@ -353,8 +368,7 @@ function parseXmlRpcResponse (xmlResponse) {
     if (fault) {
       const value = fault.children.find(filterByTagName('value'))
       if (value) {
-        const faultValue = parseValueElement(value)
-        return { fault: faultValue }
+        return parseValueElement(value)
       }
     }
 
@@ -373,62 +387,52 @@ function parseXmlRpcResponse (xmlResponse) {
 
 /**
  * Create a native XML-RPC client
+ * @param {NodeExistConnectionOptions} options connection options
+ * @returns {XmlRpcClient} XML-RPC client
  */
-export function createClient (options) {
+export function createXmlRpcClient (options) {
   /* eslint camelcase: "off" */
-  const { basic_auth, protocol, host, port, path, rejectUnauthorized } = options
-  const auth = basic_auth ? `${basic_auth.user}:${basic_auth.pass}` : null
-  const authorizationHeaderValue = auth ? 'Basic ' + Buffer.from(auth).toString('base64') : null
-  const requestUrl = `${protocol}//${host}:${port}${path}`
+  const { headers, isSecureClient, prefixUrl, rejectUnauthorized } = options
+  const dispatcher = new Agent({
+    connect: {
+      keepAlive: true,
+      rejectUnauthorized
+    }
+  })
 
   return {
-    isSecure: protocol === 'https:',
+    isSecure: isSecureClient,
     methodCall: async function (methodName, params = []) {
-      const dispatcher = new Agent({
-        connect: {
-          keepAlive: true,
-          rejectUnauthorized
-        }
-      })
       const body = buildXmlRpcCall(methodName, params)
       // TRACE - debug XML-RPC request
       // console.log('XML-RPC Request Body:', body)
 
-      const headers = {
-        Accept: 'text/xml, application/xml',
-        'Content-Type': 'text/xml',
-        'Content-Length': Buffer.byteLength(body)
-      }
-      if (authorizationHeaderValue) {
-        headers.Authorization = authorizationHeaderValue
-      }
       const requestOptions = {
         method: 'POST',
+        headers: {
+          Accept: 'text/xml, application/xml',
+          'Content-Type': 'text/xml',
+          'Content-Length': Buffer.byteLength(body),
+          ...headers
+        },
         dispatcher,
-        headers,
         body
       }
-      const response = await fetch(requestUrl, requestOptions)
+      const response = await fetch(prefixUrl, requestOptions)
       const rpcResponse = await response.text()
 
       // TRACE - debug XML-RPC request
       // console.log('XML-RPC response:', rpcResponse)
 
       const parsedResult = parseXmlRpcResponse(rpcResponse)
-      if (parsedResult.fault) {
-        const error = new Error('XML-RPC fault: ' + parsedResult.fault.faultString)
-        error.faultString = parsedResult.fault.faultString
+      if (parsedResult?.faultCode !== undefined) {
+        const error = new Error('XML-RPC fault: ' + parsedResult.faultString)
+        error.faultCode = parsedResult.faultCode
+        error.faultString = parsedResult.faultString
         throw error
       } else {
         return parsedResult
       }
     }
   }
-}
-
-/**
- * Create a secure XML-RPC client (HTTPS)
- */
-export function createSecureClient (options) {
-  return createClient({ ...options, protocol: 'https:', rejectUnauthorized: options.rejectUnauthorized !== false })
 }
