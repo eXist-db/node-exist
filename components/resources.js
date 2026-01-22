@@ -1,5 +1,5 @@
 /**
- * @typedef { import("xmlrpc").Client } XMLRPCClient
+ * @typedef { import("./xmlrpc-client.js").XmlRpcClient } XmlRpcClient
  */
 
 /**
@@ -24,7 +24,7 @@
  * Gather information on a resource
  * throws when resource does not exist, path points to a collection
  *
- * @param {XMLRPCClient} client RPC client instance
+ * @param {XmlRpcClient} client RPC client instance
  * @param {string} resourceIdentifier path to resource
  * @returns {Promise<ResourceInfo>} Resource information
  */
@@ -35,7 +35,7 @@ function describe (client, resourceIdentifier) {
 /**
  * Set the permissions for a resource or collection
  *
- * @param {XMLRPCClient} client RPC client instance
+ * @param {XmlRpcClient} client RPC client instance
  * @param {string} resourceIdentifier path to resource
  * @param {number} permission octet number
  * @returns {Promise<boolean>} true if the action was succesful
@@ -47,7 +47,7 @@ function setPermissions (client, resourceIdentifier, permission) {
 /**
  * Get the permissions for a resource or collection
  *
- * @param {XMLRPCClient} client RPC client instance
+ * @param {XmlRpcClient} client RPC client instance
  * @param {string} resourceIdentifier path to resource
  * @returns {Promise<number>} permissions as octet number
  */
