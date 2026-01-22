@@ -1,13 +1,7 @@
-import { createClient, createSecureClient } from './xmlrpc-client.js'
+import { createXmlRpcClient } from './xmlrpc-client.js'
 
 /**
- * @typedef {Object} XMLRPCClient
- * @prop {string} host
- * @prop {string} port
- * @prop {string} path
- * @prop {boolean} secure
- * @prop {Function} methodCall
- * @prop {Function} methodCall
+ * @typedef {import('./xmlrpc-client.js').XmlRpcClient} XmlRpcClient
  */
 
 /**
@@ -22,11 +16,9 @@ import { createClient, createSecureClient } from './xmlrpc-client.js'
 
 /**
  * @typedef {Object} MergedOptions
- * @prop {{user:string, pass:string}} basic_auth database user credentials
- * @prop {"http:"|"https:"} protocol "http:" or "https:"
- * @prop {string} host database host
- * @prop {string} port database port
- * @prop {string} path path to XMLRPC, default: "/exist/xmlrpc"
+ * @prop {string} prefixUrl full URL prefix for requests
+ * @prop {Object} headers base headers for requests
+ * @prop {boolean} isSecureClient indicates if connection is using an encrypted channel (https)
  * @prop {boolean} [rejectUnauthorized] enforce valid SSL certs, if https: is used
  */
 
@@ -64,16 +56,11 @@ const defaultConnectionOptions = {
 async function restConnection (options) {
   const { got } = await import('got')
   /* eslint camelcase: "off" */
-  const { basic_auth, protocol, host, port, path, rejectUnauthorized } = mergeOptions(defaultRestEndpoint, options)
-
-  const prefixUrl = protocol + '//' + host + (port ? ':' + port : '') + path
+  const { prefixUrl, headers, rejectUnauthorized } = mergeOptions(defaultRestEndpoint, options)
 
   const httpClientOptions = {
     prefixUrl,
-    headers: {
-      'user-agent': 'node-exist',
-      authorization: basicAuth(basic_auth)
-    },
+    headers: { ...headers },
     https: { rejectUnauthorized }
   }
 
@@ -85,32 +72,18 @@ async function restConnection (options) {
  * @prop {{user:string, pass:string}} auth database user credentials
  * @returns {string} header value
  */
-function basicAuth (auth) {
-  const payload = auth.pass ? `${auth.user}:${auth.pass}` : auth.user
-  return 'Basic ' + Buffer.from(payload).toString('base64')
+export function basicAuth (auth) {
+  return 'Basic ' + Buffer.from(`${auth.user}:${auth.pass}`).toString('base64')
 }
 
 /**
  * Connect to database via XML-RPC
  * @param {NodeExistConnectionOptions} [options] connection options
- * @returns {XMLRPCClient} XMLRPC-client
+ * @returns {XmlRpcClient} The XMLRPC-client connected to the database with the given options
  */
 function connect (options) {
   const mergedOptions = mergeOptions(defaultXmlrpcEndpoint, options)
-  const client = getXMLRPCClient(mergedOptions)
-  return client
-}
-
-/**
- *
- * @param {MergedOptions} options
- * @returns {XMLRPCClient} XMLRPC-client
- */
-function getXMLRPCClient (options) {
-  if (useSecureConnection(options.protocol)) {
-    return createSecureClient(options)
-  }
-  return createClient(options)
+  return createXmlRpcClient(mergedOptions)
 }
 
 /**
@@ -133,9 +106,9 @@ function mergeOptions (path, options) {
 
   const isLocalDb = checkIfLocalHost(mergedOptions.host)
   const isSecureClient = useSecureConnection(mergedOptions.protocol)
-  if (isLocalDb && isSecureClient && !('rejectUnauthorized' in mergedOptions)) {
-    mergedOptions.rejectUnauthorized = false
-  }
+  const rejectUnauthorized = 'rejectUnauthorized' in mergedOptions
+    ? mergedOptions.rejectUnauthorized
+    : !(isLocalDb && isSecureClient)
 
   if (!isLocalDb) {
     if (!isSecureClient) {
@@ -145,7 +118,18 @@ function mergeOptions (path, options) {
       console.warn('Connecting to remote DB allowing invalid certificate.')
     }
   }
-  return mergedOptions
+  const prefixUrl = `${mergedOptions.protocol}//${mergedOptions.host}${(mergedOptions.port ? ':' + mergedOptions.port : '')}${mergedOptions.path}`
+  const headers = {
+    'user-agent': 'node-exist',
+    authorization: basicAuth(mergedOptions.basic_auth)
+  }
+
+  return {
+    prefixUrl,
+    headers,
+    rejectUnauthorized,
+    isSecureClient
+  }
 }
 
 /**
