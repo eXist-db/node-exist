@@ -1,5 +1,5 @@
 /**
- * @typedef { import("xmlrpc").Client } XMLRPCClient
+ * @typedef { import("./xmlrpc-client.js").XmlRpcClient } XmlRpcClient
  */
 
 /**
@@ -28,7 +28,7 @@ const packageCollection = '/db/pkgtmp'
 /**
  * Upload XAR package to an existdb instance
  *
- * @param {XMLRPCClient} client db connection
+ * @param {XmlRpcClient} client db connection
  * @param {Buffer} xarBuffer XAR package contents (binary zip)
  * @param {String} xarName the filename that will be stored in ${app.packageCollection}
  * @returns {NormalizedQueryResult} the result of the action
@@ -51,7 +51,7 @@ function upload (client, xarBuffer, xarName) {
  * Install and deploy a XAR that was uploaded to the database instance
  * A previously installed version will be removed
  *
- * @param {XMLRPCClient} client db connection
+ * @param {XmlRpcClient} client db connection
  * @param {String} xarName the name of a XAR file, must be present in ${packageCollection}
  * @param {String} [customPackageRepoUrl] a different repository to resolve package dependencies
  * @returns {NormalizedQueryResult} the result of the action
@@ -78,7 +78,7 @@ function install (client, xarName, customPackageRepoUrl) {
 /**
  * experimental: only deploy an application that is already installed
  *
- * @param {XMLRPCClient} client db connection
+ * @param {XmlRpcClient} client db connection
  * @param {String} packageUri unique package descriptor
  * @returns {NormalizedQueryResult | Object} the result of the action
  */
@@ -95,7 +95,7 @@ function deploy (client, packageUri) {
  * Remove an installed application
  * will report success if the application was not found
  *
- * @param {XMLRPCClient} client db connection
+ * @param {XmlRpcClient} client db connection
  * @param {String} packageUri unique package descriptor
  * @returns {NormalizedQueryResult} the result of the action
  */

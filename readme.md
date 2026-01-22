@@ -186,7 +186,7 @@ const rest = await getRestClient({
 })
 ```
 
-### XMLRPCClient with defaults
+### XmlRpcClient with defaults
 
 ```js
 import {connect} from '@existdb/node-exist'

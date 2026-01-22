@@ -1,13 +1,13 @@
 /**
- * @typedef { import("xmlrpc").Client } XMLRPCClient
+ * @typedef { import("./xmlrpc-client.js").XmlRpcClient } XmlRpcClient
  */
 
 /**
- * returns a promise for a result (sub)set
- * @param {XMLRPCClient} client
- * @param {String} query
- * @param {{limit:number, start:number}} [options] - options.limit and options.start control which
- * @returns {Promise}
+ * Query the database and receive a (sub)set of results
+ * @param {XmlRpcClient} client XML-RPC client instance
+ * @param {String} query the database query string
+ * @param {{limit:number, start:number}} [options] "start" at the n-th result item and "limit" set to n items
+ * @returns {Promise} result set
  */
 function read (client, query, options = {}) {
   const limit = options.limit || 1
@@ -22,23 +22,43 @@ function read (client, query, options = {}) {
 
 /**
  * Execute a query on the database
- * @param {XMLRPCClient} client
- * @param {String|Buffer} queryStringOrBuffer
- * @param {Object} options
- * @returns {Promise}
+ * @param {XmlRpcClient} client XML-RPC client instance
+ * @param {String|Buffer} queryStringOrBuffer the database query can be a string or a buffer (for main modules read from a file)
+ * @param {Object} options additional options
+ * @returns {Promise<Number>} result handle
  */
 function execute (client, queryStringOrBuffer, options = {}) {
   return client.methodCall('executeQuery', [queryStringOrBuffer, options])
 }
 
-function count (client, resultHandle) {
-  return client.methodCall('getHits', [resultHandle])
+/**
+ * count the number of results for a result set identified by result handle
+ * @param {XmlRpcClient} client XML-RPC client instance
+ * @param {Number} handle the result handle
+ * @returns {Promise<Number>} number of results
+ */
+function count (client, handle) {
+  return client.methodCall('getHits', [handle])
 }
 
+/**
+ * retrieve a result item at position for set identified by result handle
+ * @param {XmlRpcClient} client XML-RPC client instance
+ * @param {Number} handle the result handle
+ * @param {Number} position the result item to retrieve
+ * @returns {Promise<any>} the next result item
+ */
 function retrieve (client, handle, position) {
   return client.methodCall('retrieve', [handle, position, {}])
 }
 
+/**
+ * Convenience function to retrieve all result pages for a result set identified by handle
+ * @param {XmlRpcClient} client XML-RPC client instance
+ * @param {Number} handle the result handle
+ * @param {Number} position number of result item to retrieve
+ * @returns {Promise<Array>} array of all result items
+ */
 function retrieveAll (client, handle, position) {
   const results = []
   while (position--) {
@@ -47,10 +67,23 @@ function retrieveAll (client, handle, position) {
   return Promise.all(results.reverse()) // array of results is in reverse order
 }
 
+/**
+ * When a result set is no longer needed, release it
+ * @param {XmlRpcClient} client XML-RPC client instance
+ * @param {Number} handle the result handle to release
+ * @returns {Promise<boolean>} true when the result was released
+ */
 function releaseResult (client, handle) {
   return client.methodCall('releaseQueryResult', [handle])
 }
 
+/**
+ * Convenience function to execute a query and retrieve all results
+ * @param {XmlRpcClient} client XML-RPC client instance
+ * @param {String|Buffer} queryStringOrBuffer the database query can be a string or a buffer (for main modules read from a file)
+ * @param {Object} options additional options
+ * @returns {Promise<{query: String|Buffer, options: Object, hits: Number, pages: Array}>} all results
+ */
 function readAll (client, queryStringOrBuffer, options = {}) {
   let resultHandle = -1
   let resultPages = -1

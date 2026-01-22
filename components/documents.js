@@ -1,9 +1,27 @@
 import { getMimeType } from './util.js'
 
+/**
+ *  @typedef { import("./xmlrpc-client.js").XmlRpcClient } XmlRpcClient
+ */
+
+/**
+ * Upload a document to the database
+ * @param {XmlRpcClient} client XML-RPC client instance
+ * @param {Buffer} contentBuffer the buffer to upload
+ * @returns {Promise<string>} document handle
+ */
 function upload (client, contentBuffer) {
   return client.methodCall('upload', [contentBuffer, contentBuffer.length])
 }
 
+/**
+ * Parse bytes uploeded to the database to a document
+ * @param {XmlRpcClient} client XML-RPC client instance
+ * @param {string} handle upload handle
+ * @param {string} filename local filename
+ * @param {{mimetype: string, replace: boolean}} [options] override mimetype and disallow replacing an existing document
+ * @returns {Promise<string>} document name/path in the database
+ */
 function parseLocal (client, handle, filename, options = {}) {
   // set default values
   const mimeType = getMimeType(filename, options && options.mimetype ? options.mimetype : null)
