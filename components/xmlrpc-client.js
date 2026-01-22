@@ -379,15 +379,17 @@ export function createClient (options) {
   const { basic_auth, protocol, host, port, path, rejectUnauthorized } = options
   const auth = basic_auth ? `${basic_auth.user}:${basic_auth.pass}` : null
   const authorizationHeaderValue = auth ? 'Basic ' + Buffer.from(auth).toString('base64') : null
+  const requestUrl = `${protocol}//${host}:${port}${path}`
 
-  const client = {
+  return {
     isSecure: protocol === 'https:',
-    agent: new Agent({
-      connect: {
-        rejectUnauthorized
-      }
-    }),
-    async methodCall (methodName, params = []) {
+    methodCall: async function (methodName, params = []) {
+      const dispatcher = new Agent({
+        connect: {
+          keepAlive: true,
+          rejectUnauthorized
+        }
+      })
       const body = buildXmlRpcCall(methodName, params)
       // TRACE - debug XML-RPC request
       // console.log('XML-RPC Request Body:', body)
@@ -401,12 +403,11 @@ export function createClient (options) {
         headers.Authorization = authorizationHeaderValue
       }
       const requestOptions = {
-        dispatcher: this.agent,
         method: 'POST',
+        dispatcher,
         headers,
         body
       }
-      const requestUrl = `${protocol}//${host}:${port}${path}`
       const response = await fetch(requestUrl, requestOptions)
       const rpcResponse = await response.text()
 
@@ -423,8 +424,6 @@ export function createClient (options) {
       }
     }
   }
-
-  return client
 }
 
 /**
