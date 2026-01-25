@@ -11,7 +11,7 @@
  */
 
 /**
- * @type {import('../components/connection').NodeExistConnectionOptions}
+ * @type {import('../util/connect.js').NodeExistConnectionOptions}
  */
 import { readOptionsFromEnv } from '../index.js'
 const envOptions = readOptionsFromEnv()

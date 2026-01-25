@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-import { connect } from '../../index.js'
-import { argv } from 'process'
-
-// read connection options from ENV
-import { envOptions as connectionOptions } from '../connection.js'
-import { readFileSync } from 'fs'
-import { resolve, join } from 'path'
-import { fileURLToPath } from 'url'
+import { argv } from 'node:process'
+import { readFileSync } from 'node:fs'
+import { resolve, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import yargs from 'yargs'
+
+import { getXmlRpcClient } from '../../index.js'
+import { envOptions as connectionOptions } from '../connection.js'
+
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = resolve(__filename, '..')
@@ -125,7 +125,7 @@ function renderExtendedList (list, noColor) {
 
 async function ls (collection, options) {
   try {
-    const db = connect(connectionOptions)
+    const db = getXmlRpcClient(connectionOptions)
     const { glob, color, extended } = options
     const result = await db.queries.readAll(query, {
       variables: { collection, glob, extended }

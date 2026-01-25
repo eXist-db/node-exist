@@ -1,4 +1,4 @@
-import { getMimeType } from './util.js'
+import { getMimeType } from '../util/mime.js'
 
 /**
  *  @typedef { import("./xmlrpc-client.js").XmlRpcClient } XmlRpcClient

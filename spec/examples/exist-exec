@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { argv } from 'process'
-import { connect } from '../../index.js'
-import { readFileSync } from 'fs'
+import { argv } from 'node:process'
+import { readFileSync } from 'node:fs'
+import { getXmlRpcClient } from '../../index.js'
 import yargs from 'yargs'
 
 // read connection options from ENV
@@ -110,7 +110,7 @@ Usage:
     const { file, bind } = parsed
 
     const query = getQuery(file, parsed._[0])
-    const db = connect(connectionOptions)
+    const db = getXmlRpcClient(connectionOptions)
 
     return await execute(db, query, bind)
   } catch (error) {

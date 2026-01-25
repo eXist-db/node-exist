@@ -1,7 +1,7 @@
 import { getRestClient } from '../../index.js'
 import { envOptions } from '../connection.js'
 
-const rc = await getRestClient(envOptions)
+const rc = getRestClient(envOptions)
 
 const resourcePath = '/db/rest-test/test.xml'
 
@@ -21,10 +21,10 @@ declare variable $collection := "/db/rest-test";
 try {
   const { statusCode } = await rc.put('<root />', resourcePath)
   console.log('Creation response: ', statusCode)
-  const { body } = await rc.get(resourcePath)
-  console.log('File contents:', body)
+  const { bodyText } = await rc.get(resourcePath)
+  console.log('File contents:', bodyText)
   const post = await rc.post(xquery, 'db/rest-test', { indent: 'yes' })
-  console.log('Post response:', post)
+  console.log('Post response:', post.bodyText)
   const deletion = await rc.del('/db/rest-test')
   console.log('Deletion response: ', deletion.statusCode)
 } catch (e) {

@@ -1,17 +1,18 @@
 #!/usr/bin/env node
-import { connect } from '../../index.js'
-import { argv } from 'process'
+import { argv } from 'node:process'
+import { readFileSync } from 'node:fs'
+import { basename } from 'node:path'
+
+import { getXmlRpcClient } from '../../index.js'
 import yargs from 'yargs'
 
-import { readFileSync } from 'fs'
-import { basename } from 'path'
 
 // read connection options from ENV
 import { envOptions as connectionOptions } from '../connection.js'
-const db = connect(connectionOptions)
+const db = getXmlRpcClient(connectionOptions)
 
 async function getUserInfo (db) {
-  return await db.users.getUserInfo(db.client.user)
+  return await db.users.getUserInfo(db.connection.user)
 }
 
 async function install (db, localFilePath) {
@@ -19,7 +20,7 @@ async function install (db, localFilePath) {
     const xarName = basename(localFilePath)
     const contents = readFileSync(localFilePath)
 
-    process.stdout.write(`Install ${xarName} on ${db.client.server}\n`)
+    process.stdout.write(`Install ${xarName} on ${db.connection.server}\n`)
 
     process.stdout.write('uploading...')
     const uploadResult = await db.app.upload(contents, xarName)

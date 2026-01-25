@@ -1,6 +1,6 @@
-import { connect } from '../../index.js'
+import { getXmlRpcClient } from '../../index.js'
 import { envOptions as connectionOptions } from '../connection.js'
-const db = connect(connectionOptions)
+const db = getXmlRpcClient(connectionOptions)
 
 const collection = 'foO0o'
 

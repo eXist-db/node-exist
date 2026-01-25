@@ -47,7 +47,7 @@ First, we need an instance of the restClient.
 
 ```js
 import { getRestClient } from '@existdb/node-exist'
-const rc = await getRestClient()
+const rc = getRestClient()
 ```
 
 For more information see also [Connection Options](#connection-options).
@@ -58,7 +58,8 @@ The returned HTTP client has 4 methods
   The `query` is expected to be a XQuery main module and will be wrapped in the XML-fragment that exist expects.
 
   ```js
-  await rc.post('count(//p)', '/db')
+  const { bodyText } = await rc.post('count(//p)', '/db')
+  console.log(bodyText)
   ```
 
 - `put(data, path)`: create resources in the database.
@@ -77,8 +78,8 @@ The returned HTTP client has 4 methods
   If a writableStream is passed in, the response body will be streamed into it.
 
   ```js
-  const { body } = await rc.get('/db/rest-test/test.xml')
-  console.log(body)
+  const { bodyText } = await rc.get('/db/rest-test/test.xml')
+  console.log(bodyText)
   ```
 
 - `del(path)`: remove resources and collections from an existdb instance
@@ -97,8 +98,8 @@ Look at the [rest tests](spec/tests/rest.js) to see examples.
 Creating, reading and removing a collection:
 
 ```js
-import { connect } from '@existdb/node-exist'
-const db = connect()
+import { getXmlRpcClient } from '@existdb/node-exist'
+const db = getXmlRpcClient()
 
 db.collections.create('/db/apps/test')
   .then(result => db.collections.describe('/db/apps/test'))
@@ -109,8 +110,8 @@ db.collections.create('/db/apps/test')
 Uploading an XML file into the database
 
 ```js
-import { connect } from '@existdb/node-exist'
-const db = connect()
+import { getXmlRpcClient } from '@existdb/node-exist'
+const db = getXmlRpcClient()
 
 db.documents.upload(Buffer.from('<root/>'))
   .then(fileHandle => db.documents.parseLocal(fileHandle, '/db/apps/test/file.xml'))
@@ -122,8 +123,8 @@ db.documents.upload(Buffer.from('<root/>'))
 Since all interactions with the database are promises you can also use async functions
 
 ```js
-import { connect } from '@existdb/node-exist'
-const db = connect()
+import { getXmlRpcClient } from '@existdb/node-exist'
+const db = getXmlRpcClient()
 
 async function uploadAndParse (filePath, contents) {
   const fileHandle = await db.documents.upload(contents)
@@ -173,8 +174,8 @@ to you can override those.
 ### RESTClient with defaults
 
 ```js
-import {getRestClient} from '@existdb/node-exist'
-const rest = await getRestClient({
+import { getRestClient } from '@existdb/node-exist'
+const rest = getRestClient({
   basic_auth: {
     user: 'guest',
     pass: 'guest'
@@ -189,8 +190,8 @@ const rest = await getRestClient({
 ### XmlRpcClient with defaults
 
 ```js
-import {connect} from '@existdb/node-exist'
-const db = connect({
+import {getXmlRpcClient} from '@existdb/node-exist'
+const db = getXmlRpcClient({
   basic_auth: {
     user: 'guest',
     pass: 'guest'
@@ -250,9 +251,9 @@ from a set of environment variables
 _both_ `EXISTDB_USER` _and_ `EXISTDB_PASS` have to be set!
 
 ```js
-import {connect, getRestClient, readOptionsFromEnv} from '@existdb/node-exist'
-const db = connect(readOptionsFromEnv())
-const rest = await getRestClient(readOptionsFromEnv())
+import {getXmlRpcClient, getRestClient, readOptionsFromEnv} from '@existdb/node-exist'
+const db = getXmlRpcClient(readOptionsFromEnv())
+const rest = getRestClient(readOptionsFromEnv())
 ```
 
 For more details you can have a look how it is used in the [connection script](spec/connection.js)
@@ -685,8 +686,8 @@ EXISTDB_SERVER=http://localhost:8888 npm test
 ## Roadmap
 
 - [x] switch to use eXist-db's REST-API (available through [rest-client](#rest-client))
-- [ ] refactor to ES6 modules
-- [ ] better type hints
+- [x] refactor to ES6 modules
+- [x] better type hints
 
 ## Compatibility
 
