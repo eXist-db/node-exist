@@ -1,7 +1,7 @@
 import fs from 'fs'
 import { test, describe, it } from 'node:test'
 import assert from 'node:assert'
-import * as app from '../../components/app.js'
+import * as app from '../../xmlrpc/app.js'
 import { getXmlRpcClient } from '../../index.js'
 import { envOptions } from '../connection.js'
 

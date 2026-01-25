@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-import { argv } from 'process'
+import { argv } from 'node:process'
+import { statSync, createReadStream, existsSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
 import yargs from 'yargs'
 import fg from 'fast-glob'
 import Bottleneck from 'bottleneck'
 
-import { statSync, createReadStream, existsSync, readFileSync } from 'fs'
-import { resolve } from 'path'
-
 // read connection options from ENV
-import { connect, getRestClient } from '../../index.js'
+import { getXmlRpcClient, getRestClient } from '../../index.js'
 import { envOptions as connectionOptions } from '../connection.js'
 
 const stringList = {
@@ -21,8 +21,7 @@ const stringList = {
 }
 
 async function getUserInfo (db) {
-  const { user } = db.client
-  return await db.users.getUserInfo(user)
+  return await db.users.getUserInfo(db.connection.user)
 }
 
 /**
@@ -105,8 +104,8 @@ async function uploadFileOrFolder (db, rc, source, target, options) {
 
   if (options.verbose) {
     console.log('Uploading:', source, 'to', target)
-    console.log('Sever:', db.client.server)
-    console.log('User:', db.client.user)
+    console.log('Sever:', db.connection.server)
+    console.log('User:', db.connection.user)
     if (options.include.length > 1 || options.include[0] !== '**') { console.log('Include:\n', ...options.include, '\n') }
     if (options.exclude.length) {
       console.log('Exclude:\n', ...options.exclude, '\n')
@@ -284,8 +283,8 @@ Usage:
       throw Error(source + ' not found!')
     }
 
-    const db = connect(connectionOptions)
-    const rc = await getRestClient(connectionOptions)
+    const db = getXmlRpcClient(connectionOptions)
+    const rc = getRestClient(connectionOptions)
 
     const accountInfo = await getUserInfo(db)
     const isAdmin = accountInfo.groups.includes('dba')

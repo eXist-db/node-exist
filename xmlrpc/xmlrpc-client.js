@@ -1,8 +1,9 @@
-import { createExistClient } from './undici-exist-client.js'
+import { createExistClient } from '../util/exist-client.js'
 
 /**
- * @typedef { import("./undici-exist-client.js").Connection } Connection
+ * @typedef { import("../util/exist-client.js").Connection } Connection
  */
+
 /**
  * @typedef {Object} XmlRpcClient
  * @prop {Connection} connection underlying connection
@@ -386,7 +387,7 @@ function parseXmlRpcResponse (xmlResponse) {
 
 /**
  * Create a native XML-RPC client
- * @param {import('./undici-exist-client.js').ConnectionOptions} options connection options
+ * @param {import('../util/exist-client.js').ConnectionOptions} options connection options
  * @returns {XmlRpcClient} XML-RPC client
  */
 export function createXmlRpcClient ({ server, headers, rejectUnauthorized, user, secure }) {

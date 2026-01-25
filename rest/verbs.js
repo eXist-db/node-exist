@@ -1,6 +1,6 @@
 import { types } from 'node:util'
 import { Readable, Writable } from 'node:stream'
-import { getMimeType } from './util.js'
+import { getMimeType } from '../util/mime.js'
 
 /**
  * @typedef { import("undici").Client } Client
@@ -21,7 +21,7 @@ function normalizeDBPath (path) {
  * create resource in DB
  * @param {Client} client undici.Client instance
  * @param {string | Buffer | Readable | Generator | AsyncGenerator | FormData} body contents of the resource
- * @param {string} path where to create resource
+ * @param {string} rawPath where to create resource
  * @param {string | undefined} [mimetype] enforce specific mimetype
  * @returns {Promise<any>} Response with headers
  */
@@ -123,12 +123,12 @@ function extendIfWrapped (response, bodyText) {
  * create resource in DB
  * @param {Client} client REST interface with a database instance
  * @param {string | Buffer } query XQuery main module
- * @param {string} path context path
+ * @param {string} rawPath context path
  * @param {Object} [options] query options
  * @returns {Promise<any>} Response with headers and exist specific values
  */
-async function post (client, query, path, options) {
-  const url = normalizeDBPath(path)
+async function post (client, query, rawPath, options) {
+  const path = normalizeDBPath(rawPath)
   const attributes = []
   const properties = []
 
@@ -158,7 +158,7 @@ async function post (client, query, path, options) {
 
   const response = await client.request({
     method: 'POST',
-    url,
+    path,
     headers: {
       'content-type': 'application/xml',
       'content-length': body.length
@@ -172,9 +172,9 @@ async function post (client, query, path, options) {
 /**
  * read resources and collection contents in DB
  * @param {Client} client undici.Client instance
- * @param {string} path which resource to read
+ * @param {string} rawPath which resource to read
  * @param {Object} [searchParams] query options
- * @param {Writable | undefined} [writableStream] if provided allows to stream onto the file system for instance
+ * @param {Writable} [writableStream] if provided allows to stream onto the file system for instance
  * @returns {Promise<any>} Response with body and headers
  */
 async function get (client, rawPath, searchParams, writableStream) {

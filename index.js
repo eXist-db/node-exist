@@ -1,25 +1,27 @@
-import { mime } from './components/util.js'
+import { mime } from './util/mime.js'
+import { xmlrpc, rest, readOptionsFromEnv } from './util/connect.js'
 
-// components
-import * as connect from './components/connection.js'
-import * as database from './components/database.js'
-import * as queries from './components/queries.js'
-import * as resources from './components/resources.js'
-import * as documents from './components/documents.js'
-import * as collections from './components/collections.js'
-import * as indices from './components/indices.js'
-import * as users from './components/users.js'
-import * as app from './components/app.js'
-import * as rest from './components/rest-client.js'
+// xmlrpc
+import * as database from './xmlrpc/database.js'
+import * as queries from './xmlrpc/queries.js'
+import * as resources from './xmlrpc/resources.js'
+import * as documents from './xmlrpc/documents.js'
+import * as collections from './xmlrpc/collections.js'
+import * as indices from './xmlrpc/indices.js'
+import * as users from './xmlrpc/users.js'
+import * as app from './xmlrpc/app.js'
+
+// rest
+import * as verbs from './rest/verbs.js'
 
 /**
- * @typedef { import("./components/connection").NodeExistConnectionOptions } NodeExistConnectionOptions
+ * @typedef { import("./util/connect.js").NodeExistConnectionOptions } NodeExistConnectionOptions
  */
 /**
- * @typedef { import("./components/xmlrpc-client.js").XmlRpcClient } XmlRpcClient
+ * @typedef { import("./xmlrpc/xmlrpc-client.js").XmlRpcClient } XmlRpcClient
  */
 /**
- * @typedef { import("./components/undici-exist-client.js").Connection } Connection
+ * @typedef { import("./util/exist-client.js").Connection } Connection
  */
 /**
  * @typedef {Object} NodeExistXmlRpcClient
@@ -38,10 +40,10 @@ import * as rest from './components/rest-client.js'
 /**
  * @typedef {Object} NodeExistRestClient
  * @prop {Connection} connection underlying connection
- * @prop {function} get retrieve resources via HTTP GET
- * @prop {function} put store resources via HTTP PUT
- * @prop {function} post send resources via HTTP POST
- * @prop {function} del remove resources via HTTP DELETE
+ * @prop {(rawPath:string, searchParams:Object, writableStream:Writable) => Promise<any>} get retrieve resources via HTTP GET
+ * @prop {(body:string|Buffer|Readable|Generator|AscynGenerator|FormData, rawPath:string, mimetype?:string) => Promise<any>} put store resources via HTTP PUT
+ * @prop {(query:string|Buffer, rawPath:string, options?:Object) => Promise<any>} post send resources via HTTP POST
+ * @prop {(rawPath:string) => Promise<any>} del remove resources via HTTP DELETE
  */
 
 // helper functions
@@ -73,19 +75,19 @@ function applyEachWith (module, client) {
   * @returns {NodeExistXmlRpcClient} bound components to interact with an exist-db instance
   */
 export function getXmlRpcClient (options) {
-  const xmlrpc = connect.xmlrpc(options)
-  const { connection, methodCall } = xmlrpc
+  const xmlrpcConnection = xmlrpc(options)
+  const { connection, methodCall } = xmlrpcConnection
   return {
     connection,
     methodCall,
-    server: applyEachWith(database, xmlrpc),
-    queries: applyEachWith(queries, xmlrpc),
-    resources: applyEachWith(resources, xmlrpc),
-    documents: applyEachWith(documents, xmlrpc),
-    collections: applyEachWith(collections, xmlrpc),
-    indices: applyEachWith(indices, xmlrpc),
-    users: applyEachWith(users, xmlrpc),
-    app: applyEachWith(app, xmlrpc)
+    server: applyEachWith(database, xmlrpcConnection),
+    queries: applyEachWith(queries, xmlrpcConnection),
+    resources: applyEachWith(resources, xmlrpcConnection),
+    documents: applyEachWith(documents, xmlrpcConnection),
+    collections: applyEachWith(collections, xmlrpcConnection),
+    indices: applyEachWith(indices, xmlrpcConnection),
+    users: applyEachWith(users, xmlrpcConnection),
+    app: applyEachWith(app, xmlrpcConnection)
   }
 }
 
@@ -95,8 +97,8 @@ export function getXmlRpcClient (options) {
  * @returns {NodeExistRestClient} the REST client
  */
 export function getRestClient (options) {
-  const connection = connect.rest(options)
-  const { get, put, post, del } = applyEachWith(rest, connection.client)
+  const connection = rest(options)
+  const { get, put, post, del } = applyEachWith(verbs, connection.client)
   return {
     connection,
     get,
@@ -106,7 +108,10 @@ export function getRestClient (options) {
   }
 }
 
-export const readOptionsFromEnv = connect.readOptionsFromEnv
+export {
+  readOptionsFromEnv
+}
+
 export function defineMimeTypes (mimeTypes) {
   mime.define(mimeTypes)
 }

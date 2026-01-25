@@ -1,16 +1,16 @@
-import { createXmlRpcClient } from './xmlrpc-client.js'
-import { createExistClient } from './undici-exist-client.js'
+import { createXmlRpcClient } from '../xmlrpc/xmlrpc-client.js'
+import { createExistClient } from './exist-client.js'
 
 /**
- * @typedef { import('./undici-exist-client.js').ConnectionOptions } ConnectionOptions
+ * @typedef { import('./exist-client.js').ConnectionOptions } ConnectionOptions
  */
 
 /**
- * @typedef { import("./undici-exist-client.js").Connection } Connection
+ * @typedef { import("./exist-client.js").Connection } Connection
  */
 
 /**
- * @typedef { import('./xmlrpc-client.js').XmlRpcClient } XmlRpcClient
+ * @typedef { import('../xmlrpc/xmlrpc-client.js').XmlRpcClient } XmlRpcClient
  */
 
 /**
@@ -21,15 +21,6 @@ import { createExistClient } from './undici-exist-client.js'
  * @prop {string} [port] database port, default: "8443"
  * @prop {string} [path] path to XMLRPC, default: "/exist/xmlrpc"
  * @prop {boolean} [rejectUnauthorized] enforce valid SSL certs, default: true for remote hosts
- */
-
-/**
- * @typedef {Object} MergedOptions
- * @prop {string} user the user account name connecting to the database
- * @prop {string} server full URL prefix for requests
- * @prop {Object} headers base headers for requests
- * @prop {boolean} secure indicates if connection is using an encrypted channel (https)
- * @prop {boolean} [rejectUnauthorized] enforce valid SSL certs, if https: is used
  */
 
 /**
@@ -94,7 +85,7 @@ export function xmlrpc (options) {
  * if not explicitly set to be enforced.
  * @param {string} path default endpoint
  * @param {NodeExistConnectionOptions} [options] given options
- * @returns {MergedOptions} merged options
+ * @returns {ConnectionOptions} connection options, normalized with defaults
  */
 function mergeOptions (path, options) {
   const mergedOptions = Object.assign({ path }, defaultConnectionOptions, options)

@@ -1,10 +1,8 @@
 #!/usr/bin/env node
-import { argv } from 'process'
+import { argv } from 'node:process'
 import yargs from 'yargs'
 
-import { connect } from '../../index.js'
-
-// read connection options from ENV
+import { getXmlRpcClient } from '../../index.js'
 import { envOptions as connectionOptions } from '../connection.js'
 
 // the more complex a query gets that is executed
@@ -101,7 +99,7 @@ function renderTree (json, level = 0, indent = '', last = false) {
 
 async function tree (collection, level) {
   try {
-    const db = connect(connectionOptions)
+    const db = getXmlRpcClient(connectionOptions)
     const result = await db.queries.readAll(query, { variables: { collection, level } })
     const json = JSON.parse(result.pages.toString())
     renderTree(json)
