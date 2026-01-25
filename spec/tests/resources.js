@@ -1,9 +1,9 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert'
-import { connect } from '../../index.js'
+import { getXmlRpcClient } from '../../index.js'
 import { envOptions } from '../connection.js'
 const testCollection = '/tests'
-const db = connect(envOptions)
+const db = getXmlRpcClient(envOptions)
 
 async function testGetPermissions () {
   // setup
@@ -59,7 +59,7 @@ async function testSetPermissions () {
 }
 
 await describe('resources:', async function () {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
 
   await it('setup', async function () {
     try {

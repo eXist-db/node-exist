@@ -11,22 +11,7 @@ import { envOptions as connectionOptions } from '../connection.js'
 const db = connect(connectionOptions)
 
 async function getUserInfo (db) {
-  const { user } = db.client.options.basic_auth
-  return await db.users.getUserInfo(user)
-}
-
-function serverName (db) {
-  const { isSecure, options } = db.client
-
-  const protocol = `http${isSecure ? 's' : ''}:`
-  const isStdPort =
-      (isSecure && options.port === 443) ||
-      (!isSecure && options.port === 80)
-
-  if (isStdPort) {
-    return `${protocol}//${options.host}`
-  }
-  return `${protocol}//${options.host}:${options.port}`
+  return await db.users.getUserInfo(db.client.user)
 }
 
 async function install (db, localFilePath) {
@@ -34,7 +19,7 @@ async function install (db, localFilePath) {
     const xarName = basename(localFilePath)
     const contents = readFileSync(localFilePath)
 
-    process.stdout.write(`Install ${xarName} on ${serverName(db)}\n`)
+    process.stdout.write(`Install ${xarName} on ${db.client.server}\n`)
 
     process.stdout.write('uploading...')
     const uploadResult = await db.app.upload(contents, xarName)

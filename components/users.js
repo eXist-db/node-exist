@@ -1,5 +1,5 @@
 /**
- * @typedef {import('../xmlrpc/xmlrpc-client.js').XmlRpcClient} XmlRpcClient
+ * @typedef {import('./xmlrpc-client.js').XmlRpcClient} XmlRpcClient
  */
 
 /**

@@ -2,7 +2,7 @@
 
 import { test, describe, it } from 'node:test'
 import assert from 'node:assert'
-import { connect, getMimeType, defineMimeTypes } from '../../index.js'
+import { getXmlRpcClient, getMimeType, defineMimeTypes } from '../../index.js'
 import { envOptions } from '../connection.js'
 
 test('check for default mime type extensions', () => {
@@ -16,13 +16,13 @@ test('check for default mime type extensions', () => {
 })
 
 test('raw command', async () => {
-  const db = connect()
-  const res = await db.client.methodCall('getVersion', [])
+  const db = getXmlRpcClient()
+  const res = await db.methodCall('getVersion', [])
   assert.ok(res, res)
 })
 
 test('get version', async () => {
-  const db = connect()
+  const db = getXmlRpcClient()
   const res = await db.server.version()
   assert.ok(res, res)
 })
@@ -40,31 +40,31 @@ test('extend mime type definitions', () => {
 })
 
 test('create connection with default settings', () => {
-  const db = connect()
+  const db = getXmlRpcClient()
   const components = ['collections', 'queries', 'documents', 'users', 'indices']
 
   components.forEach(function (component) {
     assert.ok(component in db, 'component ' + component + ' found')
   })
-  assert.ok(db.client.isSecure, 'secure client used')
+  assert.ok(db.connection.secure, 'secure client used')
 })
 
 test('create connection using http:', () => {
-  const db = connect({ protocol: 'http:', port: 8080 })
-  assert.strictEqual(db.client.isSecure, false, 'insecure client used')
+  const db = getXmlRpcClient({ protocol: 'http:', port: 8080 })
+  assert.strictEqual(db.connection.secure, false, 'insecure client used')
 })
 
 test('create insecure client using legacy option', () => {
-  const db = connect({ secure: false, port: 8080 })
-  assert.strictEqual(db.client.isSecure, false, 'insecure client used')
+  const db = getXmlRpcClient({ secure: false, port: 8080 })
+  assert.strictEqual(db.connection.secure, false, 'insecure client used')
 })
 
 await describe('create secure client to remote db', async () => {
   const host = 'exist-db.org'
   const protocol = 'https:'
-  const remoteDb = port => connect({ host, protocol, port })
+  const remoteDb = port => getXmlRpcClient({ host, protocol, port })
   const check = async function (db) {
-    assert.strictEqual(db.client.isSecure, true, 'secure client used')
+    assert.strictEqual(db.connection.secure, true, 'secure client used')
 
     try {
       await db.resources.describe('/db')
@@ -84,7 +84,7 @@ await describe('create secure client to remote db', async () => {
 })
 
 test('get collection permissions', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const result = await db.resources.getPermissions('/db')
   assert.ok(result)
 })

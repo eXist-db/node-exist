@@ -44,15 +44,14 @@
   "license": "MIT",
   "devDependencies": {
     "@semantic-release/github": "^12.0.2",
+    "semantic-release": "^25.0.2",
     "bottleneck": "^2.19.5",
     "fast-glob": "^3.3.3",
-    "semantic-release": "^25.0.2",
     "semver": "^7.7.3",
     "standard": "^17.1.2",
     "yargs": "^18.0.0"
   },
   "dependencies": {
-    "got": "^14.6.6",
     "mime": "^4.1.0",
     "undici": "^7.18.2"
   },

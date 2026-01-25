@@ -1,6 +1,6 @@
 import { test, describe, it } from 'node:test'
 import assert from 'node:assert'
-import { connect } from '../../index.js'
+import { getXmlRpcClient } from '../../index.js'
 import { envOptions } from '../connection.js'
 const asGuest = Object.assign({},
   envOptions,
@@ -8,7 +8,7 @@ const asGuest = Object.assign({},
 )
 
 await describe('collections.exists', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
 
   await it('true for existing collection', async () => {
     const result = await db.collections.exists('/db')
@@ -22,7 +22,7 @@ await describe('collections.exists', async () => {
 
   await it('throws with insufficient access', async () => {
     try {
-      const dbAsGuest = connect()
+      const dbAsGuest = getXmlRpcClient()
       const result = await dbAsGuest.collections.exists('/db/system/security')
       assert.ok(!result, 'Guest should not see /db/system/security')
     } catch (e) {
@@ -35,7 +35,7 @@ await describe('collections.exists', async () => {
 })
 
 await test('get collection info', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const info = await db.collections.describe('/db')
   assert.strictEqual(info.owner, 'SYSTEM')
   assert.ok(Array.isArray(info.collections))
@@ -47,7 +47,7 @@ await test('get collection info', async () => {
 })
 
 await test('read collection', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const collection = await db.collections.read('/db/system/security')
   assert.strictEqual(collection.owner, 'SYSTEM')
   assert.strictEqual(collection.collections[0], 'exist')
@@ -58,7 +58,7 @@ await test('read collection', async () => {
 })
 
 await test('get info for non existent collection', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   try {
     await db.collections.describe('/foo')
     assert.fail('no error')
@@ -71,13 +71,13 @@ await test('get info for non existent collection', async () => {
 })
 
 await test('create collection', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const r = await db.collections.create('new-test-collection')
   assert.ok(r, 'created')
 })
 
 await test('remove collection', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const testCollection = '/remove-collection'
   await db.collections.create(testCollection)
   const success = await db.collections.remove(testCollection)
@@ -85,7 +85,7 @@ await test('remove collection', async () => {
 })
 
 await test('collection exists and guest cannot open it', async () => {
-  const db = connect(asGuest)
+  const db = getXmlRpcClient(asGuest)
   try {
     await db.collections.existsAndCanOpen('/db/system/security')
     assert.fail()
@@ -95,25 +95,25 @@ await test('collection exists and guest cannot open it', async () => {
 })
 
 await test('collection exists and guest can open it', async () => {
-  const db = connect(asGuest)
+  const db = getXmlRpcClient(asGuest)
   const success = await db.collections.existsAndCanOpen('/db/apps')
   assert.ok(success, '/db/apps exists and user guest can access it')
 })
 
 await test('collection does not exist (guest)', async () => {
-  const db = connect(asGuest)
+  const db = getXmlRpcClient(asGuest)
   const success = await db.collections.existsAndCanOpen('/db/apps/asdf')
   assert.ok(!success, '/db/apps/asdf does not exist')
 })
 
 await test('collection exists and admin can open it', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const success = await db.collections.existsAndCanOpen('/db/system/security')
   assert.ok(success)
 })
 
 await test('collection does not exist (admin)', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const success = await db.collections.existsAndCanOpen('/db/apps/asdf')
   assert.ok(!success, '/db/apps/asdf does not exist')
 })

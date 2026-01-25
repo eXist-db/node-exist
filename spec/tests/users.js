@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert'
-import { connect } from '../../index.js'
+import { getXmlRpcClient } from '../../index.js'
 import { envOptions } from '../connection.js'
 const asGuest = Object.assign({},
   envOptions,
@@ -8,7 +8,7 @@ const asGuest = Object.assign({},
 )
 
 await test('list users', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const list = await db.users.list()
   assert.ok(list.length, 'Returns a non-empty list of users')
 
@@ -25,25 +25,25 @@ await test('list users', async () => {
 })
 
 await test('list users as guest', async () => {
-  const db = connect(asGuest)
+  const db = getXmlRpcClient(asGuest)
   const list = await db.users.list()
   assert.ok(list.length, 'Returns a non-empty list of users')
 })
 
 await test('get user info for admin', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const info = await db.users.getUserInfo('admin')
   assert.ok(info)
 })
 
 await test('get user info for guest', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const info = await db.users.getUserInfo('guest')
   assert.ok(info)
 })
 
 await test('get user info for non-existent user', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   try {
     await db.users.getUserInfo('thisuserschouldnotexist')
     assert.fail('should have thrown')

@@ -1,7 +1,7 @@
 import { mime } from './components/util.js'
 
 // components
-import * as connection from './components/connection.js'
+import * as connect from './components/connection.js'
 import * as database from './components/database.js'
 import * as queries from './components/queries.js'
 import * as resources from './components/resources.js'
@@ -10,17 +10,21 @@ import * as collections from './components/collections.js'
 import * as indices from './components/indices.js'
 import * as users from './components/users.js'
 import * as app from './components/app.js'
-import * as rest from './components/rest.js'
+import * as rest from './components/rest-client.js'
 
 /**
  * @typedef { import("./components/connection").NodeExistConnectionOptions } NodeExistConnectionOptions
  */
 /**
- * @typedef { import("./compontents/xmlrpc-client.js").XmlRpcClient } XmlRpcClient
+ * @typedef { import("./components/xmlrpc-client.js").XmlRpcClient } XmlRpcClient
  */
 /**
- * @typedef {Object} NodeExist
- * @prop {XmlRpcClient} client
+ * @typedef { import("./components/undici-exist-client.js").Connection } Connection
+ */
+/**
+ * @typedef {Object} NodeExistXmlRpcClient
+ * @prop {Connection} connection underlying connection
+ * @prop {function} methodCall
  * @prop {{shutdown:function, syncToDisk:function}} server
  * @prop {{read:function, readAll:function, execute:function, count:function, retrieve:function, retrieveAll:function, releaseResult:function}} queries
  * @prop {{describe:function, setPermissions:function, getPermissions:function}} resources
@@ -32,12 +36,8 @@ import * as rest from './components/rest.js'
  */
 
 /**
-/**
- * @typedef { import("got").Got } Got
- */
-/**
- * @typedef {Object} RestClient
- * @prop {Got} restClient the REST client to interact with the database
+ * @typedef {Object} NodeExistRestClient
+ * @prop {Connection} connection underlying connection
  * @prop {function} get retrieve resources via HTTP GET
  * @prop {function} put store resources via HTTP PUT
  * @prop {function} post send resources via HTTP POST
@@ -70,35 +70,35 @@ function applyEachWith (module, client) {
 /**
   * Receive set of bound components to interact with an exist-db instance
   * @param {NodeExistConnectionOptions} options set who connects to which server and how
-  * @returns {NodeExist} bound components to interact with an exist-db instance
+  * @returns {NodeExistXmlRpcClient} bound components to interact with an exist-db instance
   */
-export function connect (options) {
-  const client = connection.connect(options)
-
+export function getXmlRpcClient (options) {
+  const xmlrpc = connect.xmlrpc(options)
+  const { connection, methodCall } = xmlrpc
   return {
-    client,
-    server: applyEachWith(database, client),
-    queries: applyEachWith(queries, client),
-    resources: applyEachWith(resources, client),
-    documents: applyEachWith(documents, client),
-    collections: applyEachWith(collections, client),
-    indices: applyEachWith(indices, client),
-    users: applyEachWith(users, client),
-    app: applyEachWith(app, client)
+    connection,
+    methodCall,
+    server: applyEachWith(database, xmlrpc),
+    queries: applyEachWith(queries, xmlrpc),
+    resources: applyEachWith(resources, xmlrpc),
+    documents: applyEachWith(documents, xmlrpc),
+    collections: applyEachWith(collections, xmlrpc),
+    indices: applyEachWith(indices, xmlrpc),
+    users: applyEachWith(users, xmlrpc),
+    app: applyEachWith(app, xmlrpc)
   }
 }
 
 /**
  * Get a REST client to interact with an exist-db instance
  * @param {NodeExistConnectionOptions} options the connection options
- * @returns {RestClient} the REST client
+ * @returns {NodeExistRestClient} the REST client
  */
-export async function getRestClient (options) {
-  const restClient = await connection.restConnection(options)
-  const { get, put, post, del } = applyEachWith(rest, restClient)
-
+export function getRestClient (options) {
+  const connection = connect.rest(options)
+  const { get, put, post, del } = applyEachWith(rest, connection.client)
   return {
-    restClient,
+    connection,
     get,
     put,
     post,
@@ -106,7 +106,7 @@ export async function getRestClient (options) {
   }
 }
 
-export const readOptionsFromEnv = connection.readOptionsFromEnv
+export const readOptionsFromEnv = connect.readOptionsFromEnv
 export function defineMimeTypes (mimeTypes) {
   mime.define(mimeTypes)
 }

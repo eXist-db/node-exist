@@ -1,13 +1,12 @@
-import { Agent } from 'undici'
+import { createExistClient } from './undici-exist-client.js'
 
+/**
+ * @typedef { import("./undici-exist-client.js").Connection } Connection
+ */
 /**
  * @typedef {Object} XmlRpcClient
- * @prop {boolean} isSecure indicates if connection is using an encrypted channel (https)
+ * @prop {Connection} connection underlying connection
  * @prop {(methodName: string, params: Array) => Promise} methodCall makes an XML-RPC method call to the connected server
- */
-
-/**
- * @typedef {import('..').NodeExistConnectionOptions} NodeExistConnectionOptions
  */
 
 // Map to escape XML special characters
@@ -387,52 +386,49 @@ function parseXmlRpcResponse (xmlResponse) {
 
 /**
  * Create a native XML-RPC client
- * @param {NodeExistConnectionOptions} options connection options
+ * @param {import('./undici-exist-client.js').ConnectionOptions} options connection options
  * @returns {XmlRpcClient} XML-RPC client
  */
-export function createXmlRpcClient (options) {
-  /* eslint camelcase: "off" */
-  const { headers, isSecureClient, prefixUrl, rejectUnauthorized } = options
-  const dispatcher = new Agent({
-    connect: {
-      keepAlive: true,
-      rejectUnauthorized
+export function createXmlRpcClient ({ server, headers, rejectUnauthorized, user, secure }) {
+  const xmlrpcHeaders = {
+    Accept: 'text/xml, application/xml',
+    'Content-Type': 'text/xml',
+    ...headers
+  }
+
+  const connection = createExistClient({ server, headers: xmlrpcHeaders, rejectUnauthorized, user, secure, throwOnError: false })
+  const { client } = connection
+  const methodCall = async function (methodName, params = []) {
+    const body = buildXmlRpcCall(methodName, params)
+    // TRACE - debug XML-RPC request
+    // console.log('XML-RPC Request Body:', body)
+
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Length': Buffer.byteLength(body)
+      },
+      body
     }
-  })
+    const response = await client.request(requestOptions)
+    const rpcResponse = await response.body.text()
+
+    // TRACE - debug XML-RPC request
+    // console.log('XML-RPC response:', rpcResponse)
+
+    const parsedResult = parseXmlRpcResponse(rpcResponse)
+    if (parsedResult?.faultCode !== undefined) {
+      const error = new Error('XML-RPC fault: ' + parsedResult.faultString)
+      error.faultCode = parsedResult.faultCode
+      error.faultString = parsedResult.faultString
+      throw error
+    } else {
+      return parsedResult
+    }
+  }
 
   return {
-    isSecure: isSecureClient,
-    methodCall: async function (methodName, params = []) {
-      const body = buildXmlRpcCall(methodName, params)
-      // TRACE - debug XML-RPC request
-      // console.log('XML-RPC Request Body:', body)
-
-      const requestOptions = {
-        method: 'POST',
-        headers: {
-          Accept: 'text/xml, application/xml',
-          'Content-Type': 'text/xml',
-          'Content-Length': Buffer.byteLength(body),
-          ...headers
-        },
-        dispatcher,
-        body
-      }
-      const response = await fetch(prefixUrl, requestOptions)
-      const rpcResponse = await response.text()
-
-      // TRACE - debug XML-RPC request
-      // console.log('XML-RPC response:', rpcResponse)
-
-      const parsedResult = parseXmlRpcResponse(rpcResponse)
-      if (parsedResult?.faultCode !== undefined) {
-        const error = new Error('XML-RPC fault: ' + parsedResult.faultString)
-        error.faultCode = parsedResult.faultCode
-        error.faultString = parsedResult.faultString
-        throw error
-      } else {
-        return parsedResult
-      }
-    }
+    connection,
+    methodCall
   }
 }
