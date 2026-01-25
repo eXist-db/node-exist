@@ -2,17 +2,17 @@ import { test, describe, it } from 'node:test'
 import assert from 'node:assert'
 import { readFileSync } from 'fs'
 import semverGt from 'semver/functions/gt.js'
-import { connect } from '../../index.js'
+import { getXmlRpcClient } from '../../index.js'
 import { envOptions } from '../connection.js'
 
 await describe('binary document', async function () {
   const path = '/db/test.txt'
   const content = Buffer.from('test')
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
 
   await it('should upload', async function () {
     try {
-      const db = connect(envOptions)
+      const db = getXmlRpcClient(envOptions)
       const fh = await db.documents.upload(content, content.length)
       assert.ok(fh >= 0, 'returned filehandle:' + fh)
       const r = await db.documents.parseLocal(fh, path)
@@ -33,7 +33,7 @@ await describe('binary document', async function () {
 })
 
 await test('upload invalid XML', async function () {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const buffer = readFileSync('spec/files/invalid.xml')
 
   try {
@@ -47,7 +47,7 @@ await test('upload invalid XML', async function () {
 })
 
 await describe('valid XML', async function () {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const version = await db.server.version()
   const remoteFileName = '/test.xml'
   const contents = readFileSync('spec/files/test.xml')
@@ -188,7 +188,7 @@ await test('non well formed XML will not be uploaded as binary', async function 
 
 await test('upload document with duplicate xml:id', async function () {
   try {
-    const db = connect(envOptions)
+    const db = getXmlRpcClient(envOptions)
     const buffer = Buffer.from('<root><item xml:id="i1" /><item xml:id="i1" /></root>')
 
     await db.collections.create('/db/tmp')

@@ -2,7 +2,7 @@ import fs from 'fs'
 import { test, describe, it } from 'node:test'
 import assert from 'node:assert'
 import * as app from '../../components/app.js'
-import { connect } from '../../index.js'
+import { getXmlRpcClient } from '../../index.js'
 import { envOptions } from '../connection.js'
 
 test('app component exports install method', () => {
@@ -18,7 +18,7 @@ test('app component exports upload method', () => {
 })
 
 await describe('upload and install application XAR', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
 
   const xarBuffer = fs.readFileSync('spec/files/test-app.xar')
   const xarName = 'test-app.xar'
@@ -55,7 +55,7 @@ await describe('upload and install application XAR', async () => {
 })
 
 await describe('empty application XAR', async () => {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
 
   const xarBuffer = Buffer.from('')
   const xarName = 'test-empty-app.xar'

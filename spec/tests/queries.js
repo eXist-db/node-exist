@@ -1,10 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert'
-import { connect } from '../../index.js'
+import { getXmlRpcClient } from '../../index.js'
 import { envOptions } from '../connection.js'
 
 await test('call remote procedure through methodCall', async function () {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   let resultHandle = null
   const queryString = '<result>{for $i in (1,2) return <i>{$i + $a}</i>}</result>'
   const queryOptions = { variables: { a: 1 } }
@@ -25,7 +25,7 @@ await test('call remote procedure through methodCall', async function () {
 })
 
 await test('call promised query', async function () {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const queryString = 'for $i in (1, 2, 3) return $i'
   const options = { start: 2, limit: 1 }
   const expectedResult = '<exist:result xmlns:exist="http://exist.sourceforge.net/NS/exist" hits="3" start="2" count="1">\n<exist:value type="xs:integer">2</exist:value>\n</exist:result>'
@@ -39,7 +39,7 @@ await test('call promised query', async function () {
 })
 
 await test('call queryAll method', async function () {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const queryString = 'for $i in (1,2) return $i + $a'
   const queryOptions = { variables: { a: 10 } }
   const expectedResult = '11,12'
@@ -55,7 +55,7 @@ await test('call queryAll method', async function () {
 })
 
 await test('call queryAll method without options', async function () {
-  const db = connect(envOptions)
+  const db = getXmlRpcClient(envOptions)
   const queryString = 'for $i in (1,2) return $i + 10'
   const expectedResult = '11,12'
 

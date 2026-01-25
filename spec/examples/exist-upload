@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 import { argv } from 'process'
 import yargs from 'yargs'
+import fg from 'fast-glob'
+import Bottleneck from 'bottleneck'
 
 import { statSync, createReadStream, existsSync, readFileSync } from 'fs'
 import { resolve } from 'path'
 
 // read connection options from ENV
 import { connect, getRestClient } from '../../index.js'
+import { envOptions as connectionOptions } from '../connection.js'
 
 const stringList = {
   type: 'string',
@@ -18,7 +21,7 @@ const stringList = {
 }
 
 async function getUserInfo (db) {
-  const { user } = db.client.options.basic_auth
+  const { user } = db.client
   return await db.users.getUserInfo(user)
 }
 
@@ -37,7 +40,7 @@ async function uploadResource (db, rc, verbose, path, root, baseCollection) {
       console.log(`✔︎ ${path} uploaded`)
     }
   } catch (e) {
-    if (e.response.statusCode === 400 && verbose) {
+    if (e.statusCode === 400 && verbose) {
       // resend to get validation report
       // @see https://github.com/eXist-db/exist/issues/4482
       const fileContents = readFileSync(localFilePath)
@@ -102,8 +105,8 @@ async function uploadFileOrFolder (db, rc, source, target, options) {
 
   if (options.verbose) {
     console.log('Uploading:', source, 'to', target)
-    console.log('Sever:', (db.client.isSecure ? 'https' : 'http') + '://' + db.client.options.host + ':' + db.client.options.port)
-    console.log('User:', db.client.options.basic_auth.user)
+    console.log('Sever:', db.client.server)
+    console.log('User:', db.client.user)
     if (options.include.length > 1 || options.include[0] !== '**') { console.log('Include:\n', ...options.include, '\n') }
     if (options.exclude.length) {
       console.log('Exclude:\n', ...options.exclude, '\n')
@@ -127,8 +130,6 @@ async function uploadFileOrFolder (db, rc, source, target, options) {
     console.log(`uploaded ${source} in ${Date.now() - start}ms`)
     return 0
   }
-
-  const fg = (await import('fast-glob')).default
 
   const globbingOptions = { ignore: options.exclude, unique: true, cwd: source }
   const collectionGlob = Object.assign({ onlyDirectories: true }, globbingOptions)
@@ -182,7 +183,6 @@ async function uploadFileOrFolder (db, rc, source, target, options) {
   // ensure target collection exists
   collections.unshift('')
 
-  const Bottleneck = (await import('bottleneck/es5')).default
   const limiter = new Bottleneck({
     // also use maxConcurrent and/or minTime for safety
     maxConcurrent: options.threads,
@@ -284,7 +284,6 @@ Usage:
       throw Error(source + ' not found!')
     }
 
-    const { envOptions: connectionOptions } = await import('../connection.js')
     const db = connect(connectionOptions)
     const rc = await getRestClient(connectionOptions)
 

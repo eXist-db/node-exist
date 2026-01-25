@@ -1,11 +1,16 @@
 import { createXmlRpcClient } from './xmlrpc-client.js'
+import { createExistClient } from './undici-exist-client.js'
 
 /**
- * @typedef {import('./xmlrpc-client.js').XmlRpcClient} XmlRpcClient
+ * @typedef { import('./undici-exist-client.js').ConnectionOptions } ConnectionOptions
  */
 
 /**
- * @typedef { import("got").Got } Got
+ * @typedef { import("./undici-exist-client.js").Connection } Connection
+ */
+
+/**
+ * @typedef { import('./xmlrpc-client.js').XmlRpcClient } XmlRpcClient
  */
 
 /**
@@ -20,9 +25,10 @@ import { createXmlRpcClient } from './xmlrpc-client.js'
 
 /**
  * @typedef {Object} MergedOptions
- * @prop {string} prefixUrl full URL prefix for requests
+ * @prop {string} user the user account name connecting to the database
+ * @prop {string} server full URL prefix for requests
  * @prop {Object} headers base headers for requests
- * @prop {boolean} isSecureClient indicates if connection is using an encrypted channel (https)
+ * @prop {boolean} secure indicates if connection is using an encrypted channel (https)
  * @prop {boolean} [rejectUnauthorized] enforce valid SSL certs, if https: is used
  */
 
@@ -30,19 +36,19 @@ import { createXmlRpcClient } from './xmlrpc-client.js'
  * Default REST endpoint
  * @type {string}
  */
-const defaultRestEndpoint = '/exist/rest'
+export const defaultRestEndpoint = '/exist/rest'
 
 /**
  * Default XML-RPC endpoint
  * @type {string}
  */
-const defaultXmlrpcEndpoint = '/exist/xmlrpc'
+export const defaultXmlrpcEndpoint = '/exist/xmlrpc'
 
 /**
  * Default connection options
  * @type {NodeExistConnectionOptions}
  */
-const defaultConnectionOptions = {
+export const defaultConnectionOptions = {
   basic_auth: {
     user: 'guest',
     pass: 'guest'
@@ -53,22 +59,13 @@ const defaultConnectionOptions = {
 }
 
 /**
- * get REST client
+ * create a REST client to interact with an exist-db instance
  * @param {NodeExistConnectionOptions} [options] connection options
- * @returns {Got<never>} Extended HTTP client instance
+ * @returns {Connection} Extended HTTP client instance
  */
-async function restConnection (options) {
-  const { got } = await import('got')
-  /* eslint camelcase: "off" */
-  const { prefixUrl, headers, rejectUnauthorized } = mergeOptions(defaultRestEndpoint, options)
-
-  const httpClientOptions = {
-    prefixUrl,
-    headers: { ...headers },
-    https: { rejectUnauthorized }
-  }
-
-  return got.extend(httpClientOptions)
+export function rest (options) {
+  const mergedOptions = mergeOptions(defaultRestEndpoint, options)
+  return createExistClient(mergedOptions)
 }
 
 /**
@@ -76,7 +73,7 @@ async function restConnection (options) {
  * @prop {{user:string, pass:string}} auth database user credentials
  * @returns {string} header value
  */
-export function basicAuth (auth) {
+function basicAuth (auth) {
   return 'Basic ' + Buffer.from(`${auth.user}:${auth.pass}`).toString('base64')
 }
 
@@ -85,7 +82,7 @@ export function basicAuth (auth) {
  * @param {NodeExistConnectionOptions} [options] connection options
  * @returns {XmlRpcClient} The XMLRPC-client connected to the database with the given options
  */
-function connect (options) {
+export function xmlrpc (options) {
   const mergedOptions = mergeOptions(defaultXmlrpcEndpoint, options)
   return createXmlRpcClient(mergedOptions)
 }
@@ -109,30 +106,33 @@ function mergeOptions (path, options) {
   }
 
   const isLocalDb = checkIfLocalHost(mergedOptions.host)
-  const isSecureClient = useSecureConnection(mergedOptions.protocol)
+  const encrypted = useEncryptedChannel(mergedOptions.protocol)
   const rejectUnauthorized = 'rejectUnauthorized' in mergedOptions
     ? mergedOptions.rejectUnauthorized
-    : !(isLocalDb && isSecureClient)
+    : !(isLocalDb && encrypted)
 
   if (!isLocalDb) {
-    if (!isSecureClient) {
+    if (!encrypted) {
       console.warn('Connecting to remote DB using an unencrypted channel.')
     }
     if (('rejectUnauthorized' in mergedOptions) && !mergedOptions.rejectUnauthorized) {
       console.warn('Connecting to remote DB allowing invalid certificate.')
     }
   }
-  const prefixUrl = `${mergedOptions.protocol}//${mergedOptions.host}${(mergedOptions.port ? ':' + mergedOptions.port : '')}${mergedOptions.path}`
+  const server = `${mergedOptions.protocol}//${mergedOptions.host}${(mergedOptions.port ? ':' + mergedOptions.port : '')}${mergedOptions.path}`
   const headers = {
     'user-agent': 'node-exist',
     authorization: basicAuth(mergedOptions.basic_auth)
   }
 
+  const user = mergedOptions.basic_auth.user
+
   return {
-    prefixUrl,
+    server,
     headers,
     rejectUnauthorized,
-    isSecureClient
+    secure: encrypted,
+    user
   }
 }
 
@@ -154,7 +154,7 @@ function checkIfLocalHost (host) {
  * @param {string} protocol must end in colon
  * @returns {boolean} true, if encrypted connection
  */
-function useSecureConnection (protocol) {
+function useEncryptedChannel (protocol) {
   return protocol === 'https:'
 }
 
@@ -164,7 +164,7 @@ function useSecureConnection (protocol) {
  * have a separate set of defaults.
  * @returns {NodeExistConnectionOptions}
  */
-function readOptionsFromEnv () {
+export function readOptionsFromEnv () {
   const environmentOptions = {}
 
   if (process.env.EXISTDB_USER && 'EXISTDB_PASS' in process.env) {
@@ -188,13 +188,4 @@ function readOptionsFromEnv () {
   }
 
   return environmentOptions
-}
-
-export {
-  connect,
-  readOptionsFromEnv,
-  restConnection,
-  defaultConnectionOptions,
-  defaultXmlrpcEndpoint,
-  defaultRestEndpoint
 }
