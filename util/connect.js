@@ -135,8 +135,9 @@ function mergeOptions (path, options) {
 function checkIfLocalHost (host) {
   return (
     host === 'localhost' ||
-    host === '127.0.0.1' || // TODO: 127.0.1.1 is also local
-    host === '[::1]' // TODO: match all ipv6 addresses considered local
+    host.startsWith('127.') || // any ipv4 loopback address
+    host === '[::1]' || // ipv6 loopback
+    host.startsWith('[::ffff:127.') // any ipv6 mapped ipv4 loopback address
   )
 }
 
