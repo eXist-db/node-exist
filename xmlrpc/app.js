@@ -42,7 +42,7 @@ function upload (client, xarBuffer, xarName) {
       return collections.create(client, packageCollection)
     })
     // package operations can take long, they must never time out
-    .then(_ => documents.upload(client, xarBuffer, { timeout: 0 }))
+    .then(() => documents.upload(client, xarBuffer, { timeout: 0 }))
     .then(fh => documents.parseLocal(client, fh, `${packageCollection}/${xarName}`, { timeout: 0 }))
     .then(success => { return { success } })
     .catch(error => { return { success: false, error } })

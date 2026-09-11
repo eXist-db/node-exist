@@ -236,7 +236,7 @@ const db = getXmlRpcClient({
   this is set automatically, because it is impossible to have trusted certificates
   for local hosts.
 
-- Give up on requests that take longer than **ten minutes**
+- Give up on requests that take longer than ten minutes
   ```js
   {
     timeout: 600000

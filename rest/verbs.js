@@ -125,16 +125,12 @@ async function post (client, query, rawPath, options) {
   const properties = []
   const { timeout, ...queryOptions } = options ?? {}
 
-  for (const attributeIndex in postAttributeNames) {
-    const attributeName = postAttributeNames[attributeIndex]
-    if (attributeName in queryOptions) {
-      attributes.push(`${attributeName}="${queryOptions[attributeName]}"`)
-      delete queryOptions[attributeName]
+  for (const [name, value] of Object.entries(queryOptions)) {
+    if (postAttributeNames.includes(name)) {
+      attributes.push(`${name}="${value}"`)
+    } else {
+      properties.push(`<property name="${name}" value="${value}"/>`)
     }
-  }
-
-  for (const option in queryOptions) {
-    properties.push(`<property name="${option}" value="${queryOptions[option]}"/>`)
   }
 
   const body = `<query xmlns="http://exist.sourceforge.net/NS/exist"
