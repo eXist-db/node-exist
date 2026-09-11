@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20, 22, 24]
+        node-version: [22, 24, 26]
         exist-version: [4.10.0, 5.4.1, release]
         experimental: [false]
         include:

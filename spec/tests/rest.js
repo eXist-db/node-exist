@@ -344,6 +344,41 @@ return $r
   })
 })
 
+// a string has fewer characters than bytes as soon as it contains non-ASCII characters
+await describe('with rest client and non-ASCII content', async function () {
+  const testCollection = '/db/rest-test-non-ascii'
+  const text = 'äöü € 😀'
+
+  const db = getXmlRpcClient(envOptions)
+  const rc = getRestClient(envOptions)
+
+  await db.collections.create(testCollection)
+
+  await it('create file from non-ASCII string returns Created and reads back unchanged', async function () {
+    const res = await rc.put(text, 'db/rest-test-non-ascii/from-string.txt')
+    assert.strictEqual(res.statusCode, 201)
+    const { bodyText } = await rc.get('db/rest-test-non-ascii/from-string.txt')
+    assert.strictEqual(bodyText, text)
+  })
+
+  await it('create XML file from non-ASCII string returns Created', async function () {
+    const res = await rc.put(`<p>${text}</p>`, 'db/rest-test-non-ascii/from-string.xml')
+    assert.strictEqual(res.statusCode, 201)
+    const { bodyText } = await rc.get('db/rest-test-non-ascii/from-string.xml')
+    assert.match(bodyText, /<p>äöü € 😀<\/p>/)
+  })
+
+  await it('post query with non-ASCII characters', async function () {
+    const res = await rc.post(`"${text}"`, 'db/rest-test-non-ascii')
+    assert.strictEqual(res.statusCode, 200)
+    assert.match(res.bodyText, /äöü € 😀/)
+  })
+
+  await it('teardown', async _ => {
+    await db.collections.remove(testCollection)
+  })
+})
+
 await describe('with rest client over http', async function () {
   const modifiedOptions = Object.assign({ protocol: 'http:', port: '8080' }, envOptions)
   const rc = getRestClient(modifiedOptions)
