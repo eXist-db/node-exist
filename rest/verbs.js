@@ -1,10 +1,11 @@
 import { types } from 'node:util'
-import { Readable, Writable } from 'node:stream'
+import { Writable } from 'node:stream'
 import { getMimeType } from '../util/mime.js'
 import { requestTimeouts } from '../util/exist-client.js'
 
 /**
  * @typedef { import("undici").Client } Client
+ * @typedef { import("node:stream").Readable } Readable
  */
 
 const isGeneratorFunction = types.isGeneratorFunction
@@ -32,15 +33,6 @@ async function put (client, body, rawPath, mimetype) {
     'content-type': getMimeType(rawPath, mimetype)
   }
 
-  if (body instanceof Readable) {
-    return client.request({
-      method: 'PUT',
-      path,
-      headers,
-      body
-    })
-  }
-
   if (isGeneratorFunction(body)) {
     return client.request({
       method: 'PUT',
@@ -50,13 +42,12 @@ async function put (client, body, rawPath, mimetype) {
     })
   }
 
+  // no content-length header: undici derives it from the body in bytes,
+  // body.length counts the characters of a string
   return client.request({
     method: 'PUT',
     path,
-    headers: {
-      ...headers,
-      'content-length': body.length
-    },
+    headers,
     body
   })
 }
@@ -156,12 +147,12 @@ async function post (client, query, rawPath, options) {
   </properties>
 </query>`
 
+  // no content-length header: undici derives it from the body in bytes
   const response = await client.request({
     method: 'POST',
     path,
     headers: {
-      'content-type': 'application/xml',
-      'content-length': body.length
+      'content-type': 'application/xml'
     },
     body,
     ...requestTimeouts(timeout)
