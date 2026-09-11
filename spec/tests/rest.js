@@ -273,7 +273,12 @@ return $r
     }
   })
 
-  await it('post honors start and max', async function () {
+  // eXist-db 7.0.0-SNAPSHOT ignores the start and max attributes of a posted query
+  // https://github.com/eXist-db/exist/issues/6560
+  const paginationIgnored = parseInt(await db.server.version(), 10) >= 7 &&
+    'eXist-db 7 ignores start and max, see eXist-db/exist#6560'
+
+  await it('post honors start and max', { todo: paginationIgnored }, async function () {
     try {
       const res = await rc.post(xqueryMainModule, 'db/rest-test', { start: 1, max: 1 })
       assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
@@ -290,7 +295,7 @@ return $r
     }
   })
 
-  await it('post honors just start', async function () {
+  await it('post honors just start', { todo: paginationIgnored }, async function () {
     try {
       const res = await rc.post(xqueryMainModule, 'db/rest-test', { start: 2 })
       assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)
@@ -306,7 +311,7 @@ return $r
     }
   })
 
-  await it('post honors cache', async function () {
+  await it('post honors cache', { todo: paginationIgnored }, async function () {
     try {
       const res = await rc.post(xqueryMainModule, 'db/rest-test', { cache: 'yes', start: 1, max: 1 })
       assert.strictEqual(res.statusCode, 200, 'server responded with status ' + res.statusCode)

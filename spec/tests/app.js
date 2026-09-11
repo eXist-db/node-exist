@@ -68,7 +68,10 @@ await describe('empty application XAR', async () => {
   await it('install app', async () => {
     const response = await db.app.install(xarName)
     assert.strictEqual(response.success, false)
-    assert.strictEqual(response.error.message, `experr:EXPATH00 Missing descriptor from package: ${app.packageCollection}/test-empty-app.xar`)
+    const { message } = response.error
+    // eXist-db 7 reports EXPATH007 and prefixes the description
+    assert.ok(message.startsWith('experr:EXPATH00'), message)
+    assert.ok(message.endsWith(`Missing descriptor from package: ${app.packageCollection}/test-empty-app.xar`), message)
   })
 
   await it('cleanup', async () => {

@@ -52,6 +52,12 @@ await describe('valid XML', async function () {
   const remoteFileName = '/test.xml'
   const contents = readFileSync('spec/files/test.xml')
 
+  // eXist-db 7 keeps the XML declaration stored with a document unless the
+  // custom omit-original-xml-declaration is set, omit-xml-declaration alone
+  // does not remove it. Pending https://github.com/eXist-db/exist/pull/6277
+  const storedDeclarationKept = parseInt(version, 10) >= 7 &&
+    'eXist-db 7 keeps the stored XML declaration, see eXist-db/exist#6277'
+
   await it('can be uploaded', async function () {
     try {
       const fh = await db.documents.upload(contents)
@@ -65,7 +71,7 @@ await describe('valid XML', async function () {
     }
   })
 
-  await it('read with empty options uses defaults', async function () {
+  await it('read with empty options uses defaults', { todo: storedDeclarationKept }, async function () {
     try {
       const contentBuffer = await db.documents.read(remoteFileName, {})
       const lines = contents.toString().split('\n')
@@ -83,7 +89,7 @@ await describe('valid XML', async function () {
     }
   })
 
-  await it('read without passing options', async function () {
+  await it('read without passing options', { todo: storedDeclarationKept }, async function () {
     try {
       // calling read with just one argument, effectively passing null for options
       const contentBuffer = await db.documents.read(remoteFileName)
@@ -102,7 +108,7 @@ await describe('valid XML', async function () {
     }
   })
 
-  await it('serialized without XML declaration', async function () {
+  await it('serialized without XML declaration', { todo: storedDeclarationKept }, async function () {
     try {
       const options = { 'omit-xml-declaration': 'yes' }
       const lines = contents.toString().split('\n')
