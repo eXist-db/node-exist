@@ -41,8 +41,9 @@ function upload (client, xarBuffer, xarName) {
       }
       return collections.create(client, packageCollection)
     })
-    .then(_ => documents.upload(client, xarBuffer))
-    .then(fh => documents.parseLocal(client, fh, `${packageCollection}/${xarName}`, {}))
+    // package operations can take long, they must never time out
+    .then(_ => documents.upload(client, xarBuffer, { timeout: 0 }))
+    .then(fh => documents.parseLocal(client, fh, `${packageCollection}/${xarName}`, { timeout: 0 }))
     .then(success => { return { success } })
     .catch(error => { return { success: false, error } })
 }
@@ -58,7 +59,7 @@ function upload (client, xarBuffer, xarName) {
  */
 function install (client, xarName, customPackageRepoUrl) {
   const publicRepoURL = customPackageRepoUrl || defaultPackageRepo
-  const queryOptions = { variables: { xarPath: `${packageCollection}/${xarName}`, publicRepoURL } }
+  const queryOptions = { variables: { xarPath: `${packageCollection}/${xarName}`, publicRepoURL }, timeout: 0 }
 
   return queries.readAll(client, installQueryString, queryOptions)
     .then(result => JSON.parse(result.pages.toString()))
@@ -84,7 +85,7 @@ function install (client, xarName, customPackageRepoUrl) {
  */
 function deploy (client, packageUri) {
   const installQueryString = 'repo:deploy($packageUri)'
-  const queryOptions = { variables: { packageUri } }
+  const queryOptions = { variables: { packageUri }, timeout: 0 }
 
   return queries.readAll(client, installQueryString, queryOptions)
     .then(result => result.pages.toString())
@@ -100,7 +101,7 @@ function deploy (client, packageUri) {
  * @returns {NormalizedQueryResult} the result of the action
  */
 function remove (client, packageUri) {
-  const queryOptions = { variables: { packageUri } }
+  const queryOptions = { variables: { packageUri }, timeout: 0 }
   return queries.readAll(client, removeQueryString, queryOptions)
     .then(result => JSON.parse(result.pages.toString()))
     .catch(error => { return { success: false, error } })

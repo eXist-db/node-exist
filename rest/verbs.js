@@ -1,6 +1,7 @@
 import { types } from 'node:util'
 import { Readable, Writable } from 'node:stream'
 import { getMimeType } from '../util/mime.js'
+import { requestTimeouts } from '../util/exist-client.js'
 
 /**
  * @typedef { import("undici").Client } Client
@@ -124,26 +125,25 @@ function extendIfWrapped (response, bodyText) {
  * @param {Client} client REST interface with a database instance
  * @param {string | Buffer } query XQuery main module
  * @param {string} rawPath context path
- * @param {Object} [options] query options
+ * @param {Object} [options] query options, "timeout" overrides the connection timeout and is not sent to the database
  * @returns {Promise<any>} Response with headers and exist specific values
  */
 async function post (client, query, rawPath, options) {
   const path = normalizeDBPath(rawPath)
   const attributes = []
   const properties = []
+  const { timeout, ...queryOptions } = options ?? {}
 
-  if (options) {
-    for (const attributeIndex in postAttributeNames) {
-      const attributeName = postAttributeNames[attributeIndex]
-      if (attributeName in options) {
-        attributes.push(`${attributeName}="${options[attributeName]}"`)
-        delete options[attributeName]
-      }
+  for (const attributeIndex in postAttributeNames) {
+    const attributeName = postAttributeNames[attributeIndex]
+    if (attributeName in queryOptions) {
+      attributes.push(`${attributeName}="${queryOptions[attributeName]}"`)
+      delete queryOptions[attributeName]
     }
+  }
 
-    for (const option in options) {
-      properties.push(`<property name="${option}" value="${options[option]}"/>`)
-    }
+  for (const option in queryOptions) {
+    properties.push(`<property name="${option}" value="${queryOptions[option]}"/>`)
   }
 
   const body = `<query xmlns="http://exist.sourceforge.net/NS/exist"
@@ -163,7 +163,8 @@ async function post (client, query, rawPath, options) {
       'content-type': 'application/xml',
       'content-length': body.length
     },
-    body
+    body,
+    ...requestTimeouts(timeout)
   })
   const bodyText = await response.body.text()
   return Promise.resolve(extendIfWrapped(response, bodyText))

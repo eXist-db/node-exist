@@ -1,4 +1,4 @@
-import { createExistClient } from '../util/exist-client.js'
+import { createExistClient, requestTimeouts } from '../util/exist-client.js'
 
 /**
  * @typedef { import("../util/exist-client.js").Connection } Connection
@@ -7,7 +7,7 @@ import { createExistClient } from '../util/exist-client.js'
 /**
  * @typedef {Object} XmlRpcClient
  * @prop {Connection} connection underlying connection
- * @prop {(methodName: string, params: Array) => Promise} methodCall makes an XML-RPC method call to the connected server
+ * @prop {(methodName: string, params: Array, callOptions?: {timeout?: number}) => Promise} methodCall makes an XML-RPC method call to the connected server
  */
 
 // Map to escape XML special characters
@@ -390,16 +390,23 @@ function parseXmlRpcResponse (xmlResponse) {
  * @param {import('../util/exist-client.js').ConnectionOptions} options connection options
  * @returns {XmlRpcClient} XML-RPC client
  */
-export function createXmlRpcClient ({ server, headers, rejectUnauthorized, user, secure }) {
+export function createXmlRpcClient ({ server, headers, rejectUnauthorized, user, secure, timeout }) {
   const xmlrpcHeaders = {
     Accept: 'text/xml, application/xml',
     'Content-Type': 'text/xml',
     ...headers
   }
 
-  const connection = createExistClient({ server, headers: xmlrpcHeaders, rejectUnauthorized, user, secure, throwOnError: false })
+  const connection = createExistClient({ server, headers: xmlrpcHeaders, rejectUnauthorized, user, secure, timeout, throwOnError: false })
   const { client } = connection
-  const methodCall = async function (methodName, params = []) {
+  /**
+   * Call a remote procedure
+   * @param {string} methodName name of the remote procedure
+   * @param {Array} [params] parameters of the call
+   * @param {{timeout?: number}} [callOptions] "timeout" overrides the connection timeout for this call, 0 waits indefinitely
+   * @returns {Promise<any>} parsed result
+   */
+  const methodCall = async function (methodName, params = [], callOptions) {
     const body = buildXmlRpcCall(methodName, params)
     // TRACE - debug XML-RPC request
     // console.log('XML-RPC Request Body:', body)
@@ -409,7 +416,8 @@ export function createXmlRpcClient ({ server, headers, rejectUnauthorized, user,
       headers: {
         'Content-Length': Buffer.byteLength(body)
       },
-      body
+      body,
+      ...requestTimeouts(callOptions?.timeout)
     }
     const response = await client.request(requestOptions)
     const rpcResponse = await response.body.text()

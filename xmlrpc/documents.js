@@ -8,10 +8,11 @@ import { getMimeType } from '../util/mime.js'
  * Upload a document to the database
  * @param {XmlRpcClient} client XML-RPC client instance
  * @param {Buffer} contentBuffer the buffer to upload
+ * @param {{timeout: number}} [options] "timeout" overrides the connection timeout
  * @returns {Promise<string>} document handle
  */
-function upload (client, contentBuffer) {
-  return client.methodCall('upload', [contentBuffer, contentBuffer.length])
+function upload (client, contentBuffer, options = {}) {
+  return client.methodCall('upload', [contentBuffer, contentBuffer.length], { timeout: options?.timeout })
 }
 
 /**
@@ -19,7 +20,7 @@ function upload (client, contentBuffer) {
  * @param {XmlRpcClient} client XML-RPC client instance
  * @param {string} handle upload handle
  * @param {string} filename local filename
- * @param {{mimetype: string, replace: boolean}} [options] override mimetype and disallow replacing an existing document
+ * @param {{mimetype: string, replace: boolean, timeout: number}} [options] override mimetype, disallow replacing an existing document, override the connection timeout
  * @returns {Promise<string>} document name/path in the database
  */
 function parseLocal (client, handle, filename, options = {}) {
@@ -27,7 +28,7 @@ function parseLocal (client, handle, filename, options = {}) {
   const mimeType = getMimeType(filename, options && options.mimetype ? options.mimetype : null)
   const replace = options && options.replace ? options.replace : true
 
-  return client.methodCall('parseLocal', [handle, filename, replace, mimeType])
+  return client.methodCall('parseLocal', [handle, filename, replace, mimeType], { timeout: options?.timeout })
 }
 
 /**
