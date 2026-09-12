@@ -236,6 +236,19 @@ const db = getXmlRpcClient({
   this is set automatically, because it is impossible to have trusted certificates
   for local hosts.
 
+- Give up on requests that take longer than ten minutes
+  ```js
+  {
+    timeout: 600000
+  }
+  ```
+  `timeout` is in milliseconds and applies both to waiting for the response
+  headers and to the pause between two chunks of the response body.
+  The default, `0`, waits indefinitely, so long running queries are not cut
+  off by the client. Queries and REST `post` accept a `timeout` in their
+  options that overrides it for a single call.
+  Package operations (`db.app.*`) never time out.
+
 ### Read options from environment
 
 `readOptionsFromEnv` offers a comfortable way to read the connection options
@@ -246,6 +259,7 @@ from a set of environment variables
 | `EXISTDB_USER` | _none_ | the user used to connect to the database and to execute queries with
 | `EXISTDB_PASS` | _none_ | the password to authenticate the user against the database
 | `EXISTDB_SERVER` | `https://localhost:8443` | the URL of the database instance to connect to (only http and https protocol allowed)
+| `EXISTDB_TIMEOUT` | _none_ (waits indefinitely) | milliseconds before a request times out, `0` waits indefinitely
 
 **NOTE:** In order to connect to an instance as a user other than `guest`
 _both_ `EXISTDB_USER` _and_ `EXISTDB_PASS` have to be set!
@@ -267,6 +281,15 @@ Every method returns a promise.
 ### Queries
 
 Status: working
+
+`execute`, `read` and `readAll` accept a `timeout` in `options`, in
+milliseconds (`0` waits indefinitely). It overrides the connection
+[timeout](#connection-options) for this query only and is not sent to the
+database.
+
+```js
+db.queries.readAll(query, { variables, timeout: 0 })
+```
 
 #### execute
 

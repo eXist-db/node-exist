@@ -1,9 +1,11 @@
 import { types } from 'node:util'
-import { Readable, Writable } from 'node:stream'
+import { Writable } from 'node:stream'
 import { getMimeType } from '../util/mime.js'
+import { requestTimeouts } from '../util/exist-client.js'
 
 /**
  * @typedef { import("undici").Client } Client
+ * @typedef { import("node:stream").Readable } Readable
  */
 
 const isGeneratorFunction = types.isGeneratorFunction
@@ -31,15 +33,6 @@ async function put (client, body, rawPath, mimetype) {
     'content-type': getMimeType(rawPath, mimetype)
   }
 
-  if (body instanceof Readable) {
-    return client.request({
-      method: 'PUT',
-      path,
-      headers,
-      body
-    })
-  }
-
   if (isGeneratorFunction(body)) {
     return client.request({
       method: 'PUT',
@@ -49,13 +42,12 @@ async function put (client, body, rawPath, mimetype) {
     })
   }
 
+  // no content-length header: undici derives it from the body in bytes,
+  // body.length counts the characters of a string
   return client.request({
     method: 'PUT',
     path,
-    headers: {
-      ...headers,
-      'content-length': body.length
-    },
+    headers,
     body
   })
 }
@@ -124,25 +116,20 @@ function extendIfWrapped (response, bodyText) {
  * @param {Client} client REST interface with a database instance
  * @param {string | Buffer } query XQuery main module
  * @param {string} rawPath context path
- * @param {Object} [options] query options
+ * @param {Object} [options] query options, "timeout" overrides the connection timeout and is not sent to the database
  * @returns {Promise<any>} Response with headers and exist specific values
  */
 async function post (client, query, rawPath, options) {
   const path = normalizeDBPath(rawPath)
   const attributes = []
   const properties = []
+  const { timeout, ...queryOptions } = options ?? {}
 
-  if (options) {
-    for (const attributeIndex in postAttributeNames) {
-      const attributeName = postAttributeNames[attributeIndex]
-      if (attributeName in options) {
-        attributes.push(`${attributeName}="${options[attributeName]}"`)
-        delete options[attributeName]
-      }
-    }
-
-    for (const option in options) {
-      properties.push(`<property name="${option}" value="${options[option]}"/>`)
+  for (const [name, value] of Object.entries(queryOptions)) {
+    if (postAttributeNames.includes(name)) {
+      attributes.push(`${name}="${value}"`)
+    } else {
+      properties.push(`<property name="${name}" value="${value}"/>`)
     }
   }
 
@@ -156,14 +143,15 @@ async function post (client, query, rawPath, options) {
   </properties>
 </query>`
 
+  // no content-length header: undici derives it from the body in bytes
   const response = await client.request({
     method: 'POST',
     path,
     headers: {
-      'content-type': 'application/xml',
-      'content-length': body.length
+      'content-type': 'application/xml'
     },
-    body
+    body,
+    ...requestTimeouts(timeout)
   })
   const bodyText = await response.body.text()
   return Promise.resolve(extendIfWrapped(response, bodyText))

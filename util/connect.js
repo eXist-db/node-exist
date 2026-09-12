@@ -21,6 +21,7 @@ import { createExistClient } from './exist-client.js'
  * @prop {string} [port] database port, default: "8443"
  * @prop {string} [path] path to XMLRPC, default: "/exist/xmlrpc"
  * @prop {boolean} [rejectUnauthorized] enforce valid SSL certs, default: true for remote hosts
+ * @prop {number} [timeout] milliseconds to wait for response headers and between body chunks, default: 0 (waits indefinitely)
  */
 
 /**
@@ -123,7 +124,8 @@ function mergeOptions (path, options) {
     headers,
     rejectUnauthorized,
     secure: encrypted,
-    user
+    user,
+    timeout: mergedOptions.timeout
   }
 }
 
@@ -177,6 +179,14 @@ export function readOptionsFromEnv () {
     environmentOptions.protocol = protocol
     environmentOptions.host = hostname
     environmentOptions.port = port
+  }
+
+  if (process.env.EXISTDB_TIMEOUT) {
+    const timeout = process.env.EXISTDB_TIMEOUT
+    if (!/^\d+$/.test(timeout)) {
+      throw new Error('EXISTDB_TIMEOUT must be a number of milliseconds (0 waits indefinitely), got: "' + timeout + '"')
+    }
+    environmentOptions.timeout = parseInt(timeout, 10)
   }
 
   return environmentOptions
