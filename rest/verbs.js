@@ -19,6 +19,49 @@ function normalizeDBPath (path) {
   return path.startsWith('/') ? path.substring(1) : path
 }
 
+const serverMajorVersions = new WeakMap()
+
+/**
+ * major version of the eXist-db instance a client is connected to,
+ * asked for once per client
+ * @param {Client} client undici.Client instance
+ * @returns {Promise<number>} major version, NaN if it could not be determined
+ */
+function serverMajorVersion (client) {
+  if (!serverMajorVersions.has(client)) {
+    const query = new URLSearchParams({ _query: 'system:get-version()', _wrap: 'no' })
+    const majorVersion = client.request({ method: 'GET', path: `db?${query}` })
+      .then(response => response.body.text())
+      .then(version => parseInt(version, 10))
+      .catch(() => NaN)
+    serverMajorVersions.set(client, majorVersion)
+  }
+  return serverMajorVersions.get(client)
+}
+
+/**
+ * undici interceptor closing the connection once the response was received
+ */
+const closeConnectionAfterResponse = dispatch => (opts, handler) => dispatch({ ...opts, reset: true }, handler)
+
+/**
+ * eXist-db 4 (Jetty 9.4.14) can close a connection right after it answered a
+ * streamed upload, without announcing it. The next request on that connection
+ * would fail with "other side closed". Streamed uploads to eXist-db 4 therefore
+ * close their connection, later versions keep reusing it.
+ * @param {Client} client undici.Client instance
+ * @param {any} body contents of the resource
+ * @returns {Promise<Client>} the client to send the upload with
+ */
+async function uploadClient (client, body) {
+  const knownLength = typeof body === 'string' || ArrayBuffer.isView(body) || body instanceof ArrayBuffer
+  if (knownLength) {
+    return client
+  }
+  const majorVersion = await serverMajorVersion(client)
+  return majorVersion < 5 ? client.compose(closeConnectionAfterResponse) : client
+}
+
 /**
  * create resource in DB
  * @param {Client} client undici.Client instance
@@ -29,6 +72,7 @@ function normalizeDBPath (path) {
  */
 async function put (client, body, rawPath, mimetype) {
   const path = normalizeDBPath(rawPath)
+  client = await uploadClient(client, body)
   const headers = {
     'content-type': getMimeType(rawPath, mimetype)
   }
