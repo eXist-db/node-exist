@@ -249,6 +249,18 @@ const db = getXmlRpcClient({
   options that overrides it for a single call.
   Package operations (`db.app.*`) never time out.
 
+- Run up to eight requests in parallel
+  ```js
+  {
+    connections: 8
+  }
+  ```
+  By default a client opens one connection to the server. Over HTTP/1.1 a
+  connection serves one request at a time, so requests made at the same time
+  wait for each other; with `connections` they are spread over that many
+  connections. Over HTTP/2 (`https:` to eXist-db 7 and later) requests share a
+  connection anyway.
+
 ### Read options from environment
 
 `readOptionsFromEnv` offers a comfortable way to read the connection options
@@ -260,6 +272,7 @@ from a set of environment variables
 | `EXISTDB_PASS` | _none_ | the password to authenticate the user against the database
 | `EXISTDB_SERVER` | `https://localhost:8443` | the URL of the database instance to connect to (only http and https protocol allowed)
 | `EXISTDB_TIMEOUT` | _none_ (waits indefinitely) | milliseconds before a request times out, `0` waits indefinitely
+| `EXISTDB_CONNECTIONS` | _none_ (one connection) | how many connections to open to the server, to run requests in parallel
 
 **NOTE:** In order to connect to an instance as a user other than `guest`
 _both_ `EXISTDB_USER` _and_ `EXISTDB_PASS` have to be set!
