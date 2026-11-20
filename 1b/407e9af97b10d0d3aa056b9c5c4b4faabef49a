@@ -1,0 +1,19 @@
+.github/workflows/semantic-release.yml
+  s_7b9e4ef00bedfa::t_5c09120e31e6f3 61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1b407e9af97b10d0d3aa056b9c5c4b4faabef49a",
+  "prompts": {},
+  "sessions": {
+    "s_7b9e4ef00bedfa": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "65123127-91da-457c-8bf8-4a415390b508",
+        "model": "default"
+      },
+      "human_author": "duncdrum <d.paterson@me.com>"
+    }
+  }
+}
