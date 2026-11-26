@@ -48,7 +48,9 @@ await describe('connections after streamed uploads', async () => {
     : 'reuses the connection after a streamed upload'
 
   await it(expectation, async () => {
-    const rc = getRestClient(envOptions)
+    // one connection: the next request reuses it unless the server or the client closed it;
+    // a pool may pick another connection while the first is not marked free yet
+    const rc = getRestClient({ ...envOptions, connections: 1 })
     // the first streamed upload of a client also asks for the server version
     await rc.put(generator, `${collection}/warm-up.txt`)
     requests.length = 0

@@ -255,7 +255,7 @@ const db = getXmlRpcClient({
     connections: 8
   }
   ```
-  A client runs at most `connections` requests at the same time, **16** by
+  A client runs at most `connections` requests at the same time, 16 by
   default. It opens connections as requests need them, up to that many, and
   sends one request at a time over each, over HTTP/1.1 and HTTP/2 (`https:` to
   eXist-db 7 and later) alike. More requests wait in the client until one
