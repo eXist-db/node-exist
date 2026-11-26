@@ -22,7 +22,7 @@ import { createExistClient } from './exist-client.js'
  * @prop {string} [path] path to XMLRPC, default: "/exist/xmlrpc"
  * @prop {boolean} [rejectUnauthorized] enforce valid SSL certs, default: true for remote hosts
  * @prop {number} [timeout] milliseconds to wait for response headers and between body chunks, default: 0 (waits indefinitely)
- * @prop {number} [connections] how many connections to open to the server, to run requests in parallel, default: 1
+ * @prop {number} [connections] at most this many requests run at the same time, over as many connections, default: not limited
  */
 
 /**

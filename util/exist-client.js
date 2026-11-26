@@ -13,19 +13,19 @@ import { Client, Pool, interceptors } from 'undici'
  * @prop {boolean} [rejectUnauthorized=false] enforce valid SSL certs, if https: is used
  * @prop {boolean} [throwOnError=true] controls if the client throws on error
  * @prop {number} [timeout=0] milliseconds to wait for response headers and between body chunks, 0 waits indefinitely
- * @prop {number} [connections=1] how many connections to open to the server; requests share them, more than one lets
- *   requests run in parallel over HTTP/1.1, where each connection serves one request at a time
+ * @prop {number} [connections] at most this many requests run at the same time, over as many connections; when not set,
+ *   one connection serves one request at a time over HTTP/1.1, and as many as the server allows over HTTP/2
  */
 
 /**
  * @typedef {Object} Connection
- * @prop {import("undici").Dispatcher} client underlying undici.Client, or undici.Pool for more than one connection
+ * @prop {import("undici").Dispatcher} client underlying undici.Client, or undici.Pool if connections is set
  * @prop {string} user the user account name connecting to the database
  * @prop {string} server full URL prefix for requests
  * @prop {string} pathname path prefix that is used for requests
  * @prop {boolean} secure indicates if connection is using an encrypted channel (https)
  * @prop {number} timeout milliseconds before a request times out, 0 waits indefinitely
- * @prop {number} connections how many connections are opened to the server
+ * @prop {number} [connections] how many requests run at the same time at most, undefined when not limited
  */
 
 const existRequestInterceptor = (basepath, baseheaders) => dispatch => {
@@ -54,7 +54,7 @@ export function requestTimeouts (timeout) {
  * @param {ClientOptions} options the connection options
  * @returns {Connection} undici.Client instance
  */
-export function createExistClient ({ server, headers, rejectUnauthorized, user, secure, throwOnError = true, timeout, connections = 1 }) {
+export function createExistClient ({ server, headers, rejectUnauthorized, user, secure, throwOnError = true, timeout, connections }) {
   const parsed = new URL(server)
   // path prefix has to be passed in to interceptor
   // client cannot work with anything other than clean origin
@@ -63,7 +63,7 @@ export function createExistClient ({ server, headers, rejectUnauthorized, user, 
   // undici gives up after 300 seconds by default, queries and package
   // installations can take much longer
   const connectionTimeout = timeout ?? 0
-  if (!Number.isInteger(connections) || connections < 1) {
+  if (connections !== undefined && (!Number.isInteger(connections) || connections < 1)) {
     throw new Error('connections must be a positive integer, got: ' + connections)
   }
   const clientOptions = {
@@ -74,11 +74,14 @@ export function createExistClient ({ server, headers, rejectUnauthorized, user, 
       rejectUnauthorized
     }
   }
-  // one Client serves one request at a time over HTTP/1.1 (XML-RPC POSTs are never pipelined),
-  // a Pool spreads them over several connections
-  const dispatcher = connections === 1
+  // Without a limit one Client serves one request at a time over HTTP/1.1 (XML-RPC POSTs are never
+  // pipelined) and multiplexes as many as the server allows over HTTP/2.
+  // With a limit a Pool opens up to that many connections and sends one request at a time over each,
+  // so the limit holds whichever protocol the server picks: over HTTP/2 a Pool would otherwise
+  // multiplex every request on a single connection.
+  const dispatcher = connections === undefined
     ? new Client(parsed, clientOptions)
-    : new Pool(parsed, { ...clientOptions, connections })
+    : new Pool(parsed, { ...clientOptions, connections, maxConcurrentStreams: 1 })
   const _client = dispatcher
     .compose(existRequestInterceptor(pathname, headers))
 

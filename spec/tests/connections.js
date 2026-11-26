@@ -11,8 +11,6 @@ const { connections, ...connectionOptions } = envOptions
 const wait = 600
 const slowQuery = `util:wait(${wait}), "done"`
 const parallel = 4
-// queued requests take at least this long; parallel ones well below, even with TLS handshakes for new connections
-const serial = parallel * wait
 
 /**
  * collect the connections undici opens while run is pending
@@ -53,9 +51,9 @@ async function elapsed (run) {
 }
 
 test('connections option', async (t) => {
-  await t.test('opens one connection by default', () => {
-    assert.strictEqual(getXmlRpcClient(connectionOptions).connection.connections, 1)
-    assert.strictEqual(getRestClient(connectionOptions).connection.connections, 1)
+  await t.test('is not set by default', () => {
+    assert.strictEqual(getXmlRpcClient(connectionOptions).connection.connections, undefined)
+    assert.strictEqual(getRestClient(connectionOptions).connection.connections, undefined)
   })
 
   await t.test('is passed on to the XML-RPC and the REST client', () => {
@@ -110,65 +108,64 @@ async function measure (run) {
 }
 
 /**
- * over HTTP/1.1 one connection serves one request at a time, over HTTP/2 requests share it
- * @param {{ms: number, opened: number}} measured what one client with a single connection did
- * @param {string} what what was sent, for the message
+ * the requests ran in batches of `atOnce`, over `connections` connections
+ * @param {{ms: number, opened: number}} measured what the client did
+ * @param {{atOnce: number, connections: number, what: string}} expected how many ran at the same time, over how
+ *   many connections, and what was sent, for the messages
  */
-function assertOneConnection ({ ms, opened }, what) {
-  assert.strictEqual(opened, 1, `${parallel} ${what} over ${transport} opened ${opened} connections`)
-  const message = `${parallel} ${what} over one ${transport} connection took ${ms} ms`
-  if (http2) {
-    assert.ok(ms < serial * 0.75, message)
-  } else {
-    assert.ok(ms >= serial * 0.9, message)
+function assertBatches ({ ms, opened }, { atOnce, connections, what }) {
+  const batches = Math.ceil(parallel / atOnce)
+  const message = `${parallel} ${what} over ${transport}, ${atOnce} at a time, took ${ms} ms`
+  assert.strictEqual(opened, connections, `${parallel} ${what} over ${transport} opened ${opened} connections`)
+  assert.ok(ms >= batches * wait * 0.9, message)
+  if (batches < parallel) {
+    // allow for TLS handshakes of new connections, but stay below one more batch
+    assert.ok(ms < Math.min(batches * wait + 1200, (parallel - 0.5) * wait), message)
   }
 }
 
 /**
- * a pool runs the requests in parallel: over HTTP/1.1 it opens a connection per request,
- * over HTTP/2 it multiplexes them on the one connection it already has
- * @param {{ms: number, opened: number}} measured what one client with `parallel` connections did
- * @param {string} what what was sent, for the message
+ * the clients to test, each with a function that sends the slow query once
  */
-function assertPool ({ ms, opened }, what) {
-  assert.strictEqual(opened, http2 ? 1 : parallel, `${parallel} ${what} over ${transport} opened ${opened} connections`)
-  assert.ok(ms < serial * 0.75, `${parallel} ${what} over ${transport} took ${ms} ms`)
+const clients = {
+  'XML-RPC calls': {
+    what: 'queries',
+    connect: options => {
+      const db = getXmlRpcClient(options)
+      return async () => {
+        const { pages } = await db.queries.readAll(slowQuery)
+        assert.strictEqual(Buffer.concat(pages).toString(), 'done')
+      }
+    }
+  },
+  'REST requests': {
+    what: 'requests',
+    connect: options => {
+      const rest = getRestClient(options)
+      return async () => {
+        const response = await rest.post(slowQuery, 'db')
+        assert.strictEqual(response.statusCode, 200)
+      }
+    }
+  }
 }
 
-const oneConnection = http2
-  ? 'run in parallel over one connection (HTTP/2)'
-  : 'run one after the other over one connection (HTTP/1.1)'
+for (const [name, { what, connect }] of Object.entries(clients)) {
+  await describe(name, async () => {
+    // not limited: the protocol decides
+    await it(http2
+      ? 'run in parallel over one connection by default (HTTP/2)'
+      : 'run one after the other over one connection by default (HTTP/1.1)', async () => {
+      const run = connect(connectionOptions)
+      assertBatches(await measure(run), { atOnce: http2 ? parallel : 1, connections: 1, what })
+    })
 
-const pool = http2
-  ? `run in parallel over one connection, ${parallel} allowed (HTTP/2)`
-  : `run in parallel over ${parallel} connections (HTTP/1.1)`
-
-await describe('XML-RPC calls over several connections', async () => {
-  await it(oneConnection, async () => {
-    const db = getXmlRpcClient(connectionOptions)
-    assertOneConnection(await measure(() => db.queries.readAll(slowQuery)), 'queries')
+    // limited: at most `connections` at a time, whatever the protocol
+    for (const limit of [parallel, 2, 1]) {
+      await it(`run ${limit} at a time over ${limit} connection${limit > 1 ? 's' : ''} with connections: ${limit} (${transport})`, async () => {
+        const run = connect({ ...connectionOptions, connections: limit })
+        assertBatches(await measure(run), { atOnce: limit, connections: limit, what })
+      })
+    }
   })
-
-  await it(pool, async () => {
-    const db = getXmlRpcClient({ ...connectionOptions, connections: parallel })
-    assertPool(await measure(async () => {
-      const { pages } = await db.queries.readAll(slowQuery)
-      assert.strictEqual(Buffer.concat(pages).toString(), 'done')
-    }), 'queries')
-  })
-})
-
-await describe('REST requests over several connections', async () => {
-  await it(oneConnection, async () => {
-    const rest = getRestClient(connectionOptions)
-    assertOneConnection(await measure(() => rest.post(slowQuery, 'db')), 'requests')
-  })
-
-  await it(pool, async () => {
-    const rest = getRestClient({ ...connectionOptions, connections: parallel })
-    assertPool(await measure(async () => {
-      const response = await rest.post(slowQuery, 'db')
-      assert.strictEqual(response.statusCode, 200)
-    }), 'requests')
-  })
-})
+}

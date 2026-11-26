@@ -249,19 +249,24 @@ const db = getXmlRpcClient({
   options that overrides it for a single call.
   Package operations (`db.app.*`) never time out.
 
-- Run up to eight requests in parallel
+- Run up to eight requests at the same time
   ```js
   {
     connections: 8
   }
   ```
-  By default a client opens one connection to the server. Over HTTP/1.1 a
-  connection serves one request at a time, so requests made at the same time
-  wait for each other; with `connections` they are spread over that many
-  connections. Over HTTP/2 (`https:` to eXist-db 7 and later) requests run in
-  parallel over one connection anyway, and the client opens no more than that.
+  By default a client opens one connection to the server, and the protocol
+  decides how many requests run at the same time: over HTTP/1.1 a connection
+  serves one request at a time, so requests made at the same time wait for each
+  other; over HTTP/2 (`https:` to eXist-db 7 and later) they run in parallel
+  over that one connection, as many as the server allows.
 
-  However many connections are open, the server caps how many requests run at
+  With `connections` the client opens up to that many connections and sends one
+  request at a time over each, over HTTP/1.1 and HTTP/2 alike. More requests
+  wait in the client until one finishes. `connections: 1` runs one request at a
+  time, which keeps a client from using more than one of the server's brokers.
+
+  Whatever the client allows, the server caps how many requests run at
   the same time: each one needs a broker from eXist-db's broker pool
   (`db-connection/pool/@max` in `conf.xml`, 20 by default; the official Docker
   image sets it with `-Dorg.exist.db-connection.pool.max` in
@@ -281,7 +286,7 @@ from a set of environment variables
 | `EXISTDB_PASS` | _none_ | the password to authenticate the user against the database
 | `EXISTDB_SERVER` | `https://localhost:8443` | the URL of the database instance to connect to (only http and https protocol allowed)
 | `EXISTDB_TIMEOUT` | _none_ (waits indefinitely) | milliseconds before a request times out, `0` waits indefinitely
-| `EXISTDB_CONNECTIONS` | _none_ (one connection) | how many connections to open to the server, to run requests in parallel
+| `EXISTDB_CONNECTIONS` | _none_ (not limited) | how many requests run at the same time at most, over as many connections
 
 **NOTE:** In order to connect to an instance as a user other than `guest`
 _both_ `EXISTDB_USER` _and_ `EXISTDB_PASS` have to be set!
