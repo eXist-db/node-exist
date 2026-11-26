@@ -255,16 +255,12 @@ const db = getXmlRpcClient({
     connections: 8
   }
   ```
-  By default a client opens one connection to the server, and the protocol
-  decides how many requests run at the same time: over HTTP/1.1 a connection
-  serves one request at a time, so requests made at the same time wait for each
-  other; over HTTP/2 (`https:` to eXist-db 7 and later) they run in parallel
-  over that one connection, as many as the server allows.
-
-  With `connections` the client opens up to that many connections and sends one
-  request at a time over each, over HTTP/1.1 and HTTP/2 alike. More requests
-  wait in the client until one finishes. `connections: 1` runs one request at a
-  time, which keeps a client from using more than one of the server's brokers.
+  A client runs at most `connections` requests at the same time, **16** by
+  default. It opens connections as requests need them, up to that many, and
+  sends one request at a time over each, over HTTP/1.1 and HTTP/2 (`https:` to
+  eXist-db 7 and later) alike. More requests wait in the client until one
+  finishes. `connections: 1` runs one request at a time, which keeps a client
+  from using more than one of the server's brokers.
 
   Whatever the client allows, the server caps how many requests run at
   the same time: each one needs a broker from eXist-db's broker pool
@@ -273,7 +269,8 @@ const db = getXmlRpcClient({
   `JAVA_TOOL_OPTIONS`, which overrides `conf.xml`). Requests beyond that wait
   for a free broker, and that wait counts against `timeout`. The brokers are
   shared with every other user of the instance, so a client that keeps them all
-  busy makes everyone else wait too.
+  busy makes everyone else wait too. The default of 16 leaves a few of the
+  default 20 brokers for them.
 
 ### Read options from environment
 
@@ -286,7 +283,7 @@ from a set of environment variables
 | `EXISTDB_PASS` | _none_ | the password to authenticate the user against the database
 | `EXISTDB_SERVER` | `https://localhost:8443` | the URL of the database instance to connect to (only http and https protocol allowed)
 | `EXISTDB_TIMEOUT` | _none_ (waits indefinitely) | milliseconds before a request times out, `0` waits indefinitely
-| `EXISTDB_CONNECTIONS` | _none_ (not limited) | how many requests run at the same time at most, over as many connections
+| `EXISTDB_CONNECTIONS` | `16` | how many requests run at the same time at most, over as many connections
 
 **NOTE:** In order to connect to an instance as a user other than `guest`
 _both_ `EXISTDB_USER` _and_ `EXISTDB_PASS` have to be set!

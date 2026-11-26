@@ -11,6 +11,7 @@ const { connections, ...connectionOptions } = envOptions
 const wait = 600
 const slowQuery = `util:wait(${wait}), "done"`
 const parallel = 4
+const defaultConnections = 16
 
 /**
  * collect the connections undici opens while run is pending
@@ -42,18 +43,19 @@ async function negotiatesHttp2 () {
 /**
  * run the same slow query several times at once
  * @param {function(): Promise} run runs the query once
+ * @param {number} count how many times
  * @returns {Promise<number>} milliseconds until all of them finished
  */
-async function elapsed (run) {
+async function elapsed (run, count) {
   const start = Date.now()
-  await Promise.all(Array.from({ length: parallel }, run))
+  await Promise.all(Array.from({ length: count }, run))
   return Date.now() - start
 }
 
 test('connections option', async (t) => {
-  await t.test('is not set by default', () => {
-    assert.strictEqual(getXmlRpcClient(connectionOptions).connection.connections, undefined)
-    assert.strictEqual(getRestClient(connectionOptions).connection.connections, undefined)
+  await t.test('is 16 by default', () => {
+    assert.strictEqual(getXmlRpcClient(connectionOptions).connection.connections, defaultConnections)
+    assert.strictEqual(getRestClient(connectionOptions).connection.connections, defaultConnections)
   })
 
   await t.test('is passed on to the XML-RPC and the REST client', () => {
@@ -99,28 +101,35 @@ const transport = http2 ? 'HTTP/2' : 'HTTP/1.1'
 /**
  * send the slow query several times at once, count the connections that opens and time it
  * @param {function(): Promise} run sends the query once
- * @returns {Promise<{ms: number, opened: number}>} milliseconds until all finished, connections opened
+ * @param {number} [count] how many times
+ * @returns {Promise<{ms: number, opened: number, count: number}>} milliseconds until all finished,
+ *   connections opened, requests sent
  */
-async function measure (run) {
+async function measure (run, count = parallel) {
   let ms
-  const opened = await openedConnections(async () => { ms = await elapsed(run) })
-  return { ms, opened: opened.length }
+  const opened = await openedConnections(async () => { ms = await elapsed(run, count) })
+  return { ms, opened: opened.length, count }
 }
 
 /**
- * the requests ran in batches of `atOnce`, over `connections` connections
- * @param {{ms: number, opened: number}} measured what the client did
- * @param {{atOnce: number, connections: number, what: string}} expected how many ran at the same time, over how
- *   many connections, and what was sent, for the messages
+ * the requests ran in batches of `atOnce`, over as many connections
+ * @param {{ms: number, opened: number, count: number}} measured what the client did
+ * @param {{atOnce: number, limit: number, what: string, upperBound?: boolean}} expected how many ran at the same
+ *   time, the client's limit, what was sent, for the messages, and whether to check that they did not take longer
  */
-function assertBatches ({ ms, opened }, { atOnce, connections, what }) {
-  const batches = Math.ceil(parallel / atOnce)
-  const message = `${parallel} ${what} over ${transport}, ${atOnce} at a time, took ${ms} ms`
-  assert.strictEqual(opened, connections, `${parallel} ${what} over ${transport} opened ${opened} connections`)
+function assertBatches ({ ms, opened, count }, { atOnce, limit, what, upperBound = true }) {
+  const batches = Math.ceil(count / atOnce)
+  const message = `${count} ${what} over ${transport}, ${atOnce} at a time, took ${ms} ms`
+  // never more connections than the limit; below it XML-RPC may open a few more than requests in
+  // flight, as each query is several calls in a row and the pool does not see a connection free
+  // again right away
+  const connections = `${count} ${what} over ${transport}, limit ${limit}, opened ${opened} connections`
+  assert.ok(opened >= atOnce, connections)
+  assert.ok(opened <= limit, connections)
   assert.ok(ms >= batches * wait * 0.9, message)
-  if (batches < parallel) {
-    // allow for TLS handshakes of new connections, but stay below one more batch
-    assert.ok(ms < Math.min(batches * wait + 1200, (parallel - 0.5) * wait), message)
+  if (upperBound) {
+    // less than one more batch, but at least two, for the TLS handshakes of new connections
+    assert.ok(ms < Math.max(batches + 1, 3) * wait, message)
   }
 }
 
@@ -151,20 +160,22 @@ const clients = {
 }
 
 for (const [name, { what, connect }] of Object.entries(clients)) {
-  await describe(name, async () => {
-    // not limited: the protocol decides
-    await it(http2
-      ? 'run in parallel over one connection by default (HTTP/2)'
-      : 'run one after the other over one connection by default (HTTP/1.1)', async () => {
-      const run = connect(connectionOptions)
-      assertBatches(await measure(run), { atOnce: http2 ? parallel : 1, connections: 1, what })
+  await describe(`${name} (${transport})`, async () => {
+    await it(`run ${parallel} at a time over ${parallel} connections by default`, async () => {
+      assertBatches(await measure(connect(connectionOptions)), { atOnce: parallel, limit: defaultConnections, what })
     })
 
-    // limited: at most `connections` at a time, whatever the protocol
-    for (const limit of [parallel, 2, 1]) {
-      await it(`run ${limit} at a time over ${limit} connection${limit > 1 ? 's' : ''} with connections: ${limit} (${transport})`, async () => {
+    // eXist-db has 20 brokers by default, so 20 requests would run at once without the limit;
+    // how long that many take in parallel depends on the server's load, so only check the lower bound
+    await it(`run at most ${defaultConnections} at a time by default`, async () => {
+      const run = connect(connectionOptions)
+      assertBatches(await measure(run, defaultConnections + parallel), { atOnce: defaultConnections, limit: defaultConnections, what, upperBound: false })
+    })
+
+    for (const limit of [2, 1]) {
+      await it(`run ${limit} at a time over ${limit} connection${limit > 1 ? 's' : ''} with connections: ${limit}`, async () => {
         const run = connect({ ...connectionOptions, connections: limit })
-        assertBatches(await measure(run), { atOnce: limit, connections: limit, what })
+        assertBatches(await measure(run), { atOnce: limit, limit, what })
       })
     }
   })
