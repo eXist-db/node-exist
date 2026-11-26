@@ -261,6 +261,15 @@ const db = getXmlRpcClient({
   connections. Over HTTP/2 (`https:` to eXist-db 7 and later) requests run in
   parallel over one connection anyway, and the client opens no more than that.
 
+  However many connections are open, the server caps how many requests run at
+  the same time: each one needs a broker from eXist-db's broker pool
+  (`db-connection/pool/@max` in `conf.xml`, 20 by default; the official Docker
+  image sets it with `-Dorg.exist.db-connection.pool.max` in
+  `JAVA_TOOL_OPTIONS`, which overrides `conf.xml`). Requests beyond that wait
+  for a free broker, and that wait counts against `timeout`. The brokers are
+  shared with every other user of the instance, so a client that keeps them all
+  busy makes everyone else wait too.
+
 ### Read options from environment
 
 `readOptionsFromEnv` offers a comfortable way to read the connection options
