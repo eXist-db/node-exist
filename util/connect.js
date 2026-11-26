@@ -22,6 +22,7 @@ import { createExistClient } from './exist-client.js'
  * @prop {string} [path] path to XMLRPC, default: "/exist/xmlrpc"
  * @prop {boolean} [rejectUnauthorized] enforce valid SSL certs, default: true for remote hosts
  * @prop {number} [timeout] milliseconds to wait for response headers and between body chunks, default: 0 (waits indefinitely)
+ * @prop {number} [connections] how many connections to open to the server, to run requests in parallel, default: 1
  */
 
 /**
@@ -125,7 +126,8 @@ function mergeOptions (path, options) {
     rejectUnauthorized,
     secure: encrypted,
     user,
-    timeout: mergedOptions.timeout
+    timeout: mergedOptions.timeout,
+    connections: mergedOptions.connections
   }
 }
 
@@ -187,6 +189,14 @@ export function readOptionsFromEnv () {
       throw new Error('EXISTDB_TIMEOUT must be a number of milliseconds (0 waits indefinitely), got: "' + timeout + '"')
     }
     environmentOptions.timeout = parseInt(timeout, 10)
+  }
+
+  if (process.env.EXISTDB_CONNECTIONS) {
+    const connections = process.env.EXISTDB_CONNECTIONS
+    if (!/^[1-9]\d*$/.test(connections)) {
+      throw new Error('EXISTDB_CONNECTIONS must be a positive number of connections, got: "' + connections + '"')
+    }
+    environmentOptions.connections = parseInt(connections, 10)
   }
 
   return environmentOptions

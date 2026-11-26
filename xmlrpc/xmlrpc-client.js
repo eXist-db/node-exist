@@ -390,14 +390,14 @@ function parseXmlRpcResponse (xmlResponse) {
  * @param {import('../util/exist-client.js').ConnectionOptions} options connection options
  * @returns {XmlRpcClient} XML-RPC client
  */
-export function createXmlRpcClient ({ server, headers, rejectUnauthorized, user, secure, timeout }) {
+export function createXmlRpcClient ({ server, headers, rejectUnauthorized, user, secure, timeout, connections }) {
   const xmlrpcHeaders = {
     Accept: 'text/xml, application/xml',
     'Content-Type': 'text/xml',
     ...headers
   }
 
-  const connection = createExistClient({ server, headers: xmlrpcHeaders, rejectUnauthorized, user, secure, timeout, throwOnError: false })
+  const connection = createExistClient({ server, headers: xmlrpcHeaders, rejectUnauthorized, user, secure, timeout, connections, throwOnError: false })
   const { client } = connection
   /**
    * Call a remote procedure
