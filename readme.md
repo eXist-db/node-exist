@@ -249,6 +249,29 @@ const db = getXmlRpcClient({
   options that overrides it for a single call.
   Package operations (`db.app.*`) never time out.
 
+- Run up to eight requests at the same time
+  ```js
+  {
+    connections: 8
+  }
+  ```
+  A client runs at most `connections` requests at the same time, 16 by
+  default. It opens connections as requests need them, up to that many, and
+  sends one request at a time over each, over HTTP/1.1 and HTTP/2 (`https:` to
+  eXist-db 7 and later) alike. More requests wait in the client until one
+  finishes. `connections: 1` runs one request at a time, which keeps a client
+  from using more than one of the server's brokers.
+
+  Whatever the client allows, the server caps how many requests run at
+  the same time: each one needs a broker from eXist-db's broker pool
+  (`db-connection/pool/@max` in `conf.xml`, 20 by default; the official Docker
+  image sets it with `-Dorg.exist.db-connection.pool.max` in
+  `JAVA_TOOL_OPTIONS`, which overrides `conf.xml`). Requests beyond that wait
+  for a free broker, and that wait counts against `timeout`. The brokers are
+  shared with every other user of the instance, so a client that keeps them all
+  busy makes everyone else wait too. The default of 16 leaves a few of the
+  default 20 brokers for them.
+
 ### Read options from environment
 
 `readOptionsFromEnv` offers a comfortable way to read the connection options
@@ -260,6 +283,7 @@ from a set of environment variables
 | `EXISTDB_PASS` | _none_ | the password to authenticate the user against the database
 | `EXISTDB_SERVER` | `https://localhost:8443` | the URL of the database instance to connect to (only http and https protocol allowed)
 | `EXISTDB_TIMEOUT` | _none_ (waits indefinitely) | milliseconds before a request times out, `0` waits indefinitely
+| `EXISTDB_CONNECTIONS` | `16` | how many requests run at the same time at most, over as many connections
 
 **NOTE:** In order to connect to an instance as a user other than `guest`
 _both_ `EXISTDB_USER` _and_ `EXISTDB_PASS` have to be set!
